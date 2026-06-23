@@ -655,7 +655,7 @@
         /* SPECIFIC LAYOUTS */
         .board-container {
             display: grid;
-            grid-template-columns: repeat(7, minmax(232px, 1fr));
+            grid-template-columns: repeat(6, minmax(260px, 1fr));
             gap: 16px;
             padding: 24px;
             min-width: 1560px;
@@ -1244,7 +1244,6 @@
         const STORAGE_KEY = 'operation_levi_v1';
         let items = [];
         let goals = [];
-        let libraries = { skills: [], templates: [], preferences: [], context: [] };
         let teams = { ACST: [], DVLMNT: [], Personal: [] };
         let dailyHistory = [];
         let xpData = { total: 0, streak: 0, lastDate: '', achievements: [] };
@@ -1325,7 +1324,6 @@
                 top3Manual = Array.isArray(parsed) ? [] : (parsed.top3Manual || []);
                 widgetLayouts = Array.isArray(parsed) ? {} : (parsed.widgetLayouts || {});
                 events = Array.isArray(parsed) ? [] : (parsed.events || []);
-                libraries = Array.isArray(parsed) ? { skills: [], templates: [], preferences: [], context: [] } : Object.assign({ skills: [], templates: [], preferences: [], context: [] }, parsed.libraries || {});
                 
                 // Sync cloud avatars into localStorage so getAvatarHTML picks them up immediately
             const cloudAvatars = JSON.parse(localStorage.getItem('op_levi_avatars') || '{}');
@@ -1340,11 +1338,6 @@
                     title: item.title || '',
                     category: item.category || 'Personal',
                     status: (item.status === 'someday' ? 'backlog' : item.status) || 'backlog',
-                    execMode: item.execMode || null,
-                    aiStatus: item.aiStatus || 'idle',
-                    aiArtifact: item.aiArtifact || null,
-                    aiUsed: item.aiUsed || null,
-                    linkedContext: item.linkedContext || [],
                     startDate: item.startDate || '',
                     dueDate: item.dueDate || '',
                     deliverable: item.deliverable || '',
@@ -1414,7 +1407,7 @@
 
         function saveData() {
             archiveToday();
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events }));
             _queueCloudSave();
         }
 
@@ -1523,7 +1516,6 @@
             top3Manual    = Array.isArray(parsed) ? [] : (parsed.top3Manual    || []);
             widgetLayouts = Array.isArray(parsed) ? {} : (parsed.widgetLayouts || {});
             events        = Array.isArray(parsed) ? [] : (parsed.events        || []);
-            libraries     = Array.isArray(parsed) ? { skills: [], templates: [], preferences: [], context: [] } : Object.assign({ skills: [], templates: [], preferences: [], context: [] }, parsed.libraries || {});
             const rawProfiles = Array.isArray(parsed) ? {} : (parsed.peopleProfiles || {});
             peopleProfiles = {};
             Object.entries(rawProfiles).forEach(([person, profile]) => {
@@ -1538,11 +1530,6 @@
                 id: item.id || Math.random().toString(36).substr(2, 9),
                 type: item.type || 'task', title: item.title || '', category: item.category || 'Personal',
                 status: (item.status === 'someday' ? 'backlog' : item.status) || 'backlog',
-                    execMode: item.execMode || null,
-                    aiStatus: item.aiStatus || 'idle',
-                    aiArtifact: item.aiArtifact || null,
-                    aiUsed: item.aiUsed || null,
-                    linkedContext: item.linkedContext || [],
                 startDate: item.startDate || '', dueDate: item.dueDate || '', deliverable: item.deliverable || '',
                 notes: item.notes || '', priority: item.priority || 0, timeEstimate: item.timeEstimate || 0,
                 tshirtSize: item.tshirtSize || 'XS', raci: item.raci || { R: [], A: '', C: [], I: [] },
@@ -1576,7 +1563,7 @@
             }
 
             // Mirror to localStorage so the app works offline after first load
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries }));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events }));
 
             renderAll();
             showToast('✦ Synced from cloud');
@@ -1595,7 +1582,7 @@
 
             const { error } = await _sb.from('workspace_data').upsert({
                 workspace_id: _workspaceId,
-                data: { items: itemsToSave, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries },
+                data: { items: itemsToSave, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events },
                 updated_at: new Date().toISOString()
             }, { onConflict: 'workspace_id' });
 
@@ -2001,7 +1988,7 @@ saveData() → localStorage (immediate, always)
         }
 
         function getStatusLabel(status) {
-            const labels = { 'backlog': 'Backlog', 'thisweek': 'This Week', 'active': 'Active', 'today': 'Today', 'waiting': 'Waiting On', 'review': 'Needs Review', 'done': 'Done' };
+            const labels = { 'backlog': 'Backlog', 'thisweek': 'This Week', 'active': 'Active', 'today': 'Today', 'waiting': 'Waiting On', 'done': 'Done' };
             return labels[status] || status;
         }
 
@@ -2146,7 +2133,7 @@ saveData() → localStorage (immediate, always)
                             <option value="today">Today</option>
                             <option value="thisweek">This Week</option>
                             <option value="active" selected>Active</option>
-                            <option value="waiting">Waiting</option><option value="review">Needs Review</option>
+                            <option value="waiting">Waiting</option>
                             <option value="backlog">Backlog</option>
                         </select>
                     </div>
@@ -2852,8 +2839,8 @@ saveData() → localStorage (immediate, always)
         // ═══════════════════════════════════════════════════════════════════════════
         function renderBoard() {
             const container = document.getElementById('boardView');
-            const statuses = ['backlog', 'thisweek', 'active', 'today', 'waiting', 'review', 'done'];
-            const labels = { backlog: 'Backlog', thisweek: 'This Week', active: 'Active', today: 'Today', waiting: 'Waiting On', review: 'Needs Review', done: 'Done' };
+            const statuses = ['backlog', 'thisweek', 'active', 'today', 'waiting', 'done'];
+            const labels = { backlog: 'Backlog', thisweek: 'This Week', active: 'Active', today: 'Today', waiting: 'Waiting On', done: 'Done' };
             const allPeople = getAllAssignees();
 
             // Filter bar — grouped by team
@@ -2919,7 +2906,7 @@ saveData() → localStorage (immediate, always)
                     <div class="board-cards">` +
                     (itemsInStatus.length === 0 && status !== 'done' ?
                         `<div style="padding:20px 12px;text-align:center;color:var(--text-3);font-size:12px;border:2px dashed var(--border);border-radius:6px;margin:4px 0;">` +
-                        { backlog:'📋 Add future work here', thisweek:'📅 Drag items here to commit this week', active:'⚡ Nothing active yet — drag from This Week', today:'🎯 Drag your top tasks here', waiting:'⏳ Drag here when blocked on someone', review:'✦ AI drafts awaiting your review', done:'✅ Complete tasks appear here' }[status] +
+                        { backlog:'📋 Add future work here', thisweek:'📅 Drag items here to commit this week', active:'⚡ Nothing active yet — drag from This Week', today:'🎯 Drag your top tasks here', waiting:'⏳ Drag here when blocked on someone', done:'✅ Complete tasks appear here' }[status] +
                         `</div>` : '') + ``;
                 // Render habits checklist FIRST, above task cards
                 if (status === 'today' && habitsForToday.length > 0) {
@@ -4063,7 +4050,7 @@ saveData() → localStorage (immediate, always)
                 top3Candidates = getFilteredItems()
                     .filter(i => i.type !== 'habit' && i.status !== 'done')
                     .sort((a, b) => {
-                        const rank = { today: 0, thisweek: 1, active: 2, waiting: 3, review: 4, backlog: 5 };
+                        const rank = { today: 0, thisweek: 1, active: 2, waiting: 3, backlog: 4 };
                         const rA = rank[a.status] ?? 5, rB = rank[b.status] ?? 5;
                         if (rA !== rB) return rA - rB;
                         if ((a.priority||0) !== (b.priority||0)) return (a.priority||0) - (b.priority||0);
@@ -4917,7 +4904,7 @@ saveData() → localStorage (immediate, always)
 
             Object.entries(byStatus).forEach(([status, items]) => {
                 if (items.length === 0) return;
-                const statusIcons = { backlog: '📦', thisweek: '📋', active: '🔥', today: '⚡', waiting: '⏸️', review: '✦', done: '✓' };
+                const statusIcons = { backlog: '📦', thisweek: '📋', active: '🔥', today: '⚡', waiting: '⏸️', done: '✓' };
                 html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;">
                     <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-2);">${statusIcons[status] || '•'} ${status.toUpperCase()} (${items.length})</div>`;
                 items.forEach(item => {
@@ -5398,7 +5385,6 @@ saveData() → localStorage (immediate, always)
                         <option value="active" ${item.status === 'active' ? 'selected' : ''}>Active</option>
                         <option value="today" ${item.status === 'today' ? 'selected' : ''}>Today</option>
                         <option value="waiting" ${item.status === 'waiting' ? 'selected' : ''}>Waiting</option>
-                        <option value="review" ${item.status === 'review' ? 'selected' : ''}>Needs Review</option>
                         <option value="done" ${item.status === 'done' ? 'selected' : ''}>Done</option>
                     </select>
                 </div>
@@ -7306,7 +7292,7 @@ saveData() → localStorage (immediate, always)
             const fmtMins = m => m>=60?(m/60).toFixed(1)+'h':m+'m';
 
             // Status breakdown
-            const statuses = ['backlog','thisweek','active','today','waiting','review','done'];
+            const statuses = ['backlog','thisweek','active','today','waiting','done'];
             const statusLabels = {backlog:'Backlog',thisweek:'This Week',active:'Active',today:'Today',waiting:'Waiting',done:'Done'};
             const statusColors = {backlog:'var(--text-3)',thisweek:'var(--personal)',active:'var(--accent)',today:'var(--acst)',waiting:'var(--warn)',done:'var(--success)'};
             const statusCounts = {};
