@@ -8093,5 +8093,159 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 })();
 </script>
 
+<!-- ═══ Operation Levi 2.0 — Phase 2: Libraries UI (self-contained, additive) ═══ -->
+<style>
+.vl-fab{position:fixed;right:24px;bottom:80px;z-index:9000;background:#1b1d23;color:#e9ecf2;border:1px solid #30353d;border-radius:26px;padding:11px 17px;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;font-family:inherit}
+.vl-fab:hover{background:#23262d}
+.vl-fab .d{width:9px;height:9px;border-radius:3px;background:#f2a33c}
+.vl-ov{position:fixed;inset:0;z-index:9002;background:rgba(7,8,10,.82);display:none;overflow-y:auto;padding:5vh 16px 40px}
+.vl-ov.on{display:block}
+.vl-panel{width:880px;max-width:96vw;margin:0 auto;background:#121317;border:1px solid #2a2e38;border-radius:18px;color:#e9ecf2;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+.vl-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #23262d}
+.vl-head h2{font-size:19px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+.vl-head .star{color:#f2a33c}
+.vl-x{background:#1d2129;border:1px solid #30353d;color:#e9ecf2;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:13px;font-family:inherit}
+.vl-x:hover{background:#23262d}
+.vl-tabs{display:flex;gap:8px;padding:16px 24px 0;flex-wrap:wrap}
+.vl-tab{padding:8px 15px;border-radius:9px;border:1px solid #262a31;background:#15161b;color:#aab2c0;cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px;font-family:inherit}
+.vl-tab.on{background:#1d2129;color:#e9ecf2;border-color:#30353d}
+.vl-tab .dot{width:8px;height:8px;border-radius:3px}
+.vl-body{padding:18px 24px 26px;min-height:240px}
+.vl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.vl-bar .desc{color:#8a91a0;font-size:12.5px}
+.vl-add{background:#f2a33c;color:#1c1304;border:none;border-radius:9px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+.vl-add.ghost{background:#1d2129;color:#e9ecf2;border:1px solid #30353d}
+.vl-item{background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.vl-item .ic{width:30px;height:30px;border-radius:8px;background:#0e0f13;display:flex;align-items:center;justify-content:center;color:#f2a33c;flex-shrink:0;font-size:14px}
+.vl-item .nm{font-weight:600;font-size:14px}
+.vl-item .sm{color:#8a91a0;font-size:12.5px;margin-top:3px;line-height:1.45}
+.vl-item .act{margin-left:auto;display:flex;gap:6px}
+.vl-mini{background:#1d2129;border:1px solid #30353d;color:#aab2c0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.vl-mini:hover{background:#23262d;color:#e9ecf2}
+.vl-empty{color:#727a88;text-align:center;padding:36px;border:1px dashed #30353d;border-radius:12px}
+.vl-field{margin-bottom:12px}
+.vl-field label{display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.vl-field input,.vl-field select,.vl-field textarea{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:inherit}
+.vl-field textarea{min-height:96px;resize:vertical;line-height:1.5}
+.vl-formrow{display:flex;gap:10px;margin-top:6px}
+.vl-formrow .vl-add{flex:0 0 auto}
+</style>
+<script>
+(function(){
+  if(window.__vlib) return; window.__vlib=true;
+  var TYPES={
+    skills:{label:'Skills',dot:'#5a9be0',icon:'◆',desc:'Reusable procedures — how Claude does a task.',
+      fields:[['name','Name','text'],['description','One-line description','text'],['body','How Claude should do it','textarea']],
+      title:function(e){return e.name||'Untitled';}, sub:function(e){return e.description||'';}},
+    templates:{label:'Templates',dot:'#f2a33c',icon:'▭',desc:'Output scaffolds — what the deliverable looks like.',
+      fields:[['name','Name','text'],['description','One-line description','text'],['format','Format (doc, email, slide…)','text'],['body','Template structure','textarea']],
+      title:function(e){return e.name||'Untitled';}, sub:function(e){return e.description||(e.format?('Format: '+e.format):'');}},
+    preferences:{label:'Preferences',dot:'#46b98a',icon:'◷',desc:'How you like things done.',
+      fields:[['key','Preference','text'],['scope','Scope','select:global,category,person'],['value','Value','textarea']],
+      title:function(e){return e.key||'Untitled';}, sub:function(e){return (e.value||'')+(e.scope&&e.scope!=='global'?('  ·  '+e.scope):'');}},
+    context:{label:'Context',dot:'#b07ad6',icon:'❖',desc:'What we know — clients, projects, people, decisions.',
+      fields:[['name','Name','text'],['type','Type','select:client,project,person,decision,glossary'],['summary','Summary','text'],['details','Details','textarea']],
+      title:function(e){return e.name||'Untitled';}, sub:function(e){return (e.type?('['+e.type+'] '):'')+(e.summary||'');}}
+  };
+  var STARTERS={
+    skills:[{name:'Draft client proposal',description:'Turn a scope into a first-draft proposal.',body:'Confirm scope from the card. Pull the client from Context. Use the proposal/SOW template. Apply tone preferences. Include approach, timeline, pricing options, terms, and a clear next step. Output a draft — never send.'}],
+    templates:[{name:'Proposal / SOW',description:'Standard proposal layout.',format:'doc',body:'Summary → understanding of goal → approach → scope & deliverables → timeline → investment (options) → terms → next step.'}],
+    preferences:[{key:'Tone & voice',scope:'global',value:'Direct, warm, concrete. No filler.'},{key:'Sending rule',scope:'global',value:'Never auto-send externally — always hold for review.'}],
+    context:[{name:'Example Client',type:'client',summary:'Replace with a real client.',details:'Primary contact, goals, current project, brand notes, commercial terms, sensitivities.'}]
+  };
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function uid(){ return 'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function LIB(){
+    try{
+      if(typeof libraries==='undefined'||!libraries){ return null; }
+      libraries.skills=libraries.skills||[]; libraries.templates=libraries.templates||[];
+      libraries.preferences=libraries.preferences||[]; libraries.context=libraries.context||[];
+      return libraries;
+    }catch(e){ return null; }
+  }
+  function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
+  function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
+
+  function boot(){
+  document.body.insertAdjacentHTML('beforeend',
+    '<button class="vl-fab" id="vlFab"><span class="d"></span> Libraries</button>'+
+    '<div class="vl-ov" id="vlOv"><div class="vl-panel">'+
+      '<div class="vl-head"><h2><span class="star">✦</span> Libraries</h2><button class="vl-x" id="vlClose">✕ Close</button></div>'+
+      '<div class="vl-tabs" id="vlTabs"></div>'+
+      '<div class="vl-body" id="vlBody"></div>'+
+    '</div></div>');
+  var ov=document.getElementById('vlOv'), tabsEl=document.getElementById('vlTabs'), bodyEl=document.getElementById('vlBody');
+  var cur='skills';
+  Object.keys(TYPES).forEach(function(k){
+    var t=document.createElement('div'); t.className='vl-tab'+(k===cur?' on':''); t.dataset.k=k;
+    t.innerHTML='<span class="dot" style="background:'+TYPES[k].dot+'"></span>'+TYPES[k].label;
+    t.onclick=function(){ cur=k; Array.prototype.forEach.call(tabsEl.children,function(c){c.classList.toggle('on',c.dataset.k===k);}); renderList(); };
+    tabsEl.appendChild(t);
+  });
+  function open(){ if(!LIB()){ toast('Libraries load after you sign in'); return; } ov.classList.add('on'); renderList(); }
+  function close(){ ov.classList.remove('on'); }
+
+  function renderList(){
+    var lib=LIB()||{}; var arr=(lib[cur]||[]); var cfg=TYPES[cur];
+    bodyEl.innerHTML='';
+    var bar=document.createElement('div'); bar.className='vl-bar';
+    bar.innerHTML='<div class="desc">'+esc(cfg.desc)+'</div>';
+    var addWrap=document.createElement('div'); addWrap.style.display='flex'; addWrap.style.gap='8px';
+    if(arr.length===0){ var seed=document.createElement('button'); seed.className='vl-add ghost'; seed.textContent='+ Starter examples'; seed.onclick=function(){ (STARTERS[cur]||[]).forEach(function(s){ var o={id:uid()}; for(var kk in s) o[kk]=s[kk]; arr.push(o); }); lib[cur]=arr; persist(); toast('Added starter examples'); renderList(); }; addWrap.appendChild(seed); }
+    var add=document.createElement('button'); add.className='vl-add'; add.textContent='+ New '+cfg.label.replace(/s$/,'').toLowerCase();
+    add.onclick=function(){ renderForm(null); };
+    addWrap.appendChild(add); bar.appendChild(addWrap); bodyEl.appendChild(bar);
+    if(arr.length===0){ var e=document.createElement('div'); e.className='vl-empty'; e.textContent='No '+cfg.label.toLowerCase()+' yet. Add one, or load starter examples.'; bodyEl.appendChild(e); return; }
+    arr.forEach(function(entry){
+      var it=document.createElement('div'); it.className='vl-item';
+      var ic=document.createElement('div'); ic.className='ic'; ic.textContent=cfg.icon; ic.style.color=cfg.dot; it.appendChild(ic);
+      var mid=document.createElement('div'); mid.style.minWidth='0'; mid.style.flex='1';
+      var nm=document.createElement('div'); nm.className='nm'; nm.textContent=cfg.title(entry); mid.appendChild(nm);
+      var sm=document.createElement('div'); sm.className='sm'; sm.textContent=cfg.sub(entry); mid.appendChild(sm);
+      it.appendChild(mid);
+      var act=document.createElement('div'); act.className='act';
+      var ed=document.createElement('button'); ed.className='vl-mini'; ed.textContent='Edit'; ed.onclick=function(){ renderForm(entry); }; act.appendChild(ed);
+      var del=document.createElement('button'); del.className='vl-mini'; del.textContent='Delete'; del.onclick=function(){ var i=arr.indexOf(entry); if(i>=0){ arr.splice(i,1); lib[cur]=arr; persist(); toast('Deleted'); renderList(); } }; act.appendChild(del);
+      it.appendChild(act);
+      bodyEl.appendChild(it);
+    });
+  }
+  function renderForm(entry){
+    var cfg=TYPES[cur]; var editing=!!entry; var model=entry||{};
+    bodyEl.innerHTML='';
+    var inputs={};
+    cfg.fields.forEach(function(f){
+      var key=f[0], label=f[1], type=f[2];
+      var wrap=document.createElement('div'); wrap.className='vl-field';
+      var lab=document.createElement('label'); lab.textContent=label; wrap.appendChild(lab);
+      var inp;
+      if(type==='textarea'){ inp=document.createElement('textarea'); }
+      else if(type.indexOf('select:')===0){ inp=document.createElement('select'); type.slice(7).split(',').forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
+      else { inp=document.createElement('input'); inp.type='text'; }
+      if(model[key]!=null) inp.value=model[key];
+      inputs[key]=inp; wrap.appendChild(inp); bodyEl.appendChild(wrap);
+    });
+    var row=document.createElement('div'); row.className='vl-formrow';
+    var cancel=document.createElement('button'); cancel.className='vl-add ghost'; cancel.textContent='Cancel'; cancel.onclick=renderList;
+    var save=document.createElement('button'); save.className='vl-add'; save.textContent=editing?'Save changes':'Add';
+    save.onclick=function(){
+      var lib=LIB()||{}; var arr=lib[cur]||[];
+      var obj=editing?entry:{id:uid()};
+      cfg.fields.forEach(function(f){ obj[f[0]]=inputs[f[0]].value; });
+      if(!editing) arr.push(obj);
+      lib[cur]=arr; persist(); toast(editing?'Saved':'Added'); renderList();
+    };
+    row.appendChild(cancel); row.appendChild(save); bodyEl.appendChild(row);
+    inputs[cfg.fields[0][0]] && inputs[cfg.fields[0][0]].focus();
+  }
+  document.getElementById('vlFab').onclick=open;
+  document.getElementById('vlClose').onclick=close;
+  ov.onclick=function(e){ if(e.target===ov) close(); };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&ov.classList.contains('on')) close(); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
