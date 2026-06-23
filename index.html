@@ -8139,7 +8139,13 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 <script>
 (function(){
   if(window.__vlib) return; window.__vlib=true;
-  var CLAUDE_SKILLS=['—','Word document (docx)','PDF','PowerPoint / slides (pptx)','Excel / spreadsheet (xlsx)','Web research','Deep research','Data analysis','Image generation','Diagram','Code / scripting','Email draft','Summarize / recap','Custom / other'];
+  var CLAUDE_SKILLS=['—','algorithmic-art','brand-guidelines','canvas-design','claude-api','doc-coauthoring','docx','frontend-design','internal-comms','mcp-builder','pdf','pptx','skill-creator','slack-gif-creator','theme-factory','web-artifacts-builder','webapp-testing','xlsx','Custom / other'];
+  var CLAUDE_SKILLS_LIVE=null;
+  function fetchClaudeSkills(cb){
+    if(CLAUDE_SKILLS_LIVE){ cb(CLAUDE_SKILLS_LIVE); return; }
+    try{ fetch('https://api.github.com/repos/anthropics/skills/contents/skills').then(function(r){return r.ok?r.json():null;}).then(function(j){ if(j&&j.length){ CLAUDE_SKILLS_LIVE=['—'].concat(j.filter(function(x){return x.type==='dir';}).map(function(x){return x.name;})).concat(['Custom / other']); cb(CLAUDE_SKILLS_LIVE); } }).catch(function(){}); }catch(e){}
+  }
+  function skillUrl(name){ if(!name||name==='Custom / other') return ''; return 'https://github.com/anthropics/skills/tree/main/skills/'+name; }
   var CATS=['All','ACST','DVLMNT','Personal'];
   // field types: text, area, select(opts), cats, claude, tmpl(dynamic), tags, color, refs
   var TYPES={
@@ -8284,7 +8290,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(f.t==='area'){ inp=document.createElement('textarea'); }
       else if(f.t==='select'){ inp=document.createElement('select'); f.opts.forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
       else if(f.t==='cats'){ inp=document.createElement('select'); CATS.forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
-      else if(f.t==='claude'){ inp=document.createElement('select'); CLAUDE_SKILLS.forEach(function(o){ var op=document.createElement('option'); op.value=(o==='—'?'':o); op.textContent=o; inp.appendChild(op); }); }
+      else if(f.t==='claude'){ inp=document.createElement('select'); var fillCS=function(list){ var sel=inp.value||(model[f.k]||''); inp.innerHTML=''; list.forEach(function(o){ var op=document.createElement('option'); op.value=(o==='—'?'':o); op.textContent=o; inp.appendChild(op); }); inp.value=sel; }; fillCS(CLAUDE_SKILLS); fetchClaudeSkills(fillCS); }
       else if(f.t==='tmpl'){ inp=document.createElement('select'); var opn=document.createElement('option'); opn.value=''; opn.textContent='—'; inp.appendChild(opn); ((LIB()||{}).templates||[]).forEach(function(t){ var op=document.createElement('option'); op.value=t.name; op.textContent=t.name; inp.appendChild(op); }); }
       else if(f.t==='color'){ inp=document.createElement('input'); inp.type='text'; inp.placeholder='#0F2138, #F2A33C'; }
       else { inp=document.createElement('input'); inp.type='text'; }
@@ -8295,6 +8301,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var paint=function(){ Array.prototype.slice.call(sw.querySelectorAll('.vl-sw')).forEach(function(n){n.remove();}); (inp.value.match(/#?[0-9a-fA-F]{3,8}/g)||[]).forEach(function(c){ var d=document.createElement('div'); d.className='vl-sw'; d.style.background=(c[0]==='#'?c:'#'+c); sw.insertBefore(d,pick); }); };
         pick.onchange=function(){ inp.value=(inp.value.trim()? inp.value.trim().replace(/,?\s*$/,'')+', ':'')+pick.value; paint(); };
         sw.appendChild(pick); inp.oninput=paint; paint(); }
+      if(f.t==='claude'){ var chHint=document.createElement('div'); chHint.className='vl-hint'; chHint.textContent='Live from anthropics/skills — also fills the Source link.'; wrap.appendChild(chHint); }
       if(f.ctl){ inp.onchange=function(){ updateVis(inp.value); }; }
       bodyEl.appendChild(wrap); wraps.push({el:wrap,for:f.for});
     });
@@ -8306,6 +8313,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     save.onclick=function(){
       var lib=LIB()||{}; var arr=lib[cur]||[]; var obj=editing?entry:{id:uid()};
       cfg.fields.forEach(function(f){ if(f.k && inputs[f.k]) obj[f.k]=inputs[f.k].value; });
+      if(cur==='skills' && obj.basedOn && (!obj.source||!obj.source.trim())) obj.source=skillUrl(obj.basedOn);
       if(!editing) arr.push(obj); lib[cur]=arr; persist(); toast(editing?'Saved':'Added'); renderList();
     };
     row.appendChild(cancel); row.appendChild(save); bodyEl.appendChild(row);
