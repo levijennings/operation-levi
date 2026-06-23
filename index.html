@@ -8153,6 +8153,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         {k:'whenToUse',l:'When should Claude use this?',t:'area'},
         {sec:'How it works'},
         {k:'basedOn',l:'Built on Claude skill',t:'claude'},{k:'linkedTemplate',l:'Use template',t:'tmpl'},
+        {k:'source',l:'Source link (anthropics/skills, marketplace, GitHub…)',t:'text'},
         {k:'body',l:'Instructions — how Claude should do it',t:'area'},
         {k:'outputFormat',l:'Output format (doc, email, slides…)',t:'text'},
         {k:'example',l:'Example output',t:'area'},
@@ -8248,6 +8249,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     if(arr.length===0){ var seed=document.createElement('button'); seed.className='vl-add ghost'; seed.textContent='+ Starter examples'; seed.onclick=function(){ (STARTERS[cur]||[]).forEach(function(s){ var o={id:uid()}; for(var kk in s) o[kk]=s[kk]; arr.push(o); }); lib[cur]=arr; persist(); toast('Added starter examples'); renderList(); }; right.appendChild(seed); }
     var add=document.createElement('button'); add.className='vl-add'; add.textContent='+ New '+cfg.label.replace(/s$/,'').toLowerCase(); add.onclick=function(){ renderForm(null); }; right.appendChild(add);
     bar.appendChild(right); bodyEl.appendChild(bar);
+    if(cur==='skills'){ var src=document.createElement('div'); src.style.cssText='font-size:11.5px;color:#727a88;margin:-4px 0 14px;line-height:1.6'; src.innerHTML='Browse &amp; add existing Claude skills: '+['<a href="https://github.com/anthropics/skills" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">anthropics/skills</a>','<a href="https://skillsmp.com" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">skillsmp.com</a>','<a href="https://claudemarketplaces.com" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">claudemarketplaces.com</a>','<a href="https://lobehub.com/skills" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">lobehub</a>','<a href="https://agentskills.io" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">agentskills.io</a>'].join(' &middot; ')+' — paste the link into a skill’s <b>Source</b> field.'; bodyEl.appendChild(src); }
     var rows=document.createElement('div'); rows.id='vlRows'; bodyEl.appendChild(rows);
     renderRows();
     function renderRows(){
@@ -8288,7 +8290,11 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       else { inp=document.createElement('input'); inp.type='text'; }
       if(model[f.k]!=null) inp.value=model[f.k];
       inputs[f.k]=inp; wrap.appendChild(inp);
-      if(f.t==='color'){ var sw=document.createElement('div'); sw.className='vl-swatches'; wrap.appendChild(sw); var paint=function(){ sw.innerHTML=''; (inp.value.match(/#?[0-9a-fA-F]{3,8}/g)||[]).forEach(function(c){ var d=document.createElement('div'); d.className='vl-sw'; d.style.background=(c[0]==='#'?c:'#'+c); sw.appendChild(d); }); }; inp.oninput=paint; paint(); }
+      if(f.t==='color'){ var sw=document.createElement('div'); sw.className='vl-swatches'; wrap.appendChild(sw);
+        var pick=document.createElement('input'); pick.type='color'; pick.title='Pick a colour'; pick.style.cssText='width:26px;height:26px;padding:0;border:1px solid #30353d;border-radius:6px;background:#0e0f13;cursor:pointer;flex:0 0 auto';
+        var paint=function(){ Array.prototype.slice.call(sw.querySelectorAll('.vl-sw')).forEach(function(n){n.remove();}); (inp.value.match(/#?[0-9a-fA-F]{3,8}/g)||[]).forEach(function(c){ var d=document.createElement('div'); d.className='vl-sw'; d.style.background=(c[0]==='#'?c:'#'+c); sw.insertBefore(d,pick); }); };
+        pick.onchange=function(){ inp.value=(inp.value.trim()? inp.value.trim().replace(/,?\s*$/,'')+', ':'')+pick.value; paint(); };
+        sw.appendChild(pick); inp.oninput=paint; paint(); }
       if(f.ctl){ inp.onchange=function(){ updateVis(inp.value); }; }
       bodyEl.appendChild(wrap); wraps.push({el:wrap,for:f.for});
     });
