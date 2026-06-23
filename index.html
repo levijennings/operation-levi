@@ -7951,5 +7951,147 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         }
     </script>
 
+<!-- ═══ Operation Levi 2.0 — Phase 1: Voice Capture (self-contained, additive) ═══ -->
+<style>
+.vc-fab{position:fixed;right:24px;bottom:24px;z-index:9000;background:#f2a33c;color:#1c1304;border:none;border-radius:30px;padding:14px 20px;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);display:flex;align-items:center;gap:9px;font-family:inherit}
+.vc-fab:hover{filter:brightness(1.06)}
+.vc-fab svg{width:18px;height:18px}
+.vc-ov{position:fixed;inset:0;z-index:9001;background:rgba(5,6,8,.72);display:none;align-items:flex-start;justify-content:center;padding-top:9vh}
+.vc-ov.on{display:flex}
+.vc-modal{width:560px;max-width:94vw;background:#121317;border:1px solid #2a2e38;border-radius:18px;padding:26px;color:#e9ecf2;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.vc-mic{width:74px;height:74px;border-radius:50%;background:#f2a33c;color:#1c1304;margin:2px auto 14px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.vc-mic svg{width:30px;height:30px}
+.vc-mic.live::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid #f2a33c;opacity:.5;animation:vcpulse 1.3s ease-out infinite}
+@keyframes vcpulse{from{transform:scale(.9);opacity:.6}to{transform:scale(1.4);opacity:0}}
+.vc-h{text-align:center;font-weight:700;font-size:18px;margin-bottom:2px}
+.vc-sub{text-align:center;color:#8a91a0;font-size:12.5px;margin-bottom:14px}
+.vc-ta{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:12px;padding:13px 15px;color:#e9ecf2;font-size:15px;font-family:inherit;resize:vertical;min-height:62px}
+.vc-ta::placeholder{color:#727a88}
+.vc-row{display:flex;gap:10px;margin-top:14px}
+.vc-btn{flex:1;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:11px;padding:12px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit}
+.vc-btn:hover{background:#23262d}
+.vc-btn.amber{background:#f2a33c;color:#1c1304;border:none}
+.vc-prev{margin-top:14px;display:none}
+.vc-prev.on{display:block}
+.vc-field{margin-bottom:10px}
+.vc-field label{display:block;font-size:11px;color:#8a91a0;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.vc-field input,.vc-field select{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:9px 11px;color:#e9ecf2;font-size:14px;font-family:inherit}
+.vc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vc-mode{display:flex;gap:8px}
+.vc-mode button{flex:1;border:1px solid #30353d;background:#0e0f13;color:#8a91a0;border-radius:9px;padding:9px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+.vc-mode button.sel{border-color:#f2a33c;color:#f2a33c}
+.vc-err{color:#e0a02c;font-size:12px;text-align:center;margin-top:8px;display:none}
+</style>
+<script>
+(function(){
+  if(window.__vc) return; window.__vc=true;
+  var MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  function boot(){
+  document.body.insertAdjacentHTML('beforeend',
+    '<button class="vc-fab" id="vcFab" aria-label="Speak a task">'+MIC+' Speak a task</button>'+
+    '<div class="vc-ov" id="vcOv"><div class="vc-modal">'+
+      '<div class="vc-mic" id="vcMic" title="Tap to talk">'+MIC+'</div>'+
+      '<div class="vc-h" id="vcH">Speak a task</div>'+
+      '<div class="vc-sub" id="vcSub">Tap the mic and talk — or type below</div>'+
+      '<textarea class="vc-ta" id="vcTa" placeholder="e.g. Draft a proposal for Acme, due Friday"></textarea>'+
+      '<div class="vc-err" id="vcErr"></div>'+
+      '<div class="vc-row" id="vcStep1"><button class="vc-btn" id="vcCancel">Cancel</button><button class="vc-btn amber" id="vcContinue">Continue</button></div>'+
+      '<div class="vc-prev" id="vcPrev">'+
+        '<div class="vc-field"><label>Title</label><input id="vcTitle"></div>'+
+        '<div class="vc-grid"><div class="vc-field"><label>Due date</label><input type="date" id="vcDue"></div>'+
+        '<div class="vc-field"><label>Owner</label><select id="vcOwner"></select></div></div>'+
+        '<div class="vc-grid"><div class="vc-field"><label>Category</label><select id="vcCat"></select></div>'+
+        '<div class="vc-field"><label>Mode</label><div class="vc-mode"><button type="button" id="vcDoit">Do-it (Claude)</button><button type="button" id="vcTrack">Track-it</button></div></div></div>'+
+        '<div class="vc-row"><button class="vc-btn" id="vcBack">Back</button><button class="vc-btn amber" id="vcAdd">Add card</button></div>'+
+      '</div>'+
+    '</div></div>');
+  var ov=document.getElementById('vcOv'),ta=document.getElementById('vcTa'),mic=document.getElementById('vcMic'),
+      err=document.getElementById('vcErr'),prev=document.getElementById('vcPrev'),step1=document.getElementById('vcStep1'),
+      h=document.getElementById('vcH'),sub=document.getElementById('vcSub');
+  var mode='track-it';
+  function people(){ try{ return (typeof getAllAssignees==='function'? (getAllAssignees()||[]):[]); }catch(e){ return []; } }
+  function cats(){ try{ return (typeof teams!=='undefined'&&teams)? Object.keys(teams):['Personal']; }catch(e){ return ['Personal']; } }
+  function meName(){ try{ return (typeof _userName!=='undefined'&&_userName)? _userName:'Levi'; }catch(e){ return 'Levi'; } }
+  function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition, rec=null, listening=false;
+  function setLive(v){ listening=v; mic.classList.toggle('live',v); if(!prev.classList.contains('on')) h.textContent=v?'Listening…':'Speak a task'; }
+  function startRec(){
+    if(!SR){ err.style.display='block'; err.textContent="Voice input isn't supported in this browser — type your task below."; return; }
+    try{ rec=new SR(); }catch(e){ return; }
+    rec.lang='en-US'; rec.interimResults=true; rec.continuous=false;
+    rec.onresult=function(e){ var t=''; for(var i=0;i<e.results.length;i++){ t+=e.results[i][0].transcript; } ta.value=t; };
+    rec.onerror=function(e){ setLive(false); if(e&&e.error==='not-allowed'){ err.style.display='block'; err.textContent='Microphone blocked — allow mic access or type below.'; } };
+    rec.onend=function(){ setLive(false); };
+    try{ rec.start(); setLive(true); err.style.display='none'; }catch(e){}
+  }
+  function stopRec(){ try{ if(rec&&listening) rec.stop(); }catch(e){} setLive(false); }
+  function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function parseDue(low){
+    var now=new Date(); now.setHours(0,0,0,0);
+    if(/\btoday\b/.test(low)) return fmt(now);
+    if(/\btomorrow\b/.test(low)){ var d=new Date(now); d.setDate(d.getDate()+1); return fmt(d); }
+    if(/\bnext week\b/.test(low)){ var d2=new Date(now); d2.setDate(d2.getDate()+7); return fmt(d2); }
+    var days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    for(var i=0;i<7;i++){ if(new RegExp('\\b'+days[i]+'\\b').test(low)){ var d3=new Date(now); var add=(i-d3.getDay()+7)%7; if(add===0) add=7; d3.setDate(d3.getDate()+add); return fmt(d3); } }
+    if(/\bend of (the )?week\b|\beow\b/.test(low)){ var d4=new Date(now); var a4=(5-d4.getDay()+7)%7; d4.setDate(d4.getDate()+a4); return fmt(d4); }
+    return '';
+  }
+  function setMode(m){ mode=m; document.getElementById('vcDoit').classList.toggle('sel',m==='do-it'); document.getElementById('vcTrack').classList.toggle('sel',m==='track-it'); }
+  function parse(){
+    var text=ta.value.trim(); if(!text){ err.style.display='block'; err.textContent='Say or type a task first.'; return; }
+    err.style.display='none';
+    var low=text.toLowerCase();
+    var due=parseDue(low);
+    var pl=people(), owner=meName();
+    for(var i=0;i<pl.length;i++){ var nm=String(pl[i]).toLowerCase(); if(nm && new RegExp('\\b'+nm.replace(/[^a-z0-9]/g,'')+'\\b').test(low.replace(/[^a-z0-9 ]/g,''))){ owner=pl[i]; break; } }
+    var cl=cats(), cat=(cl.indexOf('Personal')>=0?'Personal':cl[0]);
+    for(var j=0;j<cl.length;j++){ if(low.indexOf(String(cl[j]).toLowerCase())>=0){ cat=cl[j]; break; } }
+    var doit=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/.test(low);
+    setMode(doit?'do-it':'track-it');
+    var title=text.replace(/,?\s*(due|by|before)\s+[a-z0-9 ]+$/i,'').replace(/\s+(today|tomorrow|next week)\b/ig,'').trim();
+    if(!title) title=text;
+    title=title.charAt(0).toUpperCase()+title.slice(1);
+    document.getElementById('vcTitle').value=title;
+    document.getElementById('vcDue').value=due;
+    var os=document.getElementById('vcOwner'); os.innerHTML=''; var seen={};
+    [owner].concat(pl).concat([meName()]).forEach(function(p){ if(p&&!seen[p]){ seen[p]=1; var o=document.createElement('option'); o.value=p; o.textContent=p; os.appendChild(o); } });
+    os.value=owner;
+    var cs=document.getElementById('vcCat'); cs.innerHTML=''; cl.forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; cs.appendChild(o); }); cs.value=cat;
+    step1.style.display='none'; prev.classList.add('on'); h.textContent='Review the card'; sub.textContent='Edit anything, then add it to your board';
+  }
+  function openModal(){ ov.classList.add('on'); ta.value=''; err.style.display='none'; prev.classList.remove('on'); step1.style.display='flex'; h.textContent='Speak a task'; sub.textContent='Tap the mic and talk — or type below'; setTimeout(startRec,250); }
+  function closeModal(){ stopRec(); ov.classList.remove('on'); }
+  function addCard(){
+    var owner=document.getElementById('vcOwner').value||meName();
+    var it={ id:'v'+Date.now().toString(36), type:'task', title:(document.getElementById('vcTitle').value||'').trim()||'Untitled',
+      category:document.getElementById('vcCat').value||'Personal', status:'thisweek',
+      startDate:'', dueDate:document.getElementById('vcDue').value||'', deliverable:'', notes:'',
+      priority:0, timeEstimate:0, tshirtSize:'XS', raci:{R:[],A:'',C:[],I:[]}, assignees:owner?[owner]:[], responsible:owner||'',
+      responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
+      waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[],
+      subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
+      columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
+      execMode:mode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:[] };
+    try{ if(typeof items!=='undefined' && items && items.push) items.push(it); else { closeModal(); return; } }catch(e){ closeModal(); return; }
+    try{ if(typeof saveData==='function') saveData(); }catch(e){}
+    try{ if(typeof switchView==='function') switchView('board'); else if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+    toast('✦ Card added from voice');
+    closeModal();
+  }
+  document.getElementById('vcFab').onclick=openModal;
+  document.getElementById('vcCancel').onclick=closeModal;
+  document.getElementById('vcBack').onclick=function(){ prev.classList.remove('on'); step1.style.display='flex'; h.textContent='Speak a task'; sub.textContent='Tap the mic and talk — or type below'; };
+  document.getElementById('vcContinue').onclick=function(){ stopRec(); parse(); };
+  document.getElementById('vcAdd').onclick=addCard;
+  document.getElementById('vcDoit').onclick=function(){ setMode('do-it'); };
+  document.getElementById('vcTrack').onclick=function(){ setMode('track-it'); };
+  mic.onclick=function(){ if(listening) stopRec(); else startRec(); };
+  ov.onclick=function(e){ if(e.target===ov) closeModal(); };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&ov.classList.contains('on')) closeModal(); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
