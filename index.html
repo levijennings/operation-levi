@@ -8330,5 +8330,167 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 })();
 </script>
 
+<!-- ═══ Operation Levi 2.0 — Phase 3: Execution loop (self-contained, additive) ═══ -->
+<style>
+.vr-fab{position:fixed;right:24px;bottom:136px;z-index:9000;background:#5a9be0;color:#04162b;border:none;border-radius:26px;padding:11px 17px;font-weight:700;font-size:13.5px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;font-family:inherit}
+.vr-fab:hover{filter:brightness(1.06)}
+.vr-ov{position:fixed;inset:0;z-index:9003;background:rgba(7,8,10,.82);display:none;overflow-y:auto;padding:5vh 16px 40px}
+.vr-ov.on{display:block}
+.vr-panel{width:760px;max-width:96vw;margin:0 auto;background:#121317;border:1px solid #2a2e38;border-radius:18px;color:#e9ecf2;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+.vr-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #23262d}
+.vr-head h2{font-size:19px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+.vr-head .star{color:#5a9be0}
+.vr-x{background:#1d2129;border:1px solid #30353d;color:#e9ecf2;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:13px;font-family:inherit}
+.vr-body{padding:18px 24px 26px;min-height:200px}
+.vr-item{background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:13px 15px;margin-bottom:9px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.vr-item:hover{background:#202329}
+.vr-item .nm{font-weight:600;font-size:13.5px}
+.vr-item .sm{color:#8a91a0;font-size:11.5px;margin-top:2px}
+.vr-bdg{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:auto;border:1px solid #30353d;color:#aab2c0;white-space:nowrap}
+.vr-bdg.ready{color:#f2a33c;border-color:#4a3514;background:#2c2009}
+.vr-bdg.appr{color:#46b98a;border-color:#1c4434;background:#0f2a20}
+.vr-empty{color:#727a88;text-align:center;padding:36px;border:1px dashed #30353d;border-radius:12px}
+.vr-field{margin-bottom:12px}
+.vr-field label{display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.vr-field select{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:inherit}
+.vr-chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.vr-chip{font-size:11px;padding:4px 9px;border-radius:8px;background:#1d2129;border:1px solid #30353d;color:#aab2c0}
+.vr-chip.miss{color:#727a88;border-style:dashed}
+.vr-draft{background:#0e0f13;border:1px solid #30353d;border-radius:10px;padding:14px 16px;font-size:13.5px;line-height:1.6;color:#d7dbe3;white-space:pre-wrap;max-height:340px;overflow:auto;margin-top:6px}
+.vr-row{display:flex;gap:10px;margin-top:14px;align-items:center}
+.vr-btn{border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:11px 16px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:inherit}
+.vr-btn:hover{background:#23262d}
+.vr-btn.go{background:#5a9be0;color:#04162b;border:none}
+.vr-btn.appr{background:#46b98a;color:#04231a;border:none}
+.vr-note{color:#8a91a0;font-size:12px;margin-left:auto}
+.vr-msg{background:#1a1408;border:1px solid #4a3514;color:#f2c98a;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;margin-top:8px}
+.vr-msg a{color:#f2a33c}
+.vr-hint{color:#727a88;font-size:12px;margin-bottom:12px}
+</style>
+<script>
+(function(){
+  if(window.__vrun) return; window.__vrun=true;
+  var RUN_KEY='operation-levi'; // must match Vercel RUN_SHARED_SECRET if you set that env var (optional)
+  function L(){ try{ return (typeof libraries!=='undefined'&&libraries)?libraries:{skills:[],templates:[],preferences:[],context:[]}; }catch(e){ return {skills:[],templates:[],preferences:[],context:[]}; } }
+  function ITEMS(){ try{ return (typeof items!=='undefined'&&items)?items:[]; }catch(e){ return []; } }
+  function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
+  function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
+  function esc(s){ return String(s==null?'':s); }
+
+  function matchSkill(card){
+    var sk=(L().skills||[]); if(!sk.length) return null;
+    var t=((card.title||'')+' '+(card.notes||'')).toLowerCase();
+    var best=null,bs=-1;
+    sk.forEach(function(s){ var score=0; if(s.category&&card.category&&(s.category===card.category||s.category==='All')) score+=2; (String(s.tags||'').toLowerCase().split(/[,\s]+/).filter(Boolean)).forEach(function(tag){ if(t.indexOf(tag)>=0) score+=2; }); if(s.name&&t.indexOf(String(s.name).toLowerCase())>=0) score+=1; if(score>bs){bs=score;best=s;} });
+    return best||sk[0];
+  }
+  function findByName(arr,name){ if(!name) return null; for(var i=0;i<arr.length;i++){ if(arr[i].name===name) return arr[i]; } return null; }
+  function deriveContext(card,skill){
+    var ctx=(L().context||[]);
+    if(skill&&skill.defaultContext){ var c=findByName(ctx,skill.defaultContext); if(c) return c; }
+    var t=(card.title||'').toLowerCase();
+    for(var i=0;i<ctx.length;i++){ if(ctx[i].name&&t.indexOf(String(ctx[i].name).toLowerCase())>=0) return ctx[i]; }
+    return null;
+  }
+  function derivePrefs(ctx){
+    return (L().preferences||[]).filter(function(p){ return (!p.scope||p.scope==='global'||p.scope==='category') || (ctx&&p.appliesTo&&p.appliesTo===ctx.name); });
+  }
+
+  function boot(){
+  document.body.insertAdjacentHTML('beforeend',
+    '<button class="vr-fab" id="vrFab"><span>✦</span> Run with Claude</button>'+
+    '<div class="vr-ov" id="vrOv"><div class="vr-panel">'+
+      '<div class="vr-head"><h2><span class="star">✦</span> Run with Claude</h2><button class="vr-x" id="vrClose">✕ Close</button></div>'+
+      '<div class="vr-body" id="vrBody"></div>'+
+    '</div></div>');
+  var ov=document.getElementById('vrOv'), bodyEl=document.getElementById('vrBody');
+  function open(){ ov.classList.add('on'); list(); }
+  function close(){ ov.classList.remove('on'); }
+
+  function list(){
+    bodyEl.innerHTML='';
+    var hint=document.createElement('div'); hint.className='vr-hint'; hint.textContent='Do-it cards Claude can draft for you. Pick one, confirm the skill, and run. Drafts land in Needs review — nothing sends.'; bodyEl.appendChild(hint);
+    var doit=ITEMS().filter(function(i){ return i.execMode==='do-it'; });
+    if(!doit.length){ var e=document.createElement('div'); e.className='vr-empty'; e.textContent='No do-it cards yet. Speak or create a task and mark it “do-it”.'; bodyEl.appendChild(e); return; }
+    doit.forEach(function(card){
+      var it=document.createElement('div'); it.className='vr-item';
+      var mid=document.createElement('div'); mid.style.flex='1'; mid.style.minWidth='0';
+      var nm=document.createElement('div'); nm.className='nm'; nm.textContent=card.title||'Untitled'; mid.appendChild(nm);
+      var sm=document.createElement('div'); sm.className='sm'; sm.textContent=(card.category||'')+(card.dueDate?(' · due '+card.dueDate):''); mid.appendChild(sm);
+      it.appendChild(mid);
+      if(card.aiStatus==='approved'){ var ba=document.createElement('div'); ba.className='vr-bdg appr'; ba.textContent='approved'; it.appendChild(ba); }
+      else if(card.aiArtifact){ var br=document.createElement('div'); br.className='vr-bdg ready'; br.textContent='draft ready'; it.appendChild(br); }
+      it.onclick=function(){ detail(card); };
+      bodyEl.appendChild(it);
+    });
+  }
+
+  function detail(card){
+    bodyEl.innerHTML='';
+    var back=document.createElement('button'); back.className='vr-btn'; back.textContent='← Back'; back.style.marginBottom='14px'; back.onclick=list; bodyEl.appendChild(back);
+    var h=document.createElement('div'); h.style.cssText='font-weight:700;font-size:16px;margin-bottom:12px'; h.textContent=card.title||'Untitled'; bodyEl.appendChild(h);
+    // skill chooser
+    var sk=(L().skills||[]); var matched=matchSkill(card);
+    var fl=document.createElement('div'); fl.className='vr-field'; var lab=document.createElement('label'); lab.textContent='Skill to run'; fl.appendChild(lab);
+    var sel=document.createElement('select'); var none=document.createElement('option'); none.value=''; none.textContent= sk.length?'— pick a skill —':'(no skills in your library yet)'; sel.appendChild(none);
+    sk.forEach(function(s){ var o=document.createElement('option'); o.value=s.name; o.textContent=s.name; sel.appendChild(o); });
+    if(matched) sel.value=matched.name; fl.appendChild(sel); bodyEl.appendChild(fl);
+    var chips=document.createElement('div'); chips.className='vr-chips'; bodyEl.appendChild(chips);
+    function refreshChips(){ chips.innerHTML=''; var skill=findByName(sk,sel.value); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx);
+      function chip(txt,miss){ var c=document.createElement('span'); c.className='vr-chip'+(miss?' miss':''); c.textContent=txt; chips.appendChild(c); }
+      chip(skill?('◆ '+skill.name):'◆ no skill', !skill);
+      chip(tmpl?('▭ '+tmpl.name):'▭ no template', !tmpl);
+      chip(ctx?('❖ '+ctx.name):'❖ no brand/context', !ctx);
+      chip('◷ '+prefs.length+' preference'+(prefs.length===1?'':'s'), false);
+    }
+    sel.onchange=refreshChips; refreshChips();
+    var row=document.createElement('div'); row.className='vr-row';
+    var go=document.createElement('button'); go.className='vr-btn go'; go.textContent='Run with Claude';
+    var note=document.createElement('span'); note.className='vr-note'; note.textContent='drafts only · nothing sends';
+    row.appendChild(go); row.appendChild(note); bodyEl.appendChild(row);
+    var out=document.createElement('div'); bodyEl.appendChild(out);
+
+    if(card.aiArtifact&&card.aiArtifact.content){ showDraft(out,card,card.aiArtifact.content); }
+
+    go.onclick=function(){
+      var skill=findByName(sk,sel.value); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx);
+      go.textContent='Drafting…'; go.disabled=true; out.innerHTML='';
+      fetch('/api/run',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({card:card,skill:skill,template:tmpl,context:ctx,preferences:prefs})})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+        .then(function(res){
+          go.textContent='Run with Claude'; go.disabled=false;
+          if(res.ok&&res.j&&res.j.draft){
+            card.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()};
+            card.aiStatus='ready'; card.status='review'; card.columnEnteredAt=Date.now(); persist();
+            try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+            toast('✦ Draft ready — in Needs review'); showDraft(out,card,res.j.draft);
+          } else if(res.status===503&&res.j&&res.j.error==='no_key'){
+            out.innerHTML='<div class="vr-msg"><b>Almost there — add your Anthropic API key.</b><br>In Vercel → project <b>operation-levi</b> → Settings → Environment Variables, add <b>ANTHROPIC_API_KEY</b> (from <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>) for Production &amp; Preview, then redeploy. This button starts working immediately after.</div>';
+          } else { var d=(res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status); out.innerHTML='<div class="vr-msg">Couldn’t draft: '+esc(d)+'</div>'; }
+        }).catch(function(e){ go.textContent='Run with Claude'; go.disabled=false; out.innerHTML='<div class="vr-msg">Network error: '+esc(e&&e.message||e)+'</div>'; });
+    };
+  }
+
+  function showDraft(out,card,text){
+    out.innerHTML='';
+    var d=document.createElement('div'); d.className='vr-draft'; d.textContent=text; out.appendChild(d);
+    var row=document.createElement('div'); row.className='vr-row';
+    var appr=document.createElement('button'); appr.className='vr-btn appr'; appr.textContent=(card.aiStatus==='approved')?'Approved ✓':'Approve';
+    appr.onclick=function(){ card.aiStatus='approved'; if(card.aiArtifact) card.aiArtifact.approvedAt=Date.now(); persist(); appr.textContent='Approved ✓'; toast('Approved — ready to send manually'); };
+    var copy=document.createElement('button'); copy.className='vr-btn'; copy.textContent='Copy'; copy.onclick=function(){ try{ navigator.clipboard.writeText(text); toast('Copied'); }catch(e){} };
+    var re=document.createElement('button'); re.className='vr-btn'; re.textContent='Re-run'; re.onclick=function(){ detail(card); };
+    var note=document.createElement('span'); note.className='vr-note'; note.textContent='nothing is sent automatically';
+    row.appendChild(appr); row.appendChild(copy); row.appendChild(re); row.appendChild(note); out.appendChild(row);
+  }
+
+  document.getElementById('vrFab').onclick=open;
+  document.getElementById('vrClose').onclick=close;
+  ov.onclick=function(e){ if(e.target===ov) close(); };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&ov.classList.contains('on')) close(); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
