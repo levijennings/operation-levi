@@ -8093,5 +8093,242 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 })();
 </script>
 
+<!-- ═══ Operation Levi 2.0 — Phase 2: Libraries UI (rich, self-contained, additive) ═══ -->
+<style>
+.vl-fab{position:fixed;right:24px;bottom:80px;z-index:9000;background:#1b1d23;color:#e9ecf2;border:1px solid #30353d;border-radius:26px;padding:11px 17px;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px;font-family:inherit}
+.vl-fab:hover{background:#23262d}
+.vl-fab .d{width:9px;height:9px;border-radius:3px;background:#f2a33c}
+.vl-ov{position:fixed;inset:0;z-index:9002;background:rgba(7,8,10,.82);display:none;overflow-y:auto;padding:5vh 16px 40px}
+.vl-ov.on{display:block}
+.vl-panel{width:900px;max-width:96vw;margin:0 auto;background:#121317;border:1px solid #2a2e38;border-radius:18px;color:#e9ecf2;font-family:inherit;box-shadow:0 30px 80px rgba(0,0,0,.5);overflow:hidden}
+.vl-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #23262d}
+.vl-head h2{font-size:19px;font-weight:700;margin:0;display:flex;align-items:center;gap:10px}
+.vl-head .star{color:#f2a33c}
+.vl-x{background:#1d2129;border:1px solid #30353d;color:#e9ecf2;border-radius:9px;padding:7px 12px;cursor:pointer;font-size:13px;font-family:inherit}
+.vl-x:hover{background:#23262d}
+.vl-tabs{display:flex;gap:8px;padding:16px 24px 0;flex-wrap:wrap}
+.vl-tab{padding:8px 15px;border-radius:9px;border:1px solid #262a31;background:#15161b;color:#aab2c0;cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px;font-family:inherit}
+.vl-tab.on{background:#1d2129;color:#e9ecf2;border-color:#30353d}
+.vl-tab .dot{width:8px;height:8px;border-radius:3px}
+.vl-body{padding:18px 24px 26px;min-height:240px}
+.vl-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px}
+.vl-bar .desc{color:#8a91a0;font-size:12.5px}
+.vl-search{background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:8px 11px;color:#e9ecf2;font-size:13px;font-family:inherit;width:160px}
+.vl-add{background:#f2a33c;color:#1c1304;border:none;border-radius:9px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit}
+.vl-add.ghost{background:#1d2129;color:#e9ecf2;border:1px solid #30353d}
+.vl-item{background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.vl-item .ic{width:30px;height:30px;border-radius:8px;background:#0e0f13;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.vl-item .nm{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vl-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:#0e0f13;border:1px solid #30353d;color:#aab2c0}
+.vl-item .sm{color:#8a91a0;font-size:12.5px;margin-top:4px;line-height:1.45}
+.vl-item .act{margin-left:auto;display:flex;gap:6px}
+.vl-mini{background:#1d2129;border:1px solid #30353d;color:#aab2c0;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.vl-mini:hover{background:#23262d;color:#e9ecf2}
+.vl-empty{color:#727a88;text-align:center;padding:36px;border:1px dashed #30353d;border-radius:12px}
+.vl-sec{font-size:11px;color:#727a88;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px;border-top:1px solid #23262d;padding-top:14px}
+.vl-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vl-field{margin-bottom:12px}
+.vl-field label{display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.vl-field input,.vl-field select,.vl-field textarea{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:inherit}
+.vl-field textarea{min-height:84px;resize:vertical;line-height:1.5}
+.vl-swatches{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.vl-sw{width:22px;height:22px;border-radius:6px;border:1px solid #30353d}
+.vl-formrow{display:flex;gap:10px;margin-top:8px}
+.vl-hint{color:#727a88;font-size:11px;margin-top:4px}
+</style>
+<script>
+(function(){
+  if(window.__vlib) return; window.__vlib=true;
+  var CLAUDE_SKILLS=['—','algorithmic-art','brand-guidelines','canvas-design','claude-api','doc-coauthoring','docx','frontend-design','internal-comms','mcp-builder','pdf','pptx','skill-creator','slack-gif-creator','theme-factory','web-artifacts-builder','webapp-testing','xlsx','Custom / other'];
+  var CLAUDE_SKILLS_LIVE=null;
+  function fetchClaudeSkills(cb){
+    if(CLAUDE_SKILLS_LIVE){ cb(CLAUDE_SKILLS_LIVE); return; }
+    try{ fetch('https://api.github.com/repos/anthropics/skills/contents/skills').then(function(r){return r.ok?r.json():null;}).then(function(j){ if(j&&j.length){ CLAUDE_SKILLS_LIVE=['—'].concat(j.filter(function(x){return x.type==='dir';}).map(function(x){return x.name;})).concat(['Custom / other']); cb(CLAUDE_SKILLS_LIVE); } }).catch(function(){}); }catch(e){}
+  }
+  function skillUrl(name){ if(!name||name==='Custom / other') return ''; return 'https://github.com/anthropics/skills/tree/main/skills/'+name; }
+  var CATS=['All','ACST','DVLMNT','Personal'];
+  // field types: text, area, select(opts), cats, claude, tmpl(dynamic), tags, color, refs
+  var TYPES={
+    skills:{label:'Skills',dot:'#5a9be0',icon:'◆',desc:'Reusable procedures — how Claude does a task.',
+      badge:function(e){return e.category&&e.category!=='All'?e.category:'';}, title:function(e){return e.name||'Untitled';}, sub:function(e){return e.whenToUse||e.description||'';},
+      fields:[
+        {sec:'Basics'},
+        {k:'name',l:'Name',t:'text'},{k:'description',l:'One-line description',t:'text'},
+        {k:'category',l:'Category',t:'cats'},{k:'tags',l:'Tags (comma-separated)',t:'text'},
+        {sec:'Matching'},
+        {k:'whenToUse',l:'When should Claude use this?',t:'area'},
+        {sec:'How it works'},
+        {k:'basedOn',l:'Built on Claude skill',t:'claude'},{k:'linkedTemplate',l:'Use template',t:'tmpl'},
+        {k:'source',l:'Source link (anthropics/skills, marketplace, GitHub…)',t:'text'},
+        {k:'defaultContext',l:'Default brand / context',t:'ctx',ctxTypes:['client','brand','project']},
+        {k:'body',l:'Instructions — how Claude should do it',t:'area'},
+        {k:'outputFormat',l:'Output format (doc, email, slides…)',t:'text'},
+        {k:'example',l:'Example output',t:'area'},
+        {k:'references',l:'Reference docs / research (one per line)',t:'area'}
+      ]},
+    templates:{label:'Templates',dot:'#f2a33c',icon:'▭',desc:'Output scaffolds — what the deliverable looks like.',
+      badge:function(e){return e.format||'';}, title:function(e){return e.name||'Untitled';}, sub:function(e){return e.whenToUse||e.description||'';},
+      fields:[
+        {sec:'Basics'},
+        {k:'name',l:'Name',t:'text'},{k:'description',l:'One-line description',t:'text'},
+        {k:'category',l:'Category',t:'cats'},{k:'format',l:'Format (doc, email, slide…)',t:'text'},
+        {k:'tags',l:'Tags (comma-separated)',t:'text'},
+        {sec:'Matching'},{k:'whenToUse',l:'When should Claude use this?',t:'area'},
+        {sec:'Content'},{k:'body',l:'Template structure',t:'area'},{k:'example',l:'Example filled output',t:'area'}
+      ]},
+    preferences:{label:'Preferences',dot:'#46b98a',icon:'◷',desc:'How you like things done.',
+      badge:function(e){return e.scope&&e.scope!=='global'?e.scope:'';}, title:function(e){return e.key||'Untitled';}, sub:function(e){return e.value||'';},
+      fields:[
+        {k:'key',l:'Preference',t:'text'},{k:'category',l:'Category',t:'cats'},
+        {k:'scope',l:'Scope',t:'select',opts:['global','category','person','client']},
+        {k:'appliesTo',l:'Applies to (brand / person)',t:'ctx'},
+        {k:'value',l:'Value',t:'area'},{k:'examples',l:'Do / don’t examples',t:'area'}
+      ]},
+    context:{label:'Context',dot:'#b07ad6',icon:'❖',desc:'What we know — clients, brand, projects, people, decisions.',
+      badge:function(e){return e.type||'';}, title:function(e){return e.name||'Untitled';}, sub:function(e){return e.summary||e.role||'';},
+      typed:true,
+      fields:[
+        {k:'name',l:'Name',t:'text'},
+        {k:'type',l:'Type',t:'select',opts:['client','brand','project','person','decision','glossary'],ctl:true},
+        {k:'summary',l:'Summary',t:'text'},
+        {sec:'Contact',for:['client','brand','person']},
+        {k:'primaryContact',l:'Primary contact',t:'text',for:['client','brand','person']},
+        {k:'email',l:'Email',t:'text',for:['client','brand','person']},
+        {k:'role',l:'Role',t:'text',for:['person']},
+        {sec:'Relationship',for:['client']},
+        {k:'caresAbout',l:'What they care about',t:'area',for:['client']},
+        {k:'currentProjects',l:'Current projects',t:'area',for:['client','project']},
+        {k:'commercialTerms',l:'Commercial terms',t:'area',for:['client']},
+        {k:'sensitivities',l:'Sensitivities / watch-outs',t:'area',for:['client','person']},
+        {sec:'Brand & assets',for:['client','brand']},
+        {k:'brandVoice',l:'Brand / voice notes',t:'area',for:['client','brand']},
+        {k:'fonts',l:'Fonts',t:'text',for:['client','brand']},
+        {k:'colors',l:'Brand colors (hex, comma-separated)',t:'color',for:['client','brand']},
+        {k:'guidelines',l:'Guidelines',t:'area',for:['client','brand']},
+        {sec:'Project',for:['project']},
+        {k:'status',l:'Status',t:'text',for:['project']},
+        {k:'milestones',l:'Milestones',t:'area',for:['project']},
+        {sec:'References'},
+        {k:'references',l:'Reference documents & research (one per line)',t:'area'},
+        {k:'links',l:'Links (one per line)',t:'area'},
+        {k:'details',l:'Other details',t:'area'}
+      ]}
+  };
+  var STARTERS={
+    skills:[{name:'Draft client proposal',category:'DVLMNT',description:'Turn a scope into a first-draft proposal.',whenToUse:'When a card asks to write or draft a proposal/quote for a client.',basedOn:'Word document (docx)',body:'Confirm scope from the card. Pull the client from Context. Use the proposal template. Apply tone preferences. Include approach, timeline, pricing options, terms, next step. Output a draft — never send.',outputFormat:'doc',tags:'proposal, sales'}],
+    templates:[{name:'Proposal / SOW',category:'DVLMNT',format:'doc',description:'Standard proposal layout.',body:'Summary → understanding of goal → approach → scope & deliverables → timeline → investment (options) → terms → next step.'}],
+    preferences:[{key:'Tone & voice',category:'All',scope:'global',value:'Direct, warm, concrete. No filler.'},{key:'Sending rule',category:'All',scope:'global',value:'Never auto-send externally — always hold for review.'}],
+    context:[{name:'Example Client',type:'client',summary:'Replace with a real client.',primaryContact:'',caresAbout:'',brandVoice:'',colors:'#0F2138, #F2A33C'}]
+  };
+  function uid(){ return 'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function LIB(){ try{ if(typeof libraries==='undefined'||!libraries) return null; libraries.skills=libraries.skills||[]; libraries.templates=libraries.templates||[]; libraries.preferences=libraries.preferences||[]; libraries.context=libraries.context||[]; return libraries; }catch(e){ return null; } }
+  function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
+  function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
+
+  function boot(){
+  document.body.insertAdjacentHTML('beforeend',
+    '<button class="vl-fab" id="vlFab"><span class="d"></span> Libraries</button>'+
+    '<div class="vl-ov" id="vlOv"><div class="vl-panel">'+
+      '<div class="vl-head"><h2><span class="star">✦</span> Libraries</h2><button class="vl-x" id="vlClose">✕ Close</button></div>'+
+      '<div class="vl-tabs" id="vlTabs"></div>'+
+      '<div class="vl-body" id="vlBody"></div>'+
+    '</div></div>');
+  var ov=document.getElementById('vlOv'), tabsEl=document.getElementById('vlTabs'), bodyEl=document.getElementById('vlBody');
+  var cur='skills', query='';
+  Object.keys(TYPES).forEach(function(k){
+    var t=document.createElement('div'); t.className='vl-tab'+(k===cur?' on':''); t.dataset.k=k;
+    t.innerHTML='<span class="dot" style="background:'+TYPES[k].dot+'"></span>'+TYPES[k].label;
+    t.onclick=function(){ cur=k; query=''; Array.prototype.forEach.call(tabsEl.children,function(c){c.classList.toggle('on',c.dataset.k===k);}); renderList(); };
+    tabsEl.appendChild(t);
+  });
+  function open(){ if(!LIB()){ toast('Libraries load after you sign in'); return; } ov.classList.add('on'); renderList(); }
+  function close(){ ov.classList.remove('on'); }
+
+  function matches(entry,cfg){ if(!query) return true; var q=query.toLowerCase(); return JSON.stringify(entry).toLowerCase().indexOf(q)>=0; }
+
+  function renderList(){
+    var lib=LIB()||{}; var arr=(lib[cur]||[]); var cfg=TYPES[cur];
+    bodyEl.innerHTML='';
+    var bar=document.createElement('div'); bar.className='vl-bar';
+    var left=document.createElement('div'); left.className='desc'; left.textContent=cfg.desc; bar.appendChild(left);
+    var right=document.createElement('div'); right.style.display='flex'; right.style.gap='8px';
+    var search=document.createElement('input'); search.className='vl-search'; search.placeholder='Search…'; search.value=query; search.oninput=function(){ query=search.value; renderRows(); }; right.appendChild(search);
+    if(arr.length===0){ var seed=document.createElement('button'); seed.className='vl-add ghost'; seed.textContent='+ Starter examples'; seed.onclick=function(){ (STARTERS[cur]||[]).forEach(function(s){ var o={id:uid()}; for(var kk in s) o[kk]=s[kk]; arr.push(o); }); lib[cur]=arr; persist(); toast('Added starter examples'); renderList(); }; right.appendChild(seed); }
+    var add=document.createElement('button'); add.className='vl-add'; add.textContent='+ New '+cfg.label.replace(/s$/,'').toLowerCase(); add.onclick=function(){ renderForm(null); }; right.appendChild(add);
+    bar.appendChild(right); bodyEl.appendChild(bar);
+    if(cur==='skills'){ var src=document.createElement('div'); src.style.cssText='font-size:11.5px;color:#727a88;margin:-4px 0 14px;line-height:1.6'; src.innerHTML='Browse &amp; add existing Claude skills: '+['<a href="https://github.com/anthropics/skills" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">anthropics/skills</a>','<a href="https://skillsmp.com" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">skillsmp.com</a>','<a href="https://claudemarketplaces.com" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">claudemarketplaces.com</a>','<a href="https://lobehub.com/skills" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">lobehub</a>','<a href="https://agentskills.io" target="_blank" rel="noopener" style="color:#5a9be0;text-decoration:none">agentskills.io</a>'].join(' &middot; ')+' — paste the link into a skill’s <b>Source</b> field.'; bodyEl.appendChild(src); }
+    var rows=document.createElement('div'); rows.id='vlRows'; bodyEl.appendChild(rows);
+    renderRows();
+    function renderRows(){
+      rows.innerHTML='';
+      var shown=arr.filter(function(e){return matches(e,cfg);});
+      if(shown.length===0){ var e=document.createElement('div'); e.className='vl-empty'; e.textContent=arr.length?'No matches.':('No '+cfg.label.toLowerCase()+' yet. Add one, or load starter examples.'); rows.appendChild(e); return; }
+      shown.forEach(function(entry){
+        var it=document.createElement('div'); it.className='vl-item';
+        var ic=document.createElement('div'); ic.className='ic'; ic.textContent=cfg.icon; ic.style.color=cfg.dot; it.appendChild(ic);
+        var mid=document.createElement('div'); mid.style.minWidth='0'; mid.style.flex='1';
+        var nm=document.createElement('div'); nm.className='nm'; var ttl=document.createElement('span'); ttl.textContent=cfg.title(entry); nm.appendChild(ttl);
+        var bg=cfg.badge(entry); if(bg){ var b=document.createElement('span'); b.className='vl-badge'; b.textContent=bg; nm.appendChild(b); }
+        mid.appendChild(nm);
+        var sm=document.createElement('div'); sm.className='sm'; sm.textContent=cfg.sub(entry); mid.appendChild(sm);
+        it.appendChild(mid);
+        var act=document.createElement('div'); act.className='act';
+        var ed=document.createElement('button'); ed.className='vl-mini'; ed.textContent='Edit'; ed.onclick=function(){ renderForm(entry); }; act.appendChild(ed);
+        var del=document.createElement('button'); del.className='vl-mini'; del.textContent='Delete'; del.onclick=function(){ var i=arr.indexOf(entry); if(i>=0){ arr.splice(i,1); lib[cur]=arr; persist(); toast('Deleted'); renderList(); } }; act.appendChild(del);
+        it.appendChild(act); rows.appendChild(it);
+      });
+    }
+  }
+
+  function renderForm(entry){
+    var cfg=TYPES[cur]; var editing=!!entry; var model=entry||{};
+    bodyEl.innerHTML=''; var inputs={}; var wraps=[];
+    cfg.fields.forEach(function(f){
+      if(f.sec!==undefined){ var s=document.createElement('div'); s.className='vl-sec'; s.textContent=f.sec; if(f.for) s.dataset.for=f.for.join(','); bodyEl.appendChild(s); wraps.push({el:s,for:f.for}); return; }
+      var wrap=document.createElement('div'); wrap.className='vl-field'; if(f.for) wrap.dataset.for=f.for.join(',');
+      var lab=document.createElement('label'); lab.textContent=f.l; wrap.appendChild(lab);
+      var inp;
+      if(f.t==='area'){ inp=document.createElement('textarea'); }
+      else if(f.t==='select'){ inp=document.createElement('select'); f.opts.forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
+      else if(f.t==='cats'){ inp=document.createElement('select'); CATS.forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
+      else if(f.t==='claude'){ inp=document.createElement('select'); var fillCS=function(list){ var sel=inp.value||(model[f.k]||''); inp.innerHTML=''; list.forEach(function(o){ var op=document.createElement('option'); op.value=(o==='—'?'':o); op.textContent=o; inp.appendChild(op); }); inp.value=sel; }; fillCS(CLAUDE_SKILLS); fetchClaudeSkills(fillCS); }
+      else if(f.t==='tmpl'){ inp=document.createElement('select'); var opn=document.createElement('option'); opn.value=''; opn.textContent='—'; inp.appendChild(opn); ((LIB()||{}).templates||[]).forEach(function(t){ var op=document.createElement('option'); op.value=t.name; op.textContent=t.name; inp.appendChild(op); }); }
+      else if(f.t==='ctx'){ inp=document.createElement('select'); var on0=document.createElement('option'); on0.value=''; on0.textContent='— none —'; inp.appendChild(on0); ((LIB()||{}).context||[]).filter(function(c){ return !f.ctxTypes || f.ctxTypes.indexOf(c.type)>=0; }).forEach(function(c){ var op=document.createElement('option'); op.value=c.name; op.textContent=c.name+(c.type?(' ('+c.type+')'):''); inp.appendChild(op); }); }
+      else if(f.t==='color'){ inp=document.createElement('input'); inp.type='text'; inp.placeholder='#0F2138, #F2A33C'; }
+      else { inp=document.createElement('input'); inp.type='text'; }
+      if(model[f.k]!=null) inp.value=model[f.k];
+      inputs[f.k]=inp; wrap.appendChild(inp);
+      if(f.t==='color'){ var sw=document.createElement('div'); sw.className='vl-swatches'; wrap.appendChild(sw);
+        var pick=document.createElement('input'); pick.type='color'; pick.title='Pick a colour'; pick.style.cssText='width:26px;height:26px;padding:0;border:1px solid #30353d;border-radius:6px;background:#0e0f13;cursor:pointer;flex:0 0 auto';
+        var paint=function(){ Array.prototype.slice.call(sw.querySelectorAll('.vl-sw')).forEach(function(n){n.remove();}); (inp.value.match(/#?[0-9a-fA-F]{3,8}/g)||[]).forEach(function(c){ var d=document.createElement('div'); d.className='vl-sw'; d.style.background=(c[0]==='#'?c:'#'+c); sw.insertBefore(d,pick); }); };
+        pick.onchange=function(){ inp.value=(inp.value.trim()? inp.value.trim().replace(/,?\s*$/,'')+', ':'')+pick.value; paint(); };
+        sw.appendChild(pick); inp.oninput=paint; paint(); }
+      if(f.t==='claude'){ var chHint=document.createElement('div'); chHint.className='vl-hint'; chHint.textContent='Live from anthropics/skills — also fills the Source link.'; wrap.appendChild(chHint); }
+      if(f.ctl){ inp.onchange=function(){ updateVis(inp.value); }; }
+      bodyEl.appendChild(wrap); wraps.push({el:wrap,for:f.for});
+    });
+    function updateVis(type){ wraps.forEach(function(w){ if(w.for){ w.el.style.display=(w.for.indexOf(type)>=0)?'':'none'; } }); }
+    if(cfg.typed){ updateVis(model.type||(inputs.type?inputs.type.value:'client')); }
+    var row=document.createElement('div'); row.className='vl-formrow';
+    var cancel=document.createElement('button'); cancel.className='vl-add ghost'; cancel.textContent='Cancel'; cancel.onclick=renderList;
+    var save=document.createElement('button'); save.className='vl-add'; save.textContent=editing?'Save changes':'Add';
+    save.onclick=function(){
+      var lib=LIB()||{}; var arr=lib[cur]||[]; var obj=editing?entry:{id:uid()};
+      cfg.fields.forEach(function(f){ if(f.k && inputs[f.k]) obj[f.k]=inputs[f.k].value; });
+      if(cur==='skills' && obj.basedOn && (!obj.source||!obj.source.trim())) obj.source=skillUrl(obj.basedOn);
+      if(!editing) arr.push(obj); lib[cur]=arr; persist(); toast(editing?'Saved':'Added'); renderList();
+    };
+    row.appendChild(cancel); row.appendChild(save); bodyEl.appendChild(row);
+    var first=cfg.fields.find(function(f){return f.k;}); if(first&&inputs[first.k]) inputs[first.k].focus();
+  }
+  document.getElementById('vlFab').onclick=open;
+  document.getElementById('vlClose').onclick=close;
+  ov.onclick=function(e){ if(e.target===ov) close(); };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&ov.classList.contains('on')) close(); });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
