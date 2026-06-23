@@ -8160,6 +8160,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         {sec:'How it works'},
         {k:'basedOn',l:'Built on Claude skill',t:'claude'},{k:'linkedTemplate',l:'Use template',t:'tmpl'},
         {k:'source',l:'Source link (anthropics/skills, marketplace, GitHub…)',t:'text'},
+        {k:'defaultContext',l:'Default brand / context',t:'ctx',ctxTypes:['client','brand','project']},
         {k:'body',l:'Instructions — how Claude should do it',t:'area'},
         {k:'outputFormat',l:'Output format (doc, email, slides…)',t:'text'},
         {k:'example',l:'Example output',t:'area'},
@@ -8180,7 +8181,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       fields:[
         {k:'key',l:'Preference',t:'text'},{k:'category',l:'Category',t:'cats'},
         {k:'scope',l:'Scope',t:'select',opts:['global','category','person','client']},
-        {k:'appliesTo',l:'Applies to (person / client — optional)',t:'text'},
+        {k:'appliesTo',l:'Applies to (brand / person)',t:'ctx'},
         {k:'value',l:'Value',t:'area'},{k:'examples',l:'Do / don’t examples',t:'area'}
       ]},
     context:{label:'Context',dot:'#b07ad6',icon:'❖',desc:'What we know — clients, brand, projects, people, decisions.',
@@ -8292,6 +8293,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       else if(f.t==='cats'){ inp=document.createElement('select'); CATS.forEach(function(o){ var op=document.createElement('option'); op.value=o; op.textContent=o; inp.appendChild(op); }); }
       else if(f.t==='claude'){ inp=document.createElement('select'); var fillCS=function(list){ var sel=inp.value||(model[f.k]||''); inp.innerHTML=''; list.forEach(function(o){ var op=document.createElement('option'); op.value=(o==='—'?'':o); op.textContent=o; inp.appendChild(op); }); inp.value=sel; }; fillCS(CLAUDE_SKILLS); fetchClaudeSkills(fillCS); }
       else if(f.t==='tmpl'){ inp=document.createElement('select'); var opn=document.createElement('option'); opn.value=''; opn.textContent='—'; inp.appendChild(opn); ((LIB()||{}).templates||[]).forEach(function(t){ var op=document.createElement('option'); op.value=t.name; op.textContent=t.name; inp.appendChild(op); }); }
+      else if(f.t==='ctx'){ inp=document.createElement('select'); var on0=document.createElement('option'); on0.value=''; on0.textContent='— none —'; inp.appendChild(on0); ((LIB()||{}).context||[]).filter(function(c){ return !f.ctxTypes || f.ctxTypes.indexOf(c.type)>=0; }).forEach(function(c){ var op=document.createElement('option'); op.value=c.name; op.textContent=c.name+(c.type?(' ('+c.type+')'):''); inp.appendChild(op); }); }
       else if(f.t==='color'){ inp=document.createElement('input'); inp.type='text'; inp.placeholder='#0F2138, #F2A33C'; }
       else { inp=document.createElement('input'); inp.type='text'; }
       if(model[f.k]!=null) inp.value=model[f.k];
