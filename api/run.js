@@ -30,6 +30,20 @@ module.exports = async (req, res) => {
     + "If a CURRENT DRAFT and a REVISION are provided, revise that draft to satisfy the revision while preserving everything else, and output the full revised draft only. "
     + "If something essential is missing, make a reasonable assumption and note it briefly at the end under 'Assumptions'.";
 
+  // Pull the chosen skill's REAL instructions if a catalog source is linked and the stored body is thin.
+  if (skill && skill.source && (!skill.body || String(skill.body).trim().length < 40)) {
+    var rawUrl = toRawSkillUrl(skill.source);
+    if (rawUrl) {
+      try {
+        var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var to = ctl ? setTimeout(function () { ctl.abort(); }, 6000) : null;
+        var sr = await fetch(rawUrl, ctl ? { signal: ctl.signal } : {});
+        if (to) clearTimeout(to);
+        if (sr.ok) { var md = await sr.text(); if (md && md.trim()) { skill.body = (skill.body ? skill.body + '\n\n' : '') + md.slice(0, 8000); skill.fetched = true; } }
+      } catch (e) {}
+    }
+  }
+
   var u = "TASK CARD\n" + JSON.stringify({ title: card.title, notes: card.notes, dueDate: card.dueDate, category: card.category, assignees: card.assignees }, null, 2) + "\n\n";
   if (skill) u += "SKILL (how to do it)\n" + (skill.name ? ('# ' + skill.name + '\n') : '') + (skill.whenToUse ? ('When to use: ' + skill.whenToUse + '\n') : '') + (skill.body || '') + (skill.outputFormat ? ('\nOutput format: ' + skill.outputFormat) : '') + (skill.example ? ('\n\nExample output:\n' + skill.example) : '') + "\n\n";
   if (template) u += "TEMPLATE (structure to follow)\n" + (template.body || '') + "\n\n";
@@ -58,3 +72,13 @@ module.exports = async (req, res) => {
     res.status(502).json({ error: 'fetch', detail: String((e && e.message) || e) });
   }
 };
+
+// Convert a catalog skill URL (e.g. github.com/anthropics/skills/tree/main/skills/<name>)
+// into the raw SKILL.md URL so we can pull the real instructions.
+function toRawSkillUrl(src) {
+  src = String(src || '');
+  var m = src.match(/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+)$/);
+  if (m) { return 'https://raw.githubusercontent.com/' + m[1] + '/' + m[2] + '/' + m[3] + '/' + m[4].replace(/\/$/, '') + '/SKILL.md'; }
+  if (/raw\.githubusercontent\.com/.test(src) && /SKILL\.md$/i.test(src)) return src;
+  return '';
+}
