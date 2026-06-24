@@ -8588,6 +8588,35 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .refine input::placeholder{color:#727a88}
 .ol2 .actions{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}
 .ol2 .revmsg{margin-top:12px;font-size:12.5px;line-height:1.55;color:#f2c98a;background:#1a1408;border:1px solid #4a3514;border-radius:10px;padding:11px 14px;display:none}
+/* voice capture */
+.ol2cap{position:fixed;inset:0;z-index:9200;background:rgba(4,4,6,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding-top:10vh;font-family:'Inter',system-ui,sans-serif}
+.ol2cap.on{display:flex}
+.ol2cap *{box-sizing:border-box}
+.ol2cap .cap{width:540px;max-width:92vw;background:#121317;border:1px solid #30353d;border-radius:18px;padding:28px 30px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5);color:#e9ecf2}
+.ol2cap .mic{width:74px;height:74px;border-radius:50%;background:#f2a33c;margin:2px auto 14px;display:flex;align-items:center;justify-content:center;color:#1c1304;position:relative;cursor:pointer}
+.ol2cap .mic svg{width:30px;height:30px}
+.ol2cap .mic.live::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid #f2a33c;opacity:.5;animation:ol2pulse 1.3s ease-out infinite}
+@keyframes ol2pulse{from{transform:scale(.9);opacity:.6}to{transform:scale(1.35);opacity:0}}
+.ol2cap h3{font-family:'Syne',sans-serif;text-align:center;font-size:18px;font-weight:700}
+.ol2cap .sub{text-align:center;color:#727a88;font-size:12.5px;margin-top:4px}
+.ol2cap .wave{display:flex;gap:4px;justify-content:center;align-items:center;height:30px;margin:14px 0 4px;visibility:hidden}
+.ol2cap .wave i{width:4px;border-radius:3px;background:#f2a33c;height:8px;animation:ol2w .9s ease-in-out infinite}
+.ol2cap .wave i:nth-child(2n){animation-delay:.15s}.ol2cap .wave i:nth-child(3n){animation-delay:.3s}.ol2cap .wave i:nth-child(4n){animation-delay:.45s}
+@keyframes ol2w{0%,100%{height:7px}50%{height:26px}}
+.ol2cap textarea{width:100%;background:#0e0f13;border:1px solid #30353d;border-radius:12px;padding:13px 15px;font-size:15px;line-height:1.5;min-height:58px;color:#e9ecf2;margin-top:4px;font-family:'Inter';resize:vertical}
+.ol2cap textarea::placeholder{color:#727a88}
+.ol2cap .cerr{color:#e07a63;font-size:12.5px;margin-top:8px;display:none}
+.ol2cap .pv{margin-top:16px;background:#0e0f13;border:1px solid #262a31;border-radius:12px;padding:16px;display:none}
+.ol2cap .pv.on{display:block}
+.ol2cap .pt{font-weight:600;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ol2cap .prow{display:flex;justify-content:space-between;font-size:12.5px;padding:6px 0;border-bottom:1px solid #262a31}
+.ol2cap .prow:last-child{border:none}.ol2cap .prow span{color:#727a88}
+.ol2cap .modes{display:flex;gap:8px;margin-top:12px}
+.ol2cap .mode{flex:1;text-align:center;padding:8px;border-radius:9px;border:1px solid #30353d;background:#1b1d23;color:#aab2c0;cursor:pointer;font-size:12.5px;font-weight:600}
+.ol2cap .mode.sel{border-color:#4a3514;background:#2c2009;color:#f2a33c}
+.ol2cap .cact{display:flex;gap:10px;margin-top:18px}
+.ol2cap .cact .gbtn{flex:1;justify-content:center;text-align:center;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:12px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter'}
+.ol2cap .cact .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
 </style>
 <script>
 (function(){
@@ -8652,7 +8681,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function close(){ shell.classList.remove('on'); }
     pill.onclick=open;
     document.getElementById('ol2Exit').onclick=close;
-    document.getElementById('ol2Spk').onclick=function(){ clickFab('vcFab'); };
+    document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       if(v==='libraries'){ clickFab('vlFab'); return; }
       if(v==='triage'){ return; }
@@ -8773,7 +8802,102 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       toast('✉ Opened in your email app — review and send there'); showBoard();
     }
 
-    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display!=='none'){ showBoard(); } } });
+    // ── Voice-first capture ──
+    var SR=window.SpeechRecognition||window.webkitSpeechRecognition, rec=null, listening=false, capMode='track-it', capDraft=null;
+    var cap=document.createElement('div'); cap.className='ol2cap'; cap.id='ol2cap';
+    cap.innerHTML=
+      '<div class="cap">'+
+        '<div class="mic" id="ol2capMic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>'+
+        '<h3 id="ol2capH">Speak a task</h3><div class="sub" id="ol2capSub">Tap the mic and talk — or type below</div>'+
+        '<div class="wave" id="ol2capWave"></div>'+
+        '<textarea id="ol2capTa" placeholder="e.g. Draft a proposal for Acme for the website redesign, due Friday"></textarea>'+
+        '<div class="cerr" id="ol2capErr"></div>'+
+        '<div class="pv" id="ol2capPv">'+
+          '<div class="pt">✦ Card preview <span style="font-size:10.5px;color:#727a88;border:1px solid #30353d;border-radius:6px;padding:2px 7px;margin-left:4px">confirm to save</span></div>'+
+          '<div class="prow"><span>Title</span><b id="ol2pvTitle"></b></div>'+
+          '<div class="prow"><span>Due</span><b id="ol2pvDue"></b></div>'+
+          '<div class="prow"><span>Owner</span><b id="ol2pvOwner"></b></div>'+
+          '<div class="prow"><span>Category</span><b id="ol2pvCat"></b></div>'+
+          '<div class="prow"><span>Context</span><b id="ol2pvCtx"></b></div>'+
+          '<div class="modes"><div class="mode" id="ol2mDo">✦ Do-it · Claude drafts</div><div class="mode" id="ol2mTrack">◷ Track-it · you do</div></div>'+
+        '</div>'+
+        '<div class="cact" id="ol2capAct1"><button class="gbtn" id="ol2capCancel">Cancel</button><button class="gbtn amber" id="ol2capCont">Continue →</button></div>'+
+        '<div class="cact" id="ol2capAct2" style="display:none"><button class="gbtn" id="ol2capBack">← Edit</button><button class="gbtn amber" id="ol2capConfirm">Confirm — let Claude draft it</button></div>'+
+      '</div>';
+    document.body.appendChild(cap);
+    for(var wi=0;wi<22;wi++){ cap.querySelector('#ol2capWave').appendChild(document.createElement('i')); }
+    function $c(id){ return cap.querySelector('#'+id); }
+    function people(){ try{ return (typeof getAllAssignees==='function'?(getAllAssignees()||[]):[]); }catch(e){ return []; } }
+    function cats(){ try{ return (typeof teams!=='undefined'&&teams)?Object.keys(teams):['Personal']; }catch(e){ return ['Personal']; } }
+    function meName(){ try{ return (typeof _userName!=='undefined'&&_userName)?_userName:'Levi'; }catch(e){ return 'Levi'; } }
+    function fmt(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function parseDue(low){ var now=new Date(); now.setHours(0,0,0,0);
+      if(/\btoday\b/.test(low)) return fmt(now);
+      if(/\btomorrow\b/.test(low)){ var d=new Date(now); d.setDate(d.getDate()+1); return fmt(d); }
+      if(/\bnext week\b/.test(low)){ var d2=new Date(now); d2.setDate(d2.getDate()+7); return fmt(d2); }
+      var days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+      for(var i=0;i<7;i++){ if(new RegExp('\\b'+days[i]+'\\b').test(low)){ var d3=new Date(now); var add=(i-d3.getDay()+7)%7; if(add===0) add=7; d3.setDate(d3.getDate()+add); return fmt(d3); } }
+      if(/\bend of (the )?week\b|\beow\b/.test(low)){ var d4=new Date(now); var a4=(5-d4.getDay()+7)%7; d4.setDate(d4.getDate()+a4); return fmt(d4); }
+      return '';
+    }
+    function setLive(v){ listening=v; $c('ol2capMic').classList.toggle('live',v); $c('ol2capWave').style.visibility=v?'visible':'hidden'; if(!$c('ol2capPv').classList.contains('on')) $c('ol2capH').textContent=v?'Listening…':'Speak a task'; }
+    function startRec(){ if(!SR){ var er=$c('ol2capErr'); er.style.display='block'; er.textContent="Voice input isn’t supported here — type your task below."; return; } try{ rec=new SR(); }catch(e){ return; } rec.lang='en-US'; rec.interimResults=true; rec.continuous=false; rec.onresult=function(e){ var t=''; for(var i=0;i<e.results.length;i++){ t+=e.results[i][0].transcript; } $c('ol2capTa').value=t; }; rec.onerror=function(e){ setLive(false); if(e&&e.error==='not-allowed'){ var er2=$c('ol2capErr'); er2.style.display='block'; er2.textContent='Microphone blocked — allow mic access or type below.'; } }; rec.onend=function(){ setLive(false); }; try{ rec.start(); setLive(true); $c('ol2capErr').style.display='none'; }catch(e){} }
+    function stopRec(){ try{ if(rec&&listening) rec.stop(); }catch(e){} setLive(false); }
+    function setCapMode(m){ capMode=m; $c('ol2mDo').classList.toggle('sel',m==='do-it'); $c('ol2mTrack').classList.toggle('sel',m==='track-it'); }
+    function openCapture(){ if(!shell.classList.contains('on')){ shell.classList.add('on'); showBoard(); } cap.classList.add('on'); $c('ol2capTa').value=''; $c('ol2capErr').style.display='none'; $c('ol2capPv').classList.remove('on'); $c('ol2capAct1').style.display='flex'; $c('ol2capAct2').style.display='none'; $c('ol2capH').textContent='Speak a task'; $c('ol2capSub').textContent='Tap the mic and talk — or type below'; setTimeout(startRec,250); }
+    function closeCapture(){ stopRec(); cap.classList.remove('on'); }
+    function capParse(){
+      var text=($c('ol2capTa').value||'').trim(); var er=$c('ol2capErr');
+      if(!text){ er.style.display='block'; er.textContent='Say or type a task first.'; return; }
+      er.style.display='none'; var low=text.toLowerCase();
+      var due=parseDue(low); var pl=people(), own=meName();
+      for(var i=0;i<pl.length;i++){ var nm=String(pl[i]).toLowerCase().replace(/[^a-z0-9]/g,''); if(nm && new RegExp('\\b'+nm+'\\b').test(low.replace(/[^a-z0-9 ]/g,''))){ own=pl[i]; break; } }
+      var cl=cats(), cat=(cl.indexOf('Personal')>=0?'Personal':cl[0]);
+      for(var j=0;j<cl.length;j++){ if(low.indexOf(String(cl[j]).toLowerCase())>=0){ cat=cl[j]; break; } }
+      var doit=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/.test(low);
+      var title=text.replace(/,?\s*(due|by|before)\s+[a-z0-9 ]+$/i,'').replace(/\s+(today|tomorrow|next week)\b/ig,'').trim(); if(!title) title=text; title=title.charAt(0).toUpperCase()+title.slice(1);
+      var ctx=null; try{ (L().context||[]).forEach(function(c){ if(!ctx && c.name && low.indexOf(String(c.name).toLowerCase())>=0) ctx=c; }); }catch(e){}
+      capDraft={title:title, due:due, owner:own, cat:cat, ctx:ctx};
+      $c('ol2pvTitle').textContent=title; $c('ol2pvDue').textContent=due||'—'; $c('ol2pvOwner').textContent=own; $c('ol2pvCat').textContent=cat; $c('ol2pvCtx').textContent=ctx?ctx.name:'—';
+      setCapMode(doit?'do-it':'track-it');
+      $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
+      $c('ol2capH').textContent='Got it — here’s the card'; $c('ol2capSub').textContent='Claude structured your sentence. Confirm to save.';
+    }
+    function capConfirm(){
+      if(!capDraft) return; var own=capDraft.owner||meName();
+      var it={ id:'v'+Date.now().toString(36), type:'task', title:capDraft.title||'Untitled', category:capDraft.cat||'Personal', status:'thisweek',
+        startDate:'', dueDate:capDraft.due||'', deliverable:'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
+        raci:{R:[],A:'',C:[],I:[]}, assignees:own?[own]:[], responsible:own||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
+        waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
+        columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
+        execMode:capMode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:capDraft.ctx?[capDraft.ctx.name]:[] };
+      try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
+      persist(); closeCapture(); showBoard();
+      if(capMode==='do-it'){
+        toast('✦ Card created — Claude is drafting…');
+        var parts=assemble(it);
+        callRun(it, parts, '', '', function(res){
+          if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); if(shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display==='none') showBoard(); } toast('✦ Draft ready — in Needs review'); }
+          else if(res.status===503&&res.j&&res.j.error==='no_key'){ toast('Card created — add ANTHROPIC_API_KEY to enable drafting'); }
+          else { toast('Card created — couldn’t draft right now'); }
+        });
+      } else { toast('✓ Card added'); }
+      capDraft=null;
+    }
+    $c('ol2capMic').onclick=function(){ if(listening) stopRec(); else startRec(); };
+    $c('ol2capCancel').onclick=closeCapture;
+    $c('ol2capCont').onclick=function(){ stopRec(); capParse(); };
+    $c('ol2capBack').onclick=function(){ $c('ol2capPv').classList.remove('on'); $c('ol2capAct1').style.display='flex'; $c('ol2capAct2').style.display='none'; $c('ol2capH').textContent='Speak a task'; $c('ol2capSub').textContent='Tap the mic and talk — or type below'; };
+    $c('ol2capConfirm').onclick=capConfirm;
+    $c('ol2mDo').onclick=function(){ setCapMode('do-it'); };
+    $c('ol2mTrack').onclick=function(){ setCapMode('track-it'); };
+    cap.onclick=function(e){ if(e.target===cap) closeCapture(); };
+    window.ol2OpenCapture=openCapture;
+
+    document.addEventListener('keydown',function(e){
+      if(e.altKey&&e.code==='Space'){ e.preventDefault(); openCapture(); return; }
+      if(e.key==='Escape'){ if(cap.classList.contains('on')){ closeCapture(); return; } if(shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display!=='none'){ showBoard(); } } }
+    });
     window.ol2Refresh=function(){ if(shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display==='none') showBoard(); } };
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
