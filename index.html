@@ -8524,7 +8524,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 </script>
 
 
-<!-- ═══ Operation Levi 2.0 — Phase 5: AI-native shell + board (parallel mode, self-contained) ═══ -->
+<!-- ═══ Operation Levi 2.0 — Phase 5: AI-native shell + board + Review/Refine (parallel mode) ═══ -->
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 .ol2-pill{position:fixed;top:14px;right:16px;z-index:8400;background:linear-gradient(135deg,#f2a33c,#e0852a);color:#1c1304;border:none;border-radius:22px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);display:flex;align-items:center;gap:7px;font-family:'Inter',system-ui,sans-serif}
@@ -8553,6 +8553,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .gbtn{border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:10px 15px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter';white-space:nowrap}
 .ol2 .gbtn:hover{background:#23262d}
 .ol2 .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
+.ol2 .gbtn.amber:hover{filter:brightness(1.06)}
+.ol2 .gbtn.blue{border-color:#2E6FB0;color:#9cc4ec}
+.ol2 .gbtn:disabled{opacity:.5;cursor:default}
 .ol2 .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
 .ol2 .col h3{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;padding:0 2px;display:flex;justify-content:space-between}
 .ol2 .col h3 .cnt{color:#727a88}
@@ -8569,35 +8572,49 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .b-blue{background:#16263a;color:#5a9be0;border:1px solid #244463}
 .ol2 .b-green{background:#0f2a20;color:#46b98a;border:1px solid #1c4434}
 .ol2 .empty{color:#727a88;font-size:12px;text-align:center;padding:18px;border:1px dashed #30353d;border-radius:10px}
-/* peek drawer */
-.ol2-peek{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:94vw;z-index:8600;background:#101115;border-left:1px solid #262a31;box-shadow:-20px 0 60px rgba(0,0,0,.4);transform:translateX(100%);transition:.22s;display:flex;flex-direction:column;font-family:'Inter',system-ui,sans-serif;color:#e9ecf2}
-.ol2-peek.on{transform:none}
-.ol2-peek .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #23262d}
-.ol2-peek .ph h2{font-family:'Syne';font-size:17px;font-weight:700;line-height:1.3}
-.ol2-peek .px{background:#1d2129;border:1px solid #30353d;color:#e9ecf2;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;flex-shrink:0;margin-left:10px}
-.ol2-peek .pb{padding:18px 20px;overflow-y:auto;flex:1}
-.ol2-peek .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #23262d;font-size:13px}
-.ol2-peek .kv span{color:#727a88}
-.ol2-peek .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
-.ol2-peek .chip{font-size:11px;padding:4px 9px;border-radius:8px;background:#1d2129;border:1px solid #30353d;color:#aab2c0}
-.ol2-peek .lbl{color:#727a88;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 7px}
-.ol2-peek .draft{background:#0e0f13;border:1px solid #262a31;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.65;color:#d7dbe3;white-space:pre-wrap;max-height:320px;overflow:auto}
-.ol2-peek .pf{padding:16px 20px;border-top:1px solid #23262d;display:flex;flex-wrap:wrap;gap:9px}
-.ol2-peek .pf .gbtn{border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:11px 14px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter'}
-.ol2-peek .pf .gbtn:hover{background:#23262d}
-.ol2-peek .pf .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
-.ol2-peek .pf .gbtn.blue{border-color:#2E6FB0;color:#9cc4ec}
+/* review */
+.ol2 .rev{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.ol2 .panelc{background:#15161b;border:1px solid #262a31;border-radius:14px;padding:18px}
+.ol2 .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #262a31;font-size:13px}
+.ol2 .kv:last-child{border:none}.ol2 .kv span{color:#727a88}
+.ol2 .ulbl{color:#727a88;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 0}
+.ol2 .used{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ol2 .chip{font-size:11px;padding:4px 9px;border-radius:8px;background:#1d2129;border:1px solid #30353d;color:#aab2c0}
+.ol2 .chip.miss{color:#727a88;border-style:dashed}
+.ol2 .draft{background:#0e0f13;border:1px solid #262a31;border-radius:12px;padding:18px 20px;font-size:13.5px;line-height:1.7;color:#d7dbe3;white-space:pre-wrap;min-height:120px;max-height:46vh;overflow:auto}
+.ol2 .draft.run{display:flex;align-items:center;justify-content:center;text-align:center;color:#727a88}
+.ol2 .refine{display:flex;gap:9px;margin-top:14px}
+.ol2 .refine input{flex:1;background:#0e0f13;border:1px solid #30353d;border-radius:10px;padding:11px 13px;color:#e9ecf2;font-family:'Inter';font-size:13px}
+.ol2 .refine input::placeholder{color:#727a88}
+.ol2 .actions{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}
+.ol2 .revmsg{margin-top:12px;font-size:12.5px;line-height:1.55;color:#f2c98a;background:#1a1408;border:1px solid #4a3514;border-radius:10px;padding:11px 14px;display:none}
 </style>
 <script>
 (function(){
   if(window.__ol2) return; window.__ol2=true;
+  var RUN_KEY='operation-levi';
   function ITEMS(){ try{ return (typeof items!=='undefined'&&items)?items:[]; }catch(e){ return []; } }
+  function L(){ try{ return (typeof libraries!=='undefined'&&libraries)?libraries:{skills:[],templates:[],preferences:[],context:[]}; }catch(e){ return {skills:[],templates:[],preferences:[],context:[]}; } }
   function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
+  function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
   function clickFab(id){ var f=document.getElementById(id); if(f) f.click(); }
   function esc(s){ return String(s==null?'':s); }
   function initials(name){ name=String(name||'').trim(); if(!name) return '–'; var p=name.split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
   function owner(it){ if(it.assignees&&it.assignees.length) return it.assignees[0]; if(it.raci&&it.raci.A) return it.raci.A; if(it.responsible) return it.responsible; try{ return (typeof _userName!=='undefined'&&_userName)||'Levi'; }catch(e){ return 'Levi'; } }
   function dueLabel(d){ if(!d) return ''; try{ var dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; var now=new Date(); var t=new Date(now.getFullYear(),now.getMonth(),now.getDate()); var diff=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-t)/86400000); if(diff===0) return 'today'; if(diff===1) return 'tmrw'; if(diff===-1) return 'yest'; if(diff>1&&diff<7) return dt.toLocaleDateString(undefined,{weekday:'short'}); return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){ return d; } }
+  // library matching (mirrors the execution engine)
+  function findByName(arr,name){ if(!name) return null; for(var i=0;i<(arr||[]).length;i++){ if(arr[i].name===name) return arr[i]; } return null; }
+  function matchSkill(card){ var sk=(L().skills||[]); if(!sk.length) return null; var t=((card.title||'')+' '+(card.notes||'')).toLowerCase(); var best=null,bs=-1; sk.forEach(function(s){ var score=0; if(s.category&&card.category&&(s.category===card.category||s.category==='All')) score+=2; (String(s.tags||'').toLowerCase().split(/[,\s]+/).filter(Boolean)).forEach(function(tag){ if(t.indexOf(tag)>=0) score+=2; }); if(s.name&&t.indexOf(String(s.name).toLowerCase())>=0) score+=1; if(score>bs){bs=score;best=s;} }); return best||sk[0]; }
+  function deriveContext(card,skill){ var ctx=(L().context||[]); if(skill&&skill.defaultContext){ var c=findByName(ctx,skill.defaultContext); if(c) return c; } var t=(card.title||'').toLowerCase(); for(var i=0;i<ctx.length;i++){ if(ctx[i].name&&t.indexOf(String(ctx[i].name).toLowerCase())>=0) return ctx[i]; } return null; }
+  function derivePrefs(ctx){ return (L().preferences||[]).filter(function(p){ return (!p.scope||p.scope==='global'||p.scope==='category') || (ctx&&p.appliesTo&&p.appliesTo===ctx.name); }); }
+  function assemble(card){ var skill=matchSkill(card); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx); return {skill:skill,tmpl:tmpl,ctx:ctx,prefs:prefs}; }
+  function callRun(card, parts, instruction, prev, cb){
+    var payload={card:card,skill:parts.skill,template:parts.tmpl,context:parts.ctx,preferences:parts.prefs};
+    if(instruction){ payload.instruction=instruction; payload.previousDraft=prev||''; }
+    fetch('/api/run',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify(payload)})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+      .then(cb).catch(function(e){ cb({ok:false,status:0,j:{error:'fetch',detail:String(e&&e.message||e)}}); });
+  }
 
   var COLS=[
     {label:'To do', color:'#3a3f48', st:['backlog','thisweek']},
@@ -8623,45 +8640,44 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
       '</aside>'+
       '<main class="main">'+
-        '<div class="hrow"><div><h1 id="ol2H">This week</h1><p id="ol2Sub">Speak a task, and Claude turns it into a card — and often does it.</p></div>'+
-          '<div style="display:flex;gap:9px"><button class="gbtn" id="ol2Run">✦ Run with Claude</button></div></div>'+
-        '<div class="cols" id="ol2Board"></div>'+
+        '<div id="ol2BoardView">'+
+          '<div class="hrow"><div><h1 id="ol2H">This week</h1><p id="ol2Sub">Speak a task, and Claude turns it into a card — and often does it.</p></div></div>'+
+          '<div class="cols" id="ol2Board"></div>'+
+        '</div>'+
+        '<div id="ol2Review" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
-    var peek=document.createElement('div'); peek.className='ol2-peek'; peek.id='ol2Peek'; document.body.appendChild(peek);
-
-    function open(){ shell.classList.add('on'); render(); }
-    function close(){ shell.classList.remove('on'); closePeek(); }
+    function open(){ shell.classList.add('on'); showBoard(); }
+    function close(){ shell.classList.remove('on'); }
     pill.onclick=open;
     document.getElementById('ol2Exit').onclick=close;
     document.getElementById('ol2Spk').onclick=function(){ clickFab('vcFab'); };
-    document.getElementById('ol2Run').onclick=function(){ clickFab('vrFab'); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       if(v==='libraries'){ clickFab('vlFab'); return; }
       if(v==='triage'){ return; }
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      render(v==='review'?'review':'board');
+      showBoard(v==='review'?'review':'board');
     });
 
     function badges(it){
-      var b='';
-      if(it.aiStatus==='sent'||(it.aiArtifact&&it.aiArtifact.sentAt)){ b+='<span class="badge b-green">sent</span>'; }
-      else if(it.status==='review'||(it.aiArtifact&&it.aiArtifact.content)){ b+='<span class="badge b-amber">'+(it.execMode==='do-it'?'do-it':'draft')+'</span>'; }
-      else if(it.execMode==='do-it'){ b+='<span class="badge b-amber">do-it</span>'; }
-      else if(it.execMode==='track-it'){ b+='<span class="badge b-blue">track-it</span>'; }
-      return b;
+      if(it.aiStatus==='sent'||(it.aiArtifact&&it.aiArtifact.sentAt)) return '<span class="badge b-green">sent</span>';
+      if(it.status==='review'||(it.aiArtifact&&it.aiArtifact.content)) return '<span class="badge b-amber">'+(it.execMode==='do-it'?'do-it':'draft')+'</span>';
+      if(it.execMode==='do-it') return '<span class="badge b-amber">do-it</span>';
+      if(it.execMode==='track-it') return '<span class="badge b-blue">track-it</span>';
+      return '';
     }
     function avatar(it){ if(it.execMode==='do-it') return '<div class="av cl">✦</div>'; return '<div class="av">'+esc(initials(owner(it)).toUpperCase())+'</div>'; }
 
-    function render(focus){
+    function showBoard(focus){
+      document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2BoardView').style.display='';
       var board=document.getElementById('ol2Board'); board.innerHTML='';
       var all=ITEMS();
-      var revCount=all.filter(function(i){ return i.status==='review'; }).length;
-      document.getElementById('ol2RevN').textContent=revCount;
-      var showCols = (focus==='review') ? [COLS[2]] : COLS;
-      document.getElementById('ol2H').textContent = (focus==='review')?'Needs review':'This week';
-      document.getElementById('ol2Sub').textContent = (focus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
+      document.getElementById('ol2RevN').textContent=all.filter(function(i){ return i.status==='review'; }).length;
+      var showCols=(focus==='review')?[COLS[2]]:COLS;
+      document.getElementById('ol2H').textContent=(focus==='review')?'Needs review':'This week';
+      document.getElementById('ol2Sub').textContent=(focus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
       showCols.forEach(function(c){
         var col=document.createElement('div'); col.className='col';
         var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0; });
@@ -8670,57 +8686,95 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard';
           el.innerHTML='<div class="t">'+esc(it.title||'Untitled')+'</div><div class="meta">'+avatar(it)+(it.dueDate?('<span class="due">'+esc(dueLabel(it.dueDate))+'</span>'):'')+badges(it)+'</div>';
-          el.onclick=function(){ openPeek(it); };
+          el.onclick=function(){ openReview(it); };
           col.appendChild(el);
         });
         board.appendChild(col);
       });
     }
 
-    function closePeek(){ peek.classList.remove('on'); }
-    function openPeek(it){
-      var draft=(it.aiArtifact&&it.aiArtifact.content)?it.aiArtifact.content:'';
-      var ctxName=''; try{ (libraries&&libraries.context||[]).forEach(function(c){ if(!ctxName && c.name && (it.title||'').toLowerCase().indexOf(String(c.name).toLowerCase())>=0) ctxName=c.name; }); }catch(e){}
-      var chips='';
-      if(it.execMode==='do-it') chips+='<span class="chip">✦ Claude · do-it</span>'; else if(it.execMode==='track-it') chips+='<span class="chip">◷ Track-it · you</span>';
-      if(ctxName) chips+='<span class="chip">❖ '+esc(ctxName)+'</span>';
-      if(it.aiArtifact&&it.aiArtifact.model) chips+='<span class="chip">'+esc(it.aiArtifact.model)+'</span>';
-      peek.innerHTML=
-        '<div class="ph"><h2>'+esc(it.title||'Untitled')+'</h2><button class="px" id="ol2Px">✕</button></div>'+
-        '<div class="pb">'+
-          '<div class="kv"><span>Status</span><b>'+esc(it.status||'')+'</b></div>'+
-          '<div class="kv"><span>Owner</span><b>'+esc(owner(it))+'</b></div>'+
-          '<div class="kv"><span>Mode</span><b>'+(it.execMode==='do-it'?'Do-it · Claude':(it.execMode==='track-it'?'Track-it · you':'—'))+'</b></div>'+
-          (it.dueDate?'<div class="kv"><span>Due</span><b>'+esc(it.dueDate)+'</b></div>':'')+
-          (it.category?'<div class="kv"><span>Category</span><b>'+esc(it.category)+'</b></div>':'')+
-          '<div class="chips">'+(chips||'<span class="chip">no library matched yet</span>')+'</div>'+
-          (draft?('<div class="lbl">Claude’s draft</div><div class="draft">'+esc(draft)+'</div>'):'<div class="lbl">No draft yet</div><div class="empty" style="text-align:left">Run with Claude to generate a first draft for this card.</div>')+
-        '</div>'+
-        '<div class="pf">'+
-          '<button class="gbtn amber" id="ol2Prun">✦ Run with Claude</button>'+
-          (draft?'<button class="gbtn blue" id="ol2Psend">✉ Send email</button>':'')+
-          '<button class="gbtn" id="ol2Pedit">Open in classic editor</button>'+
+    function openReview(card){
+      var parts=assemble(card);
+      var rev=document.getElementById('ol2Review');
+      document.getElementById('ol2BoardView').style.display='none';
+      rev.style.display='';
+      rev.innerHTML=
+        '<div class="hrow"><div><h1 class="syne">'+esc(card.title||'Untitled')+'</h1><p>Claude drafted this. Refine it, then approve. Nothing sends without you.</p></div>'+
+          '<button class="gbtn" id="ol2Back">← Back to board</button></div>'+
+        '<div class="rev">'+
+          '<div><div class="panelc">'+
+            '<div class="kv"><span>Status</span><b>'+esc(card.status||'')+'</b></div>'+
+            '<div class="kv"><span>Owner</span><b>'+esc(owner(card))+'</b></div>'+
+            '<div class="kv"><span>Mode</span><b>'+(card.execMode==='do-it'?'Do-it · Claude':(card.execMode==='track-it'?'Track-it · you':'—'))+'</b></div>'+
+            (card.dueDate?'<div class="kv"><span>Due</span><b>'+esc(card.dueDate)+'</b></div>':'')+
+            '<div class="ulbl">Claude uses</div>'+
+            '<div class="used">'+
+              '<span class="chip'+(parts.skill?'':' miss')+'">◆ '+(parts.skill?esc(parts.skill.name):'no skill')+'</span>'+
+              '<span class="chip'+(parts.tmpl?'':' miss')+'">▭ '+(parts.tmpl?esc(parts.tmpl.name):'no template')+'</span>'+
+              '<span class="chip'+(parts.ctx?'':' miss')+'">❖ '+(parts.ctx?esc(parts.ctx.name):'no context')+'</span>'+
+              '<span class="chip">◷ '+parts.prefs.length+' preference'+(parts.prefs.length===1?'':'s')+'</span>'+
+            '</div>'+
+          '</div></div>'+
+          '<div>'+
+            '<div class="draft'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?esc(card.aiArtifact.content):'No draft yet — Run with Claude to generate one.')+'</div>'+
+            '<div class="refine"><input id="ol2RefIn" placeholder="Refine by voice or text — e.g. “make the timeline 8 weeks”"/><button class="gbtn" id="ol2RefBtn">Refine</button></div>'+
+            '<div class="actions" id="ol2Acts"></div>'+
+            '<div class="revmsg" id="ol2RevMsg"></div>'+
+          '</div>'+
         '</div>';
-      peek.classList.add('on');
-      document.getElementById('ol2Px').onclick=closePeek;
-      document.getElementById('ol2Prun').onclick=function(){ closePeek(); clickFab('vrFab'); };
-      var pe=document.getElementById('ol2Pedit'); if(pe) pe.onclick=function(){ closePeek(); shell.classList.remove('on'); try{ if(typeof openDetail==='function') openDetail(it.id); }catch(e){} };
-      var ps=document.getElementById('ol2Psend'); if(ps) ps.onclick=function(){ sendMailto(it, draft); };
+      document.getElementById('ol2Back').onclick=function(){ showBoard(); };
+      var msg=document.getElementById('ol2RevMsg');
+      function showMsg(t,kind){ msg.style.display='block'; msg.style.color=kind==='err'?'#e07a63':'#f2c98a'; msg.innerHTML=t; }
+      function setBusy(b,label){ var d=document.getElementById('ol2Draft'); if(b){ d.classList.add('run'); d.textContent=label||'Claude is working…'; } }
+
+      function renderActions(){
+        var acts=document.getElementById('ol2Acts'); acts.innerHTML='';
+        var hasDraft=!!(card.aiArtifact&&card.aiArtifact.content);
+        if(!hasDraft){
+          var run=document.createElement('button'); run.className='gbtn amber'; run.textContent='✦ Run with Claude';
+          run.onclick=function(){ doRun(''); }; acts.appendChild(run);
+        } else {
+          var appr=document.createElement('button'); appr.className='gbtn amber'; appr.textContent=(card.aiStatus==='approved'||card.aiStatus==='sent')?'✉ Send email':'Approve & send';
+          appr.onclick=function(){ card.aiStatus='approved'; if(card.aiArtifact) card.aiArtifact.approvedAt=Date.now(); persist(); sendMailto(card, card.aiArtifact.content); }; acts.appendChild(appr);
+          var copy=document.createElement('button'); copy.className='gbtn'; copy.textContent='Copy'; copy.onclick=function(){ try{ navigator.clipboard.writeText(card.aiArtifact.content); toast('Copied'); }catch(e){} }; acts.appendChild(copy);
+          var re=document.createElement('button'); re.className='gbtn'; re.textContent='Re-run'; re.onclick=function(){ doRun(''); }; acts.appendChild(re);
+          var note=document.createElement('span'); note.style.cssText='color:#727a88;font-size:12px;margin-left:auto'; note.textContent='sending opens your email app →'; acts.appendChild(note);
+        }
+      }
+      function applyResult(res){
+        if(res.ok&&res.j&&res.j.draft){
+          card.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()};
+          card.aiStatus='ready'; if(card.status!=='review'){ card.status='review'; card.columnEnteredAt=Date.now(); } persist();
+          var d=document.getElementById('ol2Draft'); d.classList.remove('run'); d.textContent=res.j.draft; msg.style.display='none'; renderActions();
+        } else if(res.status===503&&res.j&&res.j.error==='no_key'){
+          var d2=document.getElementById('ol2Draft'); d2.classList.remove('run'); d2.textContent=(card.aiArtifact&&card.aiArtifact.content)||'No draft yet.';
+          showMsg('Add <b>ANTHROPIC_API_KEY</b> in Vercel to enable drafting.','warn'); renderActions();
+        } else {
+          var d3=document.getElementById('ol2Draft'); d3.classList.remove('run'); d3.textContent=(card.aiArtifact&&card.aiArtifact.content)||'No draft yet.';
+          showMsg('Couldn’t draft: '+esc((res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status)),'err'); renderActions();
+        }
+      }
+      function doRun(instruction){
+        msg.style.display='none'; setBusy(true, instruction?'Claude is revising…':'Claude is drafting…');
+        document.getElementById('ol2Acts').innerHTML='';
+        callRun(card, parts, instruction, (card.aiArtifact&&card.aiArtifact.content)||'', applyResult);
+      }
+      document.getElementById('ol2RefBtn').onclick=function(){ var v=document.getElementById('ol2RefIn').value.trim(); if(!v) return; document.getElementById('ol2RefIn').value=''; if(card.aiArtifact&&card.aiArtifact.content){ doRun(v); } else { doRun(''); } };
+      document.getElementById('ol2RefIn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ document.getElementById('ol2RefBtn').click(); } });
+      renderActions();
     }
 
     function sendMailto(it, text){
-      var to=''; try{ (libraries&&libraries.context||[]).forEach(function(c){ if(!to && c.email && (it.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
+      var to=''; try{ (L().context||[]).forEach(function(c){ if(!to && c.email && (it.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
       var params=[]; if(it.title) params.push('subject='+encodeURIComponent(it.title)); if(text) params.push('body='+encodeURIComponent(text));
       var url='mailto:'+(to?encodeURIComponent(to).replace(/%40/g,'@'):'')+(params.length?('?'+params.join('&')):'');
       try{ window.location.href=url; }catch(e){ try{ window.open(url); }catch(e2){} }
       it.aiStatus='sent'; if(!it.aiArtifact) it.aiArtifact={}; it.aiArtifact.sentAt=Date.now(); it.aiArtifact.sentVia='mailto'; it.status='done'; it.columnEnteredAt=Date.now(); persist();
-      try{ if(typeof showToast==='function') showToast('✉ Opened in your email app — review and send there'); }catch(e){}
-      closePeek(); render();
+      toast('✉ Opened in your email app — review and send there'); showBoard();
     }
 
-    // keep the 2.0 board fresh when data changes elsewhere
-    document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closePeek(); } });
-    window.ol2Refresh=function(){ if(shell.classList.contains('on')) render(); };
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display!=='none'){ showBoard(); } } });
+    window.ol2Refresh=function(){ if(shell.classList.contains('on')){ var rev=document.getElementById('ol2Review'); if(rev.style.display==='none') showBoard(); } };
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
 })();
