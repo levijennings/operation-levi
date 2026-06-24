@@ -9017,7 +9017,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           run.onclick=function(){ doRun(''); }; acts.appendChild(run);
         } else {
           var appr=document.createElement('button'); appr.className='gbtn amber'; appr.textContent=(card.aiStatus==='approved'||card.aiStatus==='sent')?'✉ Send email':'Approve & send';
-          appr.onclick=function(){ card.aiStatus='approved'; if(card.aiArtifact) card.aiArtifact.approvedAt=Date.now(); persist(); sendMailto(card, card.aiArtifact.content); }; acts.appendChild(appr);
+          appr.onclick=function(){ card.aiStatus='approved'; if(card.aiArtifact) card.aiArtifact.approvedAt=Date.now(); persist(); sendEmail2(card, card.aiArtifact.content); }; acts.appendChild(appr);
           var copy=document.createElement('button'); copy.className='gbtn'; copy.textContent='Copy'; copy.onclick=function(){ try{ navigator.clipboard.writeText(card.aiArtifact.content); toast('Copied'); }catch(e){} }; acts.appendChild(copy);
           var re=document.createElement('button'); re.className='gbtn'; re.textContent='Re-run'; re.onclick=function(){ doRun(''); }; acts.appendChild(re);
           var note=document.createElement('span'); note.style.cssText='color:#727a88;font-size:12px;margin-left:auto'; note.textContent='sending opens your email app →'; acts.appendChild(note);
@@ -9053,6 +9053,36 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       try{ window.location.href=url; }catch(e){ try{ window.open(url); }catch(e2){} }
       it.aiStatus='sent'; if(!it.aiArtifact) it.aiArtifact={}; it.aiArtifact.sentAt=Date.now(); it.aiArtifact.sentVia='mailto'; it.status='done'; it.columnEnteredAt=Date.now(); persist();
       toast('✉ Opened in your email app — review and send there'); showBoard();
+    }
+
+    function sendEmail2(it, text){
+      var to=''; try{ (L().context||[]).forEach(function(c){ if(!to && c.email && (it.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:9300;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:Inter,system-ui,sans-serif';
+      var box=document.createElement('div'); box.style.cssText='width:560px;max-width:94vw;background:#121317;border:1px solid #2a2e38;border-radius:16px;padding:22px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)';
+      box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#8a91a0;font-size:12.5px;margin-bottom:16px">This sends for real, from your dvlmnt.com address. Review and confirm — nothing sends on its own.</div>';
+      function field(label,tag,val,ph){ var w=document.createElement('div'); w.style.marginBottom='11px'; var l=document.createElement('label'); l.textContent=label; l.style.cssText='display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em'; var inp=document.createElement(tag); inp.style.cssText='width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:Inter'; if(tag==="textarea"){inp.style.minHeight="150px";inp.style.lineHeight="1.5";inp.style.resize="vertical";} if(val!=null) inp.value=val; if(ph) inp.placeholder=ph; w.appendChild(l); w.appendChild(inp); box.appendChild(w); return inp; }
+      var toI=field('To','input',to,'name@client.com'); var ccI=field('CC (optional)','input','',''); var subI=field('Subject','input',it.title||'',''); var bodyI=field('Message','textarea',text,'');
+      var msg=document.createElement('div'); msg.style.cssText='font-size:12.5px;margin-top:4px;line-height:1.5;display:none'; box.appendChild(msg);
+      function showFallback(t){ msg.style.display='block'; msg.style.color='#f2c98a'; msg.innerHTML=''; var d=document.createElement('div'); d.innerHTML=t; d.style.marginBottom='8px'; msg.appendChild(d); var fb=document.createElement('button'); fb.textContent='Open in mail app instead'; fb.style.cssText='border:1px solid #30353d;background:#1d2129;color:#aab2c0;border-radius:9px;padding:9px 13px;font-weight:600;cursor:pointer;font-family:Inter'; fb.onclick=function(){ try{document.body.removeChild(ov);}catch(e){} sendMailto(it, bodyI.value); }; msg.appendChild(fb); }
+      var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:10px;margin-top:16px';
+      var cancel=document.createElement('button'); cancel.textContent='Cancel'; cancel.style.cssText='flex:1;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:12px;font-weight:600;cursor:pointer;font-family:Inter'; cancel.onclick=function(){ document.body.removeChild(ov); };
+      var go=document.createElement('button'); go.textContent='Confirm & send'; go.style.cssText='flex:1;border:none;background:#2E6FB0;color:#fff;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-family:Inter';
+      go.onclick=function(){
+        if(!toI.value.trim()){ msg.style.display='block'; msg.style.color='#e0a02c'; msg.textContent='Add a recipient first.'; return; }
+        go.textContent='Sending…'; go.disabled=true; cancel.disabled=true; msg.style.display='none';
+        var html=String(bodyI.value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        fetch('/api/send',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({to:toI.value.trim(),cc:ccI.value.trim(),subject:subI.value,html:html,text:bodyI.value})})
+          .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+          .then(function(res){
+            go.textContent='Confirm & send'; go.disabled=false; cancel.disabled=false;
+            if(res.ok){ it.aiStatus='sent'; if(!it.aiArtifact) it.aiArtifact={}; it.aiArtifact.sentAt=Date.now(); it.aiArtifact.sentTo=toI.value.trim(); it.aiArtifact.sentVia='resend'; it.status='done'; it.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){} toast('✉ Sent to '+toI.value.trim()); try{document.body.removeChild(ov);}catch(e){} showBoard(); }
+            else if(res.status===503&&res.j&&res.j.error==='no_key'){ showFallback('Add <b>RESEND_API_KEY</b> in Vercel (and verify a dvlmnt.com sender) to send automatically.'); }
+            else if(res.j&&res.j.error==='no_from'){ showFallback('Verify a sender for <b>dvlmnt.com</b> in Resend and set <b>RESEND_FROM</b> in Vercel.'); }
+            else { msg.style.display='block'; msg.style.color='#e07a63'; msg.textContent='Send failed: '+((res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status)); }
+          }).catch(function(e){ go.textContent='Confirm & send'; go.disabled=false; cancel.disabled=false; msg.style.display='block'; msg.style.color='#e07a63'; msg.textContent='Network error: '+(e&&e.message||e); });
+      };
+      btns.appendChild(cancel); btns.appendChild(go); box.appendChild(btns);
+      ov.appendChild(box); ov.onclick=function(e){ if(e.target===ov) document.body.removeChild(ov); }; document.body.appendChild(ov);
     }
 
     // ── Voice-first capture ──
