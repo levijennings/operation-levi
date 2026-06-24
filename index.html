@@ -8482,7 +8482,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var re=document.createElement('button'); re.className='vr-btn'; re.textContent='Re-run'; re.onclick=function(){ detail(card); };
     var send=document.createElement('button'); send.className='vr-btn'; send.style.cssText='border-color:#2E6FB0;color:#9cc4ec'; send.textContent='✉ Send email…';
     send.onclick=function(){ var cur=out.querySelector('.vr-draft'); sendEmail(card, cur?cur.textContent:text); };
-    var note=document.createElement('span'); note.className='vr-note'; note.textContent='approve, then send needs an explicit confirm';
+    var note=document.createElement('span'); note.className='vr-note'; note.textContent='opens your email app — nothing sends on its own';
     row.appendChild(appr); row.appendChild(send); row.appendChild(copy); row.appendChild(re); row.appendChild(note); out.appendChild(row);
   }
 
@@ -8491,10 +8491,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var to=''; try{ (L().context||[]).forEach(function(c){ if(!to && c.email && (card.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
     var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:9004;background:rgba(5,6,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:inherit';
     var box=document.createElement('div'); box.style.cssText='width:560px;max-width:94vw;background:#121317;border:1px solid #2a2e38;border-radius:16px;padding:22px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)';
-    box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#8a91a0;font-size:12.5px;margin-bottom:14px">Sends for real, from your connected Gmail. Review every field and confirm — Operation Levi never sends on its own.</div>';
-    if(card.aiStatus!=='approved'){ var warn=document.createElement('div'); warn.style.cssText='background:#1a1408;border:1px solid #4a3514;color:#f2c98a;border-radius:9px;padding:10px 12px;font-size:12.5px;margin-bottom:14px'; warn.textContent='Heads up: this draft isn’t approved yet. You can still send, but approving first is the intended order.'; box.appendChild(warn); }
-    function connectGmail(){ try{ window.open('/api/gmail-start','_blank','noopener'); }catch(e){ location.href='/api/gmail-start'; } }
-    function showConnect(text){ msg.style.display='block'; msg.style.color='#9cc4ec'; msg.innerHTML=''; var t=document.createElement('div'); t.textContent=text; t.style.marginBottom='8px'; msg.appendChild(t); var cb=document.createElement('button'); cb.textContent='🔗 Connect Gmail'; cb.style.cssText='border:1px solid #2E6FB0;background:#16243a;color:#9cc4ec;border-radius:9px;padding:9px 14px;font-weight:600;cursor:pointer;font-family:inherit'; cb.onclick=connectGmail; msg.appendChild(cb); var hint=document.createElement('div'); hint.style.cssText='color:#8a91a0;margin-top:7px;font-size:11.5px'; hint.textContent='A Google window opens — approve once, then come back and press Confirm & send.'; msg.appendChild(hint); }
+    box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#8a91a0;font-size:12.5px;margin-bottom:14px">Opens your email app with everything pre-filled. Review there and hit send — Operation Levi never sends on its own.</div>';
     function field(label,tag,val,ph){ var w=document.createElement('div'); w.style.marginBottom='11px'; var l=document.createElement('label'); l.textContent=label; l.style.cssText='display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em'; var inp=document.createElement(tag); inp.style.cssText='width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:inherit'; if(tag==='textarea'){inp.style.minHeight='150px';inp.style.lineHeight='1.5';inp.style.resize='vertical';} if(val!=null) inp.value=val; if(ph) inp.placeholder=ph; w.appendChild(l); w.appendChild(inp); box.appendChild(w); return inp; }
     var toI=field('To','input',to,'name@client.com');
     var ccI=field('CC (optional)','input','','');
@@ -8503,25 +8500,17 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var msg=document.createElement('div'); msg.style.cssText='font-size:12.5px;margin-top:4px;line-height:1.5;display:none'; box.appendChild(msg);
     var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:10px;margin-top:16px';
     var cancel=document.createElement('button'); cancel.textContent='Cancel'; cancel.style.cssText='flex:1;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:12px;font-weight:600;cursor:pointer;font-family:inherit'; cancel.onclick=function(){ document.body.removeChild(ov); };
-    var go=document.createElement('button'); go.textContent='Confirm & send'; go.style.cssText='flex:1;border:none;background:#2E6FB0;color:#fff;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit';
+    var go=document.createElement('button'); go.textContent='✉ Open in email app'; go.style.cssText='flex:1;border:none;background:#2E6FB0;color:#fff;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit';
     go.onclick=function(){
       if(!toI.value.trim()){ msg.style.display='block'; msg.style.color='#e0a02c'; msg.textContent='Add a recipient first.'; return; }
-      go.textContent='Sending…'; go.disabled=true; cancel.disabled=true; msg.style.display='none';
-      var html=String(bodyI.value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-      fetch('/api/send',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({to:toI.value.trim(),cc:ccI.value.trim(),subject:subI.value,html:html,text:bodyI.value})})
-        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
-        .then(function(res){
-          go.textContent='Confirm & send'; go.disabled=false; cancel.disabled=false;
-          if(res.ok){ card.aiStatus='sent'; if(!card.aiArtifact) card.aiArtifact={}; card.aiArtifact.sentAt=Date.now(); card.aiArtifact.sentTo=toI.value.trim(); card.status='done'; card.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){} toast('✉ Sent to '+toI.value.trim()); document.body.removeChild(ov); }
-          else if(res.status===503&&res.j&&res.j.error==='no_gmail'){ showConnect('Connect your Gmail to send. You only do this once.'); }
-          else if(res.j&&res.j.error==='token'){ showConnect('Your Gmail connection expired or was revoked — reconnect to continue.'); }
-          else if(res.status===503&&res.j&&res.j.error==='no_config'){ msg.style.display='block'; msg.style.color='#f2c98a'; msg.innerHTML='Add <b>GOOGLE_CLIENT_ID</b> and <b>GOOGLE_CLIENT_SECRET</b> in Vercel to enable Gmail sending.'; }
-          else if(res.status===503&&res.j&&res.j.error==='no_storage'){ msg.style.display='block'; msg.style.color='#f2c98a'; msg.innerHTML='Add <b>SUPABASE_SERVICE_ROLE_KEY</b> in Vercel so the Gmail token can be stored.'; }
-          else { msg.style.display='block'; msg.style.color='#e07a63'; msg.textContent='Send failed: '+((res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status)); }
-        }).catch(function(e){ go.textContent='Confirm & send'; go.disabled=false; cancel.disabled=false; msg.style.display='block'; msg.style.color='#e07a63'; msg.textContent='Network error: '+(e&&e.message||e); });
+      var params=[]; if(subI.value) params.push('subject='+encodeURIComponent(subI.value)); if(ccI.value.trim()) params.push('cc='+encodeURIComponent(ccI.value.trim())); if(bodyI.value) params.push('body='+encodeURIComponent(bodyI.value));
+      var url='mailto:'+encodeURIComponent(toI.value.trim()).replace(/%40/g,'@')+(params.length?('?'+params.join('&')):'');
+      try{ window.location.href=url; }catch(e){ try{ window.open(url); }catch(e2){} }
+      card.aiStatus='sent'; if(!card.aiArtifact) card.aiArtifact={}; card.aiArtifact.sentAt=Date.now(); card.aiArtifact.sentTo=toI.value.trim(); card.aiArtifact.sentVia='mailto'; card.status='done'; card.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+      toast('✉ Opened in your email app — review and send there'); document.body.removeChild(ov);
     };
     btns.appendChild(cancel); btns.appendChild(go); box.appendChild(btns);
-    var foot=document.createElement('div'); foot.style.cssText='margin-top:12px;text-align:center'; var cg=document.createElement('a'); cg.textContent='Connect / reconnect Gmail'; cg.href='javascript:void(0)'; cg.style.cssText='color:#8a91a0;font-size:11.5px;text-decoration:underline;cursor:pointer'; cg.onclick=connectGmail; foot.appendChild(cg); box.appendChild(foot);
+    var foot=document.createElement('div'); foot.style.cssText='margin-top:11px;text-align:center;color:#727a88;font-size:11.5px'; foot.textContent='Your draft opens in Mail / Outlook / your default app. Nothing sends until you press send there.'; box.appendChild(foot);
     ov.appendChild(box); ov.onclick=function(e){ if(e.target===ov) document.body.removeChild(ov); }; document.body.appendChild(ov);
   }
 
