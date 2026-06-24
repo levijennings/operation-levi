@@ -8638,6 +8638,26 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2cap .cact{display:flex;gap:10px;margin-top:18px}
 .ol2cap .cact .gbtn{flex:1;justify-content:center;text-align:center;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:12px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter'}
 .ol2cap .cact .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
+/* drag + inline edit + my day */
+.ol2 .col{border-radius:12px;transition:.12s}
+.ol2 .col.drop{background:#13202f;outline:1.5px dashed #2E6FB0;outline-offset:3px}
+.ol2 .tcard[draggable]{cursor:grab}
+.ol2 .panelc .erl{display:block;font-size:11px;color:#727a88;text-transform:uppercase;letter-spacing:.05em;margin:13px 0 5px}
+.ol2 .panelc .erl:first-child{margin-top:0}
+.ol2 .ein,.ol2 .esel{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:9px 11px;color:#e9ecf2;font-size:13.5px;font-family:'Inter'}
+.ol2 .emode{display:flex;gap:7px}
+.ol2 .emodeb{flex:1;border:1px solid #30353d;background:#1b1d23;color:#aab2c0;border-radius:9px;padding:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:'Inter'}
+.ol2 .emodeb.sel{border-color:#4a3514;background:#2c2009;color:#f2a33c}
+.ol2 .md-top3{display:grid;gap:10px}
+.ol2 .md-card{display:flex;align-items:center;gap:13px;background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:14px 16px;cursor:pointer;transition:.14s}
+.ol2 .md-card:hover{border-color:#30353d;background:#202329}
+.ol2 .md-card .n{width:26px;height:26px;border-radius:50%;background:#2c2009;color:#f2a33c;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ol2 .md-card .t,.ol2 .md-row .t{font-weight:600;font-size:13.5px}
+.ol2 .md-card .s,.ol2 .md-row .s{color:#727a88;font-size:11.5px;margin-top:2px}
+.ol2 .md-row{display:flex;align-items:center;gap:12px;background:#15161b;border:1px solid #23262d;border-radius:11px;padding:11px 14px;margin-bottom:8px;cursor:pointer}
+.ol2 .md-row:hover{background:#1b1d23}
+.ol2 .md-pin{background:none;border:none;color:#5a6270;font-size:17px;cursor:pointer;flex-shrink:0;line-height:1;padding:0}
+.ol2 .md-pin.on{color:#f2a33c}
 /* responsive / mobile */
 @media (max-width:720px){
   .ol2.on{grid-template-columns:1fr;grid-template-rows:auto 1fr}
@@ -8694,10 +8714,10 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   }
 
   var COLS=[
-    {label:'To do', color:'#3a3f48', st:['backlog','thisweek']},
-    {label:'In progress', color:'#5a9be0', st:['active','today','waiting']},
-    {label:'Needs review', color:'#f2a33c', st:['review']},
-    {label:'Done', color:'#46b98a', st:['done']}
+    {label:'To do', color:'#3a3f48', st:['backlog','thisweek'], set:'thisweek'},
+    {label:'In progress', color:'#5a9be0', st:['active','today','waiting'], set:'active'},
+    {label:'Needs review', color:'#f2a33c', st:['review'], set:'review'},
+    {label:'Done', color:'#46b98a', st:['done'], set:'done'}
   ];
 
   function boot(){
@@ -8709,6 +8729,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div class="brand"><span class="star">✦</span> Operation Levi</div>'+
         '<nav class="nav" id="ol2Nav">'+
           '<a data-v="board" class="on">▦ Board</a>'+
+          '<a data-v="myday">◴ My Day</a>'+
           '<a data-v="review">✎ Needs review <span class="tag" id="ol2RevN">0</span></a>'+
           '<a data-v="libraries">◆ Libraries</a>'+
           '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
@@ -8724,6 +8745,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2Review" style="display:none"></div>'+
         '<div id="ol2Triage" style="display:none"></div>'+
         '<div id="ol2Lib" style="display:none"></div>'+
+        '<div id="ol2MyDay" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -8734,7 +8756,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='triage'){ showTriage(); } else if(v==='libraries'){ showLibraries(); } else { showBoard(v==='review'?'review':'board'); }
+      if(v==='triage'){ showTriage(); } else if(v==='libraries'){ showLibraries(); } else if(v==='myday'){ showMyDay(); } else { showBoard(v==='review'?'review':'board'); }
     });
 
     function badges(it){
@@ -8750,6 +8772,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       document.getElementById('ol2Review').style.display='none';
       document.getElementById('ol2Triage').style.display='none';
       document.getElementById('ol2Lib').style.display='none';
+      document.getElementById('ol2MyDay').style.display='none';
       document.getElementById('ol2BoardView').style.display='';
       var board=document.getElementById('ol2Board'); board.innerHTML='';
       var all=ITEMS();
@@ -8762,10 +8785,15 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var col=document.createElement('div'); col.className='col';
         var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0; });
         col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#727a88':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
+        col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
+        col.ondragleave=function(){ col.classList.remove('drop'); };
+        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); } showBoard(focus); };
         if(!cards.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='—'; col.appendChild(e); }
         cards.forEach(function(it){
-          var el=document.createElement('div'); el.className='tcard';
+          var el=document.createElement('div'); el.className='tcard'; el.draggable=true;
           el.innerHTML='<div class="t">'+esc(it.title||'Untitled')+'</div><div class="meta">'+avatar(it)+(it.dueDate?('<span class="due">'+esc(dueLabel(it.dueDate))+'</span>'):'')+badges(it)+'</div>';
+          el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
+          el.ondragend=function(){ el.style.opacity=''; };
           el.onclick=function(){ openReview(it); };
           col.appendChild(el);
         });
@@ -8795,6 +8823,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       document.getElementById('ol2BoardView').style.display='none';
       document.getElementById('ol2Review').style.display='none';
       document.getElementById('ol2Triage').style.display='none';
+      document.getElementById('ol2MyDay').style.display='none';
       var lib=document.getElementById('ol2Lib'); lib.style.display='';
       var dot=LIBTABS.reduce(function(o,t){ o[t.k]=t.dot; return o; },{});
       var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>The knowledge layer — loaded only when a task needs it. Edit in the full editor.</p></div>'+
@@ -8816,6 +8845,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       document.getElementById('ol2BoardView').style.display='none';
       document.getElementById('ol2Review').style.display='none';
       document.getElementById('ol2Lib').style.display='none';
+      document.getElementById('ol2MyDay').style.display='none';
       var tr=document.getElementById('ol2Triage'); tr.style.display='';
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsClaude).length;
@@ -8851,22 +8881,61 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       setTimeout(showTriage, 280);
     }
 
+    // ── My Day / Top 3 ──
+    function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function top3Ids(){ try{ return (typeof top3Manual!=='undefined'&&top3Manual)?top3Manual.map(String):[]; }catch(e){ return []; } }
+    function showMyDay(){
+      document.getElementById('ol2BoardView').style.display='none';
+      document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2Triage').style.display='none';
+      document.getElementById('ol2Lib').style.display='none';
+      var md=document.getElementById('ol2MyDay'); md.style.display='';
+      var all=ITEMS(); var today=todayStr(); var ids=top3Ids();
+      var pinned=ids.map(function(id){ return all.filter(function(x){ return String(x.id)===id; })[0]; }).filter(Boolean);
+      var todayCards=all.filter(function(i){ return i.status!=='done' && (i.dueDate===today || i.status==='today'); });
+      var top3=pinned.slice();
+      if(top3.length<3){ var fill=all.filter(function(i){ return i.status!=='done' && top3.indexOf(i)<0 && (i.dueDate===today || i.status==='today' || i.status==='active' || i.status==='thisweek'); }); top3=top3.concat(fill).slice(0,3); }
+      var dstr=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+      md.innerHTML='<div class="hrow"><div><h1 class="syne">My Day</h1><p>'+esc(dstr)+'</p></div></div>'+
+        '<div class="ulbl" style="margin-bottom:8px">Top 3 for today'+(pinned.length?'':' · auto-ranked — pin below to customize')+'</div><div class="md-top3" id="ol2Top3"></div>'+
+        '<div class="ulbl" style="margin:24px 0 8px">Today'+(todayCards.length?(' ('+todayCards.length+')'):'')+'</div><div id="ol2TodayList"></div>';
+      var t3=document.getElementById('ol2Top3');
+      if(!top3.length){ t3.innerHTML='<div class="empty">Nothing scheduled yet — speak a task, or pin one below.</div>'; }
+      top3.forEach(function(it,idx){ var el=document.createElement('div'); el.className='md-card'; el.innerHTML='<div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+' · '+esc(it.status||'')+'</div></div>'+avatar(it); el.onclick=function(){ openReview(it); }; t3.appendChild(el); });
+      var tl=document.getElementById('ol2TodayList');
+      if(!todayCards.length){ tl.innerHTML='<div class="empty">No tasks due today.</div>'; }
+      todayCards.forEach(function(it){ var isPinned=ids.indexOf(String(it.id))>=0; var el=document.createElement('div'); el.className='md-row';
+        el.innerHTML='<button class="md-pin'+(isPinned?' on':'')+'" title="Pin to Top 3">'+(isPinned?'★':'☆')+'</button><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it);
+        el.querySelector('.md-pin').onclick=function(ev){ ev.stopPropagation(); try{ if(typeof toggleTop3Pick==='function') toggleTop3Pick(it.id); else { var p=(typeof top3Manual!=='undefined'&&top3Manual)?top3Manual:[]; var k=p.map(String).indexOf(String(it.id)); if(k>=0) p.splice(k,1); else if(p.length<3) p.push(it.id); persist(); } }catch(e){} showMyDay(); };
+        el.onclick=function(){ openReview(it); };
+        tl.appendChild(el);
+      });
+    }
+
     function openReview(card){
       var parts=assemble(card);
       var rev=document.getElementById('ol2Review');
       document.getElementById('ol2BoardView').style.display='none';
       document.getElementById('ol2Triage').style.display='none';
       document.getElementById('ol2Lib').style.display='none';
+      document.getElementById('ol2MyDay').style.display='none';
       rev.style.display='';
+      var STATUSES=[['backlog','Backlog'],['thisweek','This week'],['active','Active'],['today','Today'],['waiting','Waiting'],['review','Needs review'],['done','Done']];
+      var OWNERS=(function(){ var a=[]; try{ a=(typeof getAllAssignees==='function'?(getAllAssignees()||[]):[]); }catch(e){} var o=owner(card); if(o&&a.indexOf(o)<0) a=[o].concat(a); if(!a.length) a=[o||'Levi']; return a; })();
+      var CATS=(function(){ var a=[]; try{ a=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(card.category&&a.indexOf(card.category)<0) a=[card.category].concat(a); if(!a.length) a=['Personal']; return a; })();
+      function opts(list,cur){ return list.map(function(o){ var v=(o instanceof Array)?o[0]:o, lab=(o instanceof Array)?o[1]:o; return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); }
       rev.innerHTML=
-        '<div class="hrow"><div><h1 class="syne">'+esc(card.title||'Untitled')+'</h1><p>Claude drafted this. Refine it, then approve. Nothing sends without you.</p></div>'+
+        '<div class="hrow"><div><h1 class="syne" id="ol2RevTitle">'+esc(card.title||'Untitled')+'</h1><p>Edit the card, run &amp; refine the draft, then approve. Nothing sends without you.</p></div>'+
           '<button class="gbtn" id="ol2Back">← Back to board</button></div>'+
         '<div class="rev">'+
           '<div><div class="panelc">'+
-            '<div class="kv"><span>Status</span><b>'+esc(card.status||'')+'</b></div>'+
-            '<div class="kv"><span>Owner</span><b>'+esc(owner(card))+'</b></div>'+
-            '<div class="kv"><span>Mode</span><b>'+(card.execMode==='do-it'?'Do-it · Claude':(card.execMode==='track-it'?'Track-it · you':'—'))+'</b></div>'+
-            (card.dueDate?'<div class="kv"><span>Due</span><b>'+esc(card.dueDate)+'</b></div>':'')+
+            '<label class="erl">Title</label><input class="ein" id="edTitle" value="'+esc(card.title||'')+'"/>'+
+            '<label class="erl">Status</label><select class="esel" id="edStatus">'+opts(STATUSES,card.status)+'</select>'+
+            '<label class="erl">Owner</label><select class="esel" id="edOwner">'+opts(OWNERS,owner(card))+'</select>'+
+            '<label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo">✦ Do-it</button><button type="button" class="emodeb" id="edTrack">◷ Track-it</button></div>'+
+            '<label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/>'+
+            '<label class="erl">Category</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select>'+
+            '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:58px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
             '<div class="ulbl">Claude uses</div>'+
             '<div class="used">'+
               '<span class="chip'+(parts.skill?'':' miss')+'">◆ '+(parts.skill?esc(parts.skill.name):'no skill')+'</span>'+
@@ -8874,6 +8943,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
               '<span class="chip'+(parts.ctx?'':' miss')+'">❖ '+(parts.ctx?esc(parts.ctx.name):'no context')+'</span>'+
               '<span class="chip">◷ '+parts.prefs.length+' preference'+(parts.prefs.length===1?'':'s')+'</span>'+
             '</div>'+
+            '<a href="javascript:void(0)" id="edClassic" style="display:inline-block;margin-top:12px;color:#8a91a0;font-size:11.5px;text-decoration:underline">Edit all fields in classic →</a>'+
           '</div></div>'+
           '<div>'+
             '<div class="draft'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?esc(card.aiArtifact.content):'No draft yet — Run with Claude to generate one.')+'</div>'+
@@ -8883,6 +8953,21 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '</div>'+
         '</div>';
       document.getElementById('ol2Back').onclick=function(){ showBoard(); };
+      (function(){
+        function setModeBtns(){ var d=document.getElementById('edDo'), t=document.getElementById('edTrack'); if(d) d.classList.toggle('sel',card.execMode==='do-it'); if(t) t.classList.toggle('sel',card.execMode==='track-it'); }
+        setModeBtns();
+        var et=document.getElementById('edTitle');
+        et.oninput=function(){ card.title=et.value; var h=document.getElementById('ol2RevTitle'); if(h) h.textContent=et.value||'Untitled'; };
+        et.onchange=function(){ persist(); };
+        document.getElementById('edStatus').onchange=function(){ card.status=this.value; card.columnEnteredAt=Date.now(); persist(); updateCounts(); };
+        document.getElementById('edOwner').onchange=function(){ card.assignees=[this.value]; card.responsible=this.value; persist(); };
+        document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; persist(); };
+        document.getElementById('edCat').onchange=function(){ card.category=this.value; persist(); };
+        document.getElementById('edNotes').onchange=function(){ card.notes=this.value; persist(); };
+        document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
+        document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
+        document.getElementById('edClassic').onclick=function(){ shell.classList.remove('on'); try{ if(typeof openDetail==='function') openDetail(card.id); }catch(e){} };
+      })();
       var msg=document.getElementById('ol2RevMsg');
       function showMsg(t,kind){ msg.style.display='block'; msg.style.color=kind==='err'?'#e07a63':'#f2c98a'; msg.innerHTML=t; }
       function setBusy(b,label){ var d=document.getElementById('ol2Draft'); if(b){ d.classList.add('run'); d.textContent=label||'Claude is working…'; } }
