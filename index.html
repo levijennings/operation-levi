@@ -8523,5 +8523,208 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 })();
 </script>
 
+
+<!-- ═══ Operation Levi 2.0 — Phase 5: AI-native shell + board (parallel mode, self-contained) ═══ -->
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.ol2-pill{position:fixed;top:14px;right:16px;z-index:8400;background:linear-gradient(135deg,#f2a33c,#e0852a);color:#1c1304;border:none;border-radius:22px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.3);display:flex;align-items:center;gap:7px;font-family:'Inter',system-ui,sans-serif}
+.ol2-pill:hover{filter:brightness(1.05)}
+.ol2{position:fixed;inset:0;z-index:8500;background:#0a0a0b;color:#e9ecf2;font-family:'Inter',system-ui,sans-serif;font-size:14px;display:none;grid-template-columns:232px 1fr}
+.ol2.on{display:grid}
+.ol2 *{box-sizing:border-box}
+.ol2 .syne{font-family:'Syne',sans-serif}
+.ol2 .side{background:#101115;border-right:1px solid #262a31;display:flex;flex-direction:column;padding:18px 14px}
+.ol2 .brand{font-family:'Syne';font-weight:800;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;margin:4px 6px 22px}
+.ol2 .brand .star{color:#f2a33c}
+.ol2 .nav{display:flex;flex-direction:column;gap:2px}
+.ol2 .nav a{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;color:#aab2c0;cursor:pointer;font-weight:500;font-size:13.5px;border:1px solid transparent}
+.ol2 .nav a:hover{background:#181a20;color:#e9ecf2}
+.ol2 .nav a.on{background:#1d2129;color:#e9ecf2;border-color:#30353d}
+.ol2 .nav a .tag{margin-left:auto;font-size:10.5px;color:#727a88;border:1px solid #30353d;border-radius:6px;padding:1px 7px;font-weight:600}
+.ol2 .spk{margin-top:auto;background:#f2a33c;color:#1c1304;border:none;border-radius:11px;padding:13px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Inter'}
+.ol2 .spk:hover{filter:brightness(1.06)}
+.ol2 .exit{background:none;border:none;color:#727a88;font-size:12px;cursor:pointer;margin-top:10px;text-align:center;font-family:'Inter'}
+.ol2 .exit:hover{color:#aab2c0}
+.ol2 .main{overflow-y:auto;padding:24px 28px 60px}
+.ol2 .main::-webkit-scrollbar{width:9px}.ol2 .main::-webkit-scrollbar-thumb{background:#23262d;border-radius:6px}
+.ol2 .hrow{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:14px}
+.ol2 .hrow h1{font-family:'Syne';font-weight:700;font-size:23px;letter-spacing:-.02em}
+.ol2 .hrow p{color:#727a88;font-size:13px;margin-top:3px}
+.ol2 .gbtn{border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:10px 15px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter';white-space:nowrap}
+.ol2 .gbtn:hover{background:#23262d}
+.ol2 .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
+.ol2 .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start}
+.ol2 .col h3{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;padding:0 2px;display:flex;justify-content:space-between}
+.ol2 .col h3 .cnt{color:#727a88}
+.ol2 .col .bar{height:2px;border-radius:2px;margin-bottom:11px}
+.ol2 .tcard{background:#1b1d23;border:1px solid #262a31;border-radius:11px;padding:12px 13px;margin-bottom:10px;cursor:pointer;transition:.14s}
+.ol2 .tcard:hover{border-color:#30353d;background:#202329;transform:translateY(-1px)}
+.ol2 .tcard .t{font-weight:600;font-size:13.5px;line-height:1.35}
+.ol2 .tcard .meta{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ol2 .av{width:19px;height:19px;border-radius:50%;background:#33405a;color:#cdd8ea;font-size:8.5px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ol2 .av.cl{background:#3a2b12;color:#f2a33c}
+.ol2 .due{color:#727a88;font-size:11.5px}
+.ol2 .badge{font-size:10px;font-weight:600;padding:2.5px 8px;border-radius:20px;margin-left:auto}
+.ol2 .b-amber{background:#2c2009;color:#f2a33c;border:1px solid #4a3514}
+.ol2 .b-blue{background:#16263a;color:#5a9be0;border:1px solid #244463}
+.ol2 .b-green{background:#0f2a20;color:#46b98a;border:1px solid #1c4434}
+.ol2 .empty{color:#727a88;font-size:12px;text-align:center;padding:18px;border:1px dashed #30353d;border-radius:10px}
+/* peek drawer */
+.ol2-peek{position:fixed;top:0;right:0;bottom:0;width:420px;max-width:94vw;z-index:8600;background:#101115;border-left:1px solid #262a31;box-shadow:-20px 0 60px rgba(0,0,0,.4);transform:translateX(100%);transition:.22s;display:flex;flex-direction:column;font-family:'Inter',system-ui,sans-serif;color:#e9ecf2}
+.ol2-peek.on{transform:none}
+.ol2-peek .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #23262d}
+.ol2-peek .ph h2{font-family:'Syne';font-size:17px;font-weight:700;line-height:1.3}
+.ol2-peek .px{background:#1d2129;border:1px solid #30353d;color:#e9ecf2;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;flex-shrink:0;margin-left:10px}
+.ol2-peek .pb{padding:18px 20px;overflow-y:auto;flex:1}
+.ol2-peek .kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #23262d;font-size:13px}
+.ol2-peek .kv span{color:#727a88}
+.ol2-peek .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.ol2-peek .chip{font-size:11px;padding:4px 9px;border-radius:8px;background:#1d2129;border:1px solid #30353d;color:#aab2c0}
+.ol2-peek .lbl{color:#727a88;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 7px}
+.ol2-peek .draft{background:#0e0f13;border:1px solid #262a31;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.65;color:#d7dbe3;white-space:pre-wrap;max-height:320px;overflow:auto}
+.ol2-peek .pf{padding:16px 20px;border-top:1px solid #23262d;display:flex;flex-wrap:wrap;gap:9px}
+.ol2-peek .pf .gbtn{border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:11px 14px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter'}
+.ol2-peek .pf .gbtn:hover{background:#23262d}
+.ol2-peek .pf .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
+.ol2-peek .pf .gbtn.blue{border-color:#2E6FB0;color:#9cc4ec}
+</style>
+<script>
+(function(){
+  if(window.__ol2) return; window.__ol2=true;
+  function ITEMS(){ try{ return (typeof items!=='undefined'&&items)?items:[]; }catch(e){ return []; } }
+  function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
+  function clickFab(id){ var f=document.getElementById(id); if(f) f.click(); }
+  function esc(s){ return String(s==null?'':s); }
+  function initials(name){ name=String(name||'').trim(); if(!name) return '–'; var p=name.split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
+  function owner(it){ if(it.assignees&&it.assignees.length) return it.assignees[0]; if(it.raci&&it.raci.A) return it.raci.A; if(it.responsible) return it.responsible; try{ return (typeof _userName!=='undefined'&&_userName)||'Levi'; }catch(e){ return 'Levi'; } }
+  function dueLabel(d){ if(!d) return ''; try{ var dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; var now=new Date(); var t=new Date(now.getFullYear(),now.getMonth(),now.getDate()); var diff=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-t)/86400000); if(diff===0) return 'today'; if(diff===1) return 'tmrw'; if(diff===-1) return 'yest'; if(diff>1&&diff<7) return dt.toLocaleDateString(undefined,{weekday:'short'}); return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){ return d; } }
+
+  var COLS=[
+    {label:'To do', color:'#3a3f48', st:['backlog','thisweek']},
+    {label:'In progress', color:'#5a9be0', st:['active','today','waiting']},
+    {label:'Needs review', color:'#f2a33c', st:['review']},
+    {label:'Done', color:'#46b98a', st:['done']}
+  ];
+
+  function boot(){
+    var pill=document.createElement('button'); pill.className='ol2-pill'; pill.innerHTML='<span>✦</span> 2.0'; pill.title='Open the AI-native 2.0 view'; document.body.appendChild(pill);
+
+    var shell=document.createElement('div'); shell.className='ol2'; shell.id='ol2Shell';
+    shell.innerHTML=
+      '<aside class="side">'+
+        '<div class="brand"><span class="star">✦</span> Operation Levi</div>'+
+        '<nav class="nav" id="ol2Nav">'+
+          '<a data-v="board" class="on">▦ Board</a>'+
+          '<a data-v="review">✎ Needs review <span class="tag" id="ol2RevN">0</span></a>'+
+          '<a data-v="libraries">◆ Libraries</a>'+
+          '<a data-v="triage">↳ EA triage <span class="tag">soon</span></a>'+
+        '</nav>'+
+        '<button class="spk" id="ol2Spk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg> Speak a task</button>'+
+        '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
+      '</aside>'+
+      '<main class="main">'+
+        '<div class="hrow"><div><h1 id="ol2H">This week</h1><p id="ol2Sub">Speak a task, and Claude turns it into a card — and often does it.</p></div>'+
+          '<div style="display:flex;gap:9px"><button class="gbtn" id="ol2Run">✦ Run with Claude</button></div></div>'+
+        '<div class="cols" id="ol2Board"></div>'+
+      '</main>';
+    document.body.appendChild(shell);
+
+    var peek=document.createElement('div'); peek.className='ol2-peek'; peek.id='ol2Peek'; document.body.appendChild(peek);
+
+    function open(){ shell.classList.add('on'); render(); }
+    function close(){ shell.classList.remove('on'); closePeek(); }
+    pill.onclick=open;
+    document.getElementById('ol2Exit').onclick=close;
+    document.getElementById('ol2Spk').onclick=function(){ clickFab('vcFab'); };
+    document.getElementById('ol2Run').onclick=function(){ clickFab('vrFab'); };
+    document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
+      if(v==='libraries'){ clickFab('vlFab'); return; }
+      if(v==='triage'){ return; }
+      [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
+      render(v==='review'?'review':'board');
+    });
+
+    function badges(it){
+      var b='';
+      if(it.aiStatus==='sent'||(it.aiArtifact&&it.aiArtifact.sentAt)){ b+='<span class="badge b-green">sent</span>'; }
+      else if(it.status==='review'||(it.aiArtifact&&it.aiArtifact.content)){ b+='<span class="badge b-amber">'+(it.execMode==='do-it'?'do-it':'draft')+'</span>'; }
+      else if(it.execMode==='do-it'){ b+='<span class="badge b-amber">do-it</span>'; }
+      else if(it.execMode==='track-it'){ b+='<span class="badge b-blue">track-it</span>'; }
+      return b;
+    }
+    function avatar(it){ if(it.execMode==='do-it') return '<div class="av cl">✦</div>'; return '<div class="av">'+esc(initials(owner(it)).toUpperCase())+'</div>'; }
+
+    function render(focus){
+      var board=document.getElementById('ol2Board'); board.innerHTML='';
+      var all=ITEMS();
+      var revCount=all.filter(function(i){ return i.status==='review'; }).length;
+      document.getElementById('ol2RevN').textContent=revCount;
+      var showCols = (focus==='review') ? [COLS[2]] : COLS;
+      document.getElementById('ol2H').textContent = (focus==='review')?'Needs review':'This week';
+      document.getElementById('ol2Sub').textContent = (focus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
+      showCols.forEach(function(c){
+        var col=document.createElement('div'); col.className='col';
+        var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0; });
+        col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#727a88':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
+        if(!cards.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='—'; col.appendChild(e); }
+        cards.forEach(function(it){
+          var el=document.createElement('div'); el.className='tcard';
+          el.innerHTML='<div class="t">'+esc(it.title||'Untitled')+'</div><div class="meta">'+avatar(it)+(it.dueDate?('<span class="due">'+esc(dueLabel(it.dueDate))+'</span>'):'')+badges(it)+'</div>';
+          el.onclick=function(){ openPeek(it); };
+          col.appendChild(el);
+        });
+        board.appendChild(col);
+      });
+    }
+
+    function closePeek(){ peek.classList.remove('on'); }
+    function openPeek(it){
+      var draft=(it.aiArtifact&&it.aiArtifact.content)?it.aiArtifact.content:'';
+      var ctxName=''; try{ (libraries&&libraries.context||[]).forEach(function(c){ if(!ctxName && c.name && (it.title||'').toLowerCase().indexOf(String(c.name).toLowerCase())>=0) ctxName=c.name; }); }catch(e){}
+      var chips='';
+      if(it.execMode==='do-it') chips+='<span class="chip">✦ Claude · do-it</span>'; else if(it.execMode==='track-it') chips+='<span class="chip">◷ Track-it · you</span>';
+      if(ctxName) chips+='<span class="chip">❖ '+esc(ctxName)+'</span>';
+      if(it.aiArtifact&&it.aiArtifact.model) chips+='<span class="chip">'+esc(it.aiArtifact.model)+'</span>';
+      peek.innerHTML=
+        '<div class="ph"><h2>'+esc(it.title||'Untitled')+'</h2><button class="px" id="ol2Px">✕</button></div>'+
+        '<div class="pb">'+
+          '<div class="kv"><span>Status</span><b>'+esc(it.status||'')+'</b></div>'+
+          '<div class="kv"><span>Owner</span><b>'+esc(owner(it))+'</b></div>'+
+          '<div class="kv"><span>Mode</span><b>'+(it.execMode==='do-it'?'Do-it · Claude':(it.execMode==='track-it'?'Track-it · you':'—'))+'</b></div>'+
+          (it.dueDate?'<div class="kv"><span>Due</span><b>'+esc(it.dueDate)+'</b></div>':'')+
+          (it.category?'<div class="kv"><span>Category</span><b>'+esc(it.category)+'</b></div>':'')+
+          '<div class="chips">'+(chips||'<span class="chip">no library matched yet</span>')+'</div>'+
+          (draft?('<div class="lbl">Claude’s draft</div><div class="draft">'+esc(draft)+'</div>'):'<div class="lbl">No draft yet</div><div class="empty" style="text-align:left">Run with Claude to generate a first draft for this card.</div>')+
+        '</div>'+
+        '<div class="pf">'+
+          '<button class="gbtn amber" id="ol2Prun">✦ Run with Claude</button>'+
+          (draft?'<button class="gbtn blue" id="ol2Psend">✉ Send email</button>':'')+
+          '<button class="gbtn" id="ol2Pedit">Open in classic editor</button>'+
+        '</div>';
+      peek.classList.add('on');
+      document.getElementById('ol2Px').onclick=closePeek;
+      document.getElementById('ol2Prun').onclick=function(){ closePeek(); clickFab('vrFab'); };
+      var pe=document.getElementById('ol2Pedit'); if(pe) pe.onclick=function(){ closePeek(); shell.classList.remove('on'); try{ if(typeof openDetail==='function') openDetail(it.id); }catch(e){} };
+      var ps=document.getElementById('ol2Psend'); if(ps) ps.onclick=function(){ sendMailto(it, draft); };
+    }
+
+    function sendMailto(it, text){
+      var to=''; try{ (libraries&&libraries.context||[]).forEach(function(c){ if(!to && c.email && (it.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
+      var params=[]; if(it.title) params.push('subject='+encodeURIComponent(it.title)); if(text) params.push('body='+encodeURIComponent(text));
+      var url='mailto:'+(to?encodeURIComponent(to).replace(/%40/g,'@'):'')+(params.length?('?'+params.join('&')):'');
+      try{ window.location.href=url; }catch(e){ try{ window.open(url); }catch(e2){} }
+      it.aiStatus='sent'; if(!it.aiArtifact) it.aiArtifact={}; it.aiArtifact.sentAt=Date.now(); it.aiArtifact.sentVia='mailto'; it.status='done'; it.columnEnteredAt=Date.now(); persist();
+      try{ if(typeof showToast==='function') showToast('✉ Opened in your email app — review and send there'); }catch(e){}
+      closePeek(); render();
+    }
+
+    // keep the 2.0 board fresh when data changes elsewhere
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closePeek(); } });
+    window.ol2Refresh=function(){ if(shell.classList.contains('on')) render(); };
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot); else boot();
+})();
+</script>
+
 </body>
 </html>
