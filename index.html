@@ -8658,6 +8658,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .md-row:hover{background:#1b1d23}
 .ol2 .md-pin{background:none;border:none;color:#5a6270;font-size:17px;cursor:pointer;flex-shrink:0;line-height:1;padding:0}
 .ol2 .md-pin.on{color:#f2a33c}
+.ol2 .ol2-filter{display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+.ol2 .ol2-filter input,.ol2 .ol2-filter select{background:#15161b;border:1px solid #262a31;border-radius:9px;padding:9px 12px;color:#e9ecf2;font-size:13px;font-family:'Inter'}
+.ol2 .ol2-filter input{flex:1;min-width:180px}
+.ol2 .ol2-filter input::placeholder{color:#727a88}
+.ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
+.ol2 .ol2-filter button:hover{background:#23262d;color:#e9ecf2}
 /* responsive / mobile */
 @media (max-width:720px){
   .ol2.on{grid-template-columns:1fr;grid-template-rows:auto 1fr}
@@ -8740,6 +8746,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       '<main class="main">'+
         '<div id="ol2BoardView">'+
           '<div class="hrow"><div><h1 id="ol2H">This week</h1><p id="ol2Sub">Speak a task, and Claude turns it into a card — and often does it.</p></div></div>'+
+          '<div class="ol2-filter" id="ol2Filter"><input id="ol2Search" placeholder="Search tasks…" autocomplete="off"/><select id="ol2FCat"><option value="all">All categories</option></select><select id="ol2FOwner"><option value="all">All owners</option></select><button id="ol2FClear" style="display:none">Clear</button></div>'+
           '<div class="cols" id="ol2Board"></div>'+
         '</div>'+
         '<div id="ol2Review" style="display:none"></div>'+
@@ -8758,6 +8765,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
       if(v==='triage'){ showTriage(); } else if(v==='libraries'){ showLibraries(); } else if(v==='myday'){ showMyDay(); } else { showBoard(v==='review'?'review':'board'); }
     });
+    var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
+    function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
+    document.getElementById('ol2Search').oninput=function(){ boardQuery=this.value; syncClear(); renderColumns(); };
+    document.getElementById('ol2FCat').onchange=function(){ boardCat=this.value; syncClear(); renderColumns(); };
+    document.getElementById('ol2FOwner').onchange=function(){ boardOwner=this.value; syncClear(); renderColumns(); };
+    document.getElementById('ol2FClear').onclick=function(){ boardQuery=''; boardCat='all'; boardOwner='all'; populateFilters(); renderColumns(); };
 
     function badges(it){
       if(it.aiStatus==='sent'||(it.aiArtifact&&it.aiArtifact.sentAt)) return '<span class="badge b-green">sent</span>';
@@ -8768,26 +8781,34 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     }
     function avatar(it){ if(it.execMode==='do-it') return '<div class="av cl">✦</div>'; return '<div class="av">'+esc(initials(owner(it)).toUpperCase())+'</div>'; }
 
-    function showBoard(focus){
-      document.getElementById('ol2Review').style.display='none';
-      document.getElementById('ol2Triage').style.display='none';
-      document.getElementById('ol2Lib').style.display='none';
-      document.getElementById('ol2MyDay').style.display='none';
-      document.getElementById('ol2BoardView').style.display='';
+    function matchesFilter(it){
+      var q=(boardQuery||'').toLowerCase().trim();
+      if(q && (((it.title||'')+' '+(it.notes||'')).toLowerCase().indexOf(q)<0)) return false;
+      if(boardCat!=='all' && it.category!==boardCat) return false;
+      if(boardOwner!=='all' && owner(it)!==boardOwner) return false;
+      return true;
+    }
+    function populateFilters(){
+      var all=ITEMS();
+      var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams).slice():[]; }catch(e){}
+      all.forEach(function(i){ if(i.category && cats.indexOf(i.category)<0) cats.push(i.category); });
+      var owners=[]; all.forEach(function(i){ var o=owner(i); if(o && owners.indexOf(o)<0) owners.push(o); });
+      var fc=document.getElementById('ol2FCat'); if(fc){ if(cats.indexOf(boardCat)<0) boardCat='all'; fc.innerHTML='<option value="all">All categories</option>'+cats.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+'</option>'; }).join(''); fc.value=boardCat; }
+      var fo=document.getElementById('ol2FOwner'); if(fo){ if(owners.indexOf(boardOwner)<0) boardOwner='all'; fo.innerHTML='<option value="all">All owners</option>'+owners.map(function(o){ return '<option value="'+esc(o)+'">'+esc(o)+'</option>'; }).join(''); fo.value=boardOwner; }
+      var fs=document.getElementById('ol2Search'); if(fs && fs.value!==boardQuery) fs.value=boardQuery;
+      syncClear();
+    }
+    function renderColumns(){
       var board=document.getElementById('ol2Board'); board.innerHTML='';
       var all=ITEMS();
-      document.getElementById('ol2RevN').textContent=all.filter(function(i){ return i.status==='review'; }).length;
-      document.getElementById('ol2TriN').textContent=all.filter(function(i){ return i.status==='backlog'; }).length;
-      var showCols=(focus==='review')?[COLS[2]]:COLS;
-      document.getElementById('ol2H').textContent=(focus==='review')?'Needs review':'This week';
-      document.getElementById('ol2Sub').textContent=(focus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
+      var showCols=(boardFocus==='review')?[COLS[2]]:COLS;
       showCols.forEach(function(c){
         var col=document.createElement('div'); col.className='col';
-        var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0; });
+        var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0 && matchesFilter(i); });
         col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#727a88':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
         col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
         col.ondragleave=function(){ col.classList.remove('drop'); };
-        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); } showBoard(focus); };
+        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
         if(!cards.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='—'; col.appendChild(e); }
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard'; el.draggable=true;
@@ -8799,6 +8820,22 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         });
         board.appendChild(col);
       });
+    }
+    function showBoard(focus){
+      document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2Triage').style.display='none';
+      document.getElementById('ol2Lib').style.display='none';
+      document.getElementById('ol2MyDay').style.display='none';
+      document.getElementById('ol2BoardView').style.display='';
+      boardFocus=focus||'board';
+      var all=ITEMS();
+      document.getElementById('ol2RevN').textContent=all.filter(function(i){ return i.status==='review'; }).length;
+      document.getElementById('ol2TriN').textContent=all.filter(function(i){ return i.status==='backlog'; }).length;
+      document.getElementById('ol2H').textContent=(boardFocus==='review')?'Needs review':'This week';
+      document.getElementById('ol2Sub').textContent=(boardFocus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
+      document.getElementById('ol2Filter').style.display=(boardFocus==='review')?'none':'';
+      populateFilters();
+      renderColumns();
     }
 
     // ── EA triage ──
