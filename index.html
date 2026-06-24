@@ -8638,6 +8638,33 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2cap .cact{display:flex;gap:10px;margin-top:18px}
 .ol2cap .cact .gbtn{flex:1;justify-content:center;text-align:center;border:1px solid #30353d;background:#1d2129;color:#e9ecf2;border-radius:10px;padding:12px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter'}
 .ol2cap .cact .gbtn.amber{background:#f2a33c;color:#1c1304;border:none}
+/* responsive / mobile */
+@media (max-width:720px){
+  .ol2.on{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .ol2 .side{flex-direction:row;align-items:center;gap:8px;padding:9px 12px;border-right:none;border-bottom:1px solid #262a31;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .ol2 .side::-webkit-scrollbar{display:none}
+  .ol2 .brand{margin:0 4px 0 0;font-size:15px;white-space:nowrap}
+  .ol2 .nav{flex-direction:row;gap:6px}
+  .ol2 .nav a{padding:7px 10px;white-space:nowrap;font-size:12.5px;border:1px solid #262a31}
+  .ol2 .nav a .tag{margin-left:6px}
+  .ol2 .spk{margin:0 0 0 auto;padding:9px 13px;white-space:nowrap;font-size:13px}
+  .ol2 .exit{margin:0 0 0 2px;white-space:nowrap;font-size:11px}
+  .ol2 .main{padding:16px 14px 64px;min-width:0}
+  .ol2 .hrow{flex-direction:column;align-items:stretch;gap:10px}
+  .ol2 .hrow h1{font-size:20px}
+  .ol2 .cols{grid-template-columns:1fr}
+  .ol2 .rev{grid-template-columns:1fr}
+  .ol2 .lgrid{grid-template-columns:1fr}
+  .ol2 .draft{max-height:none}
+  .ol2 .trow{flex-wrap:wrap}
+  .ol2 .trow .sug{margin-left:0;width:100%;margin-top:9px;justify-content:flex-end}
+  .ol2 .refine{flex-direction:column}
+  .ol2 .actions{flex-wrap:wrap}
+  .ol2-pill{top:10px;right:10px;padding:8px 13px;font-size:12px}
+  .ol2cap{padding-top:5vh}
+  .ol2cap .cap{padding:22px 18px 20px}
+  .ol2cap .cact{flex-wrap:wrap}
+}
 </style>
 <script>
 (function(){
