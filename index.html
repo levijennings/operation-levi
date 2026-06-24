@@ -8588,6 +8588,17 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .refine input::placeholder{color:#727a88}
 .ol2 .actions{display:flex;gap:10px;margin-top:16px;align-items:center;flex-wrap:wrap}
 .ol2 .revmsg{margin-top:12px;font-size:12.5px;line-height:1.55;color:#f2c98a;background:#1a1408;border:1px solid #4a3514;border-radius:10px;padding:11px 14px;display:none}
+/* triage */
+.ol2 .trow{display:flex;align-items:center;gap:14px;background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:13px 16px;margin-bottom:10px;transition:.22s}
+.ol2 .trow.gone{opacity:.3;pointer-events:none;transform:translateX(8px)}
+.ol2 .trow .src{width:30px;height:30px;border-radius:8px;background:#1d2129;display:flex;align-items:center;justify-content:center;color:#aab2c0;font-size:14px;flex-shrink:0}
+.ol2 .trow .tt{font-weight:600;font-size:13.5px}
+.ol2 .trow .ts{color:#727a88;font-size:11.5px;margin-top:2px}
+.ol2 .trow .sug{margin-left:auto;display:flex;gap:7px;align-items:center}
+.ol2 .trow .sg{font-size:10.5px;color:#727a88;margin-right:2px;white-space:nowrap}
+.ol2 .asn{font-size:12px;font-weight:600;padding:6px 11px;border-radius:8px;cursor:pointer;border:1px solid #30353d;background:#1d2129;color:#aab2c0;white-space:nowrap;font-family:'Inter'}
+.ol2 .asn:hover{background:#23262d;color:#e9ecf2}
+.ol2 .asn.cl{border-color:#4a3514;color:#f2a33c}
 /* voice capture */
 .ol2cap{position:fixed;inset:0;z-index:9200;background:rgba(4,4,6,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding-top:10vh;font-family:'Inter',system-ui,sans-serif}
 .ol2cap.on{display:flex}
@@ -8663,7 +8674,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="board" class="on">▦ Board</a>'+
           '<a data-v="review">✎ Needs review <span class="tag" id="ol2RevN">0</span></a>'+
           '<a data-v="libraries">◆ Libraries</a>'+
-          '<a data-v="triage">↳ EA triage <span class="tag">soon</span></a>'+
+          '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
         '</nav>'+
         '<button class="spk" id="ol2Spk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg> Speak a task</button>'+
         '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
@@ -8674,6 +8685,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<div class="cols" id="ol2Board"></div>'+
         '</div>'+
         '<div id="ol2Review" style="display:none"></div>'+
+        '<div id="ol2Triage" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -8684,9 +8696,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       if(v==='libraries'){ clickFab('vlFab'); return; }
-      if(v==='triage'){ return; }
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      showBoard(v==='review'?'review':'board');
+      if(v==='triage'){ showTriage(); } else { showBoard(v==='review'?'review':'board'); }
     });
 
     function badges(it){
@@ -8700,10 +8711,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 
     function showBoard(focus){
       document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2Triage').style.display='none';
       document.getElementById('ol2BoardView').style.display='';
       var board=document.getElementById('ol2Board'); board.innerHTML='';
       var all=ITEMS();
       document.getElementById('ol2RevN').textContent=all.filter(function(i){ return i.status==='review'; }).length;
+      document.getElementById('ol2TriN').textContent=all.filter(function(i){ return i.status==='backlog'; }).length;
       var showCols=(focus==='review')?[COLS[2]]:COLS;
       document.getElementById('ol2H').textContent=(focus==='review')?'Needs review':'This week';
       document.getElementById('ol2Sub').textContent=(focus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Speak a task, and Claude turns it into a card — and often does it.';
@@ -8722,10 +8735,54 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       });
     }
 
+    // ── EA triage ──
+    var DOIT=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/;
+    function suggestsClaude(it){ var t=((it.title||'')+' '+(it.notes||'')).toLowerCase(); return it.execMode==='do-it' || DOIT.test(t); }
+    function triIcon(it){ var id=String(it.id||''); if(id.charAt(0)==='v') return '🎤'; if(it.type==='phone-call') return '☎'; if(it.type==='book-meeting') return '📅'; return '▦'; }
+    function updateCounts(){ var all=ITEMS(); var t=document.getElementById('ol2TriN'); if(t) t.textContent=all.filter(function(i){ return i.status==='backlog'; }).length; var rv=document.getElementById('ol2RevN'); if(rv) rv.textContent=all.filter(function(i){ return i.status==='review'; }).length; }
+    function showTriage(){
+      document.getElementById('ol2BoardView').style.display='none';
+      document.getElementById('ol2Review').style.display='none';
+      var tr=document.getElementById('ol2Triage'); tr.style.display='';
+      var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
+      var nDo=inbox.filter(suggestsClaude).length;
+      var html='<div class="hrow"><div><h1 class="syne">Morning triage</h1><p>Clear the inbox — route each item to Claude or a person. Claude drafts the do-it ones.</p></div>'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div><div id="ol2TriList"></div>';
+      if(!inbox.length){ html+='<div class="empty" style="padding:46px">Inbox cleared. Claude’s drafts land in <b style="color:#f2a33c">Needs review</b>.</div>'; }
+      tr.innerHTML=html;
+      var list=document.getElementById('ol2TriList');
+      inbox.forEach(function(it){
+        var sug=suggestsClaude(it); var own=owner(it); var ownLabel=(own===meName())?'Me':own;
+        var row=document.createElement('div'); row.className='trow';
+        row.innerHTML='<div class="src">'+triIcon(it)+'</div>'+
+          '<div style="flex:1;min-width:0"><div class="tt">'+esc(it.title||'Untitled')+'</div><div class="ts">'+esc(it.category||'')+(it.dueDate?(' · due '+esc(it.dueDate)):'')+'</div></div>'+
+          '<div class="sug"><span class="sg">Claude suggests →</span></div>';
+        var sugWrap=row.querySelector('.sug');
+        var bC=document.createElement('button'); bC.className='asn'+(sug?' cl':''); bC.textContent='✦ Claude'; bC.onclick=function(){ assignTri(it,'Claude',row); }; sugWrap.appendChild(bC);
+        var bM=document.createElement('button'); bM.className='asn'+(sug?'':' cl'); bM.textContent='→ '+ownLabel; bM.onclick=function(){ assignTri(it, own, row); }; sugWrap.appendChild(bM);
+        list.appendChild(row);
+      });
+      var runBtn=document.getElementById('ol2TriRun'); if(runBtn) runBtn.onclick=runAllTri;
+    }
+    function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){ if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); updateCounts(); } }); }
+    function assignTri(it, who, row){
+      if(row) row.classList.add('gone');
+      if(who==='Claude'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('✦ Assigned to Claude — drafting…'); draftFor(it); }
+      else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Assigned to '+(who===meName()?'you':who)); }
+      setTimeout(showTriage, 280);
+    }
+    function runAllTri(){
+      var inbox=ITEMS().filter(function(i){ return i.status==='backlog' && suggestsClaude(i); });
+      if(!inbox.length) return;
+      inbox.forEach(function(it){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); draftFor(it); });
+      persist(); toast('✦ '+inbox.length+' task'+(inbox.length===1?'':'s')+' sent to Claude');
+      setTimeout(showTriage, 280);
+    }
+
     function openReview(card){
       var parts=assemble(card);
       var rev=document.getElementById('ol2Review');
       document.getElementById('ol2BoardView').style.display='none';
+      document.getElementById('ol2Triage').style.display='none';
       rev.style.display='';
       rev.innerHTML=
         '<div class="hrow"><div><h1 class="syne">'+esc(card.title||'Untitled')+'</h1><p>Claude drafted this. Refine it, then approve. Nothing sends without you.</p></div>'+
