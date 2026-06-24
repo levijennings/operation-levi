@@ -8599,6 +8599,16 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .asn{font-size:12px;font-weight:600;padding:6px 11px;border-radius:8px;cursor:pointer;border:1px solid #30353d;background:#1d2129;color:#aab2c0;white-space:nowrap;font-family:'Inter'}
 .ol2 .asn:hover{background:#23262d;color:#e9ecf2}
 .ol2 .asn.cl{border-color:#4a3514;color:#f2a33c}
+/* libraries */
+.ol2 .ltabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.ol2 .ltab{padding:8px 15px;border-radius:9px;border:1px solid #262a31;background:#15161b;color:#aab2c0;cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px}
+.ol2 .ltab.on{background:#1d2129;color:#e9ecf2;border-color:#30353d}
+.ol2 .ldot{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.ol2 .lgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+.ol2 .litem{background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:15px 16px;cursor:pointer;transition:.14s}
+.ol2 .litem:hover{border-color:#30353d;background:#202329}
+.ol2 .litem .lt{font-weight:600;font-size:14px;display:flex;align-items:center;gap:9px}
+.ol2 .litem .ld{color:#727a88;font-size:12.5px;margin-top:6px;line-height:1.5}
 /* voice capture */
 .ol2cap{position:fixed;inset:0;z-index:9200;background:rgba(4,4,6,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding-top:10vh;font-family:'Inter',system-ui,sans-serif}
 .ol2cap.on{display:flex}
@@ -8686,6 +8696,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '</div>'+
         '<div id="ol2Review" style="display:none"></div>'+
         '<div id="ol2Triage" style="display:none"></div>'+
+        '<div id="ol2Lib" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -8695,9 +8706,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Exit').onclick=close;
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
-      if(v==='libraries'){ clickFab('vlFab'); return; }
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='triage'){ showTriage(); } else { showBoard(v==='review'?'review':'board'); }
+      if(v==='triage'){ showTriage(); } else if(v==='libraries'){ showLibraries(); } else { showBoard(v==='review'?'review':'board'); }
     });
 
     function badges(it){
@@ -8712,6 +8722,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function showBoard(focus){
       document.getElementById('ol2Review').style.display='none';
       document.getElementById('ol2Triage').style.display='none';
+      document.getElementById('ol2Lib').style.display='none';
       document.getElementById('ol2BoardView').style.display='';
       var board=document.getElementById('ol2Board'); board.innerHTML='';
       var all=ITEMS();
@@ -8740,9 +8751,44 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function suggestsClaude(it){ var t=((it.title||'')+' '+(it.notes||'')).toLowerCase(); return it.execMode==='do-it' || DOIT.test(t); }
     function triIcon(it){ var id=String(it.id||''); if(id.charAt(0)==='v') return '🎤'; if(it.type==='phone-call') return '☎'; if(it.type==='book-meeting') return '📅'; return '▦'; }
     function updateCounts(){ var all=ITEMS(); var t=document.getElementById('ol2TriN'); if(t) t.textContent=all.filter(function(i){ return i.status==='backlog'; }).length; var rv=document.getElementById('ol2RevN'); if(rv) rv.textContent=all.filter(function(i){ return i.status==='review'; }).length; }
+    // ── Libraries (native browse) ──
+    var LIBTABS=[{k:'skills',label:'Skills',dot:'#5a9be0'},{k:'templates',label:'Templates',dot:'#f2a33c'},{k:'preferences',label:'Preferences',dot:'#46b98a'},{k:'context',label:'Context',dot:'#b07ad6'}];
+    var curLib='skills';
+    function ltrunc(s){ s=String(s==null?'':s).replace(/\s+/g,' ').trim(); return s.length>130?s.slice(0,127)+'…':s; }
+    function libRows(k){
+      var arr=(L()[k]||[]);
+      return arr.map(function(it){
+        if(k==='preferences'){ var v=it.value; if(v&&typeof v==='object'){ try{ v=JSON.stringify(v); }catch(e){ v=''; } } return {title:it.key||it.name||'Preference', desc:ltrunc(v||it.description||'')}; }
+        if(k==='context'){ return {title:it.name||'Context', desc:ltrunc(it.summary||it.type||it.description||'')}; }
+        if(k==='templates'){ return {title:it.name||'Template', desc:ltrunc(it.description||it.body||it.format||'')}; }
+        return {title:it.name||'Skill', desc:ltrunc(it.description||it.whenToUse||it.body||'')};
+      });
+    }
+    function showLibraries(){
+      document.getElementById('ol2BoardView').style.display='none';
+      document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2Triage').style.display='none';
+      var lib=document.getElementById('ol2Lib'); lib.style.display='';
+      var dot=LIBTABS.reduce(function(o,t){ o[t.k]=t.dot; return o; },{});
+      var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>The knowledge layer — loaded only when a task needs it. Edit in the full editor.</p></div>'+
+        '<button class="gbtn" id="ol2LibEdit">＋ Add / edit</button></div>'+
+        '<div class="ltabs" id="ol2LibTabs">'+LIBTABS.map(function(t){ return '<div class="ltab'+(t.k===curLib?' on':'')+'" data-l="'+t.k+'"><span class="ldot" style="background:'+t.dot+'"></span>'+t.label+' <span style="color:#727a88;font-size:11px">'+((L()[t.k]||[]).length)+'</span></div>'; }).join('')+'</div>'+
+        '<div class="lgrid" id="ol2LibGrid"></div>';
+      lib.innerHTML=html;
+      function renderGrid(){
+        var g=document.getElementById('ol2LibGrid'); var rows=libRows(curLib); g.innerHTML='';
+        if(!rows.length){ g.innerHTML='<div class="empty" style="grid-column:1/-1;padding:36px">No '+curLib+' yet — add one in the editor.</div>'; return; }
+        rows.forEach(function(r){ var el=document.createElement('div'); el.className='litem'; el.innerHTML='<div class="lt"><span class="ldot" style="background:'+dot[curLib]+'"></span>'+esc(r.title)+'</div>'+(r.desc?'<div class="ld">'+esc(r.desc)+'</div>':''); el.onclick=function(){ clickFab('vlFab'); }; g.appendChild(el); });
+      }
+      renderGrid();
+      document.getElementById('ol2LibTabs').addEventListener('click',function(e){ var t=e.target.closest('.ltab'); if(!t) return; curLib=t.getAttribute('data-l'); [].forEach.call(lib.querySelectorAll('.ltab'),function(x){ x.classList.toggle('on', x===t); }); renderGrid(); });
+      document.getElementById('ol2LibEdit').onclick=function(){ clickFab('vlFab'); };
+    }
+
     function showTriage(){
       document.getElementById('ol2BoardView').style.display='none';
       document.getElementById('ol2Review').style.display='none';
+      document.getElementById('ol2Lib').style.display='none';
       var tr=document.getElementById('ol2Triage'); tr.style.display='';
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsClaude).length;
@@ -8783,6 +8829,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var rev=document.getElementById('ol2Review');
       document.getElementById('ol2BoardView').style.display='none';
       document.getElementById('ol2Triage').style.display='none';
+      document.getElementById('ol2Lib').style.display='none';
       rev.style.display='';
       rev.innerHTML=
         '<div class="hrow"><div><h1 class="syne">'+esc(card.title||'Untitled')+'</h1><p>Claude drafted this. Refine it, then approve. Nothing sends without you.</p></div>'+
