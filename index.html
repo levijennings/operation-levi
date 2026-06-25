@@ -8692,6 +8692,50 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   .ol2cap .cact{flex-wrap:wrap}
 }
 </style>
+<style>
+/* 2.0 — home / week / people surfaces */
+.ol2 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:4px 0 8px}
+.ol2 .tile{background:#15161b;border:1px solid #262a31;border-radius:13px;padding:15px 16px;cursor:pointer;transition:.14s}
+.ol2 .tile:hover{border-color:#30353d;background:#1b1d23;transform:translateY(-1px)}
+.ol2 .tile .num{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1}
+.ol2 .tile .lbl{color:#aab2c0;font-size:12.5px;margin-top:7px;display:flex;align-items:center;gap:7px}
+.ol2 .tile .dot{width:7px;height:7px;border-radius:50%}
+.ol2 .glance{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ol2 .gseg{background:#15161b;border:1px solid #262a31;border-radius:11px;padding:12px 14px;text-align:center}
+.ol2 .gseg .gn{font-family:'Syne',sans-serif;font-weight:800;font-size:22px}
+.ol2 .gseg .gl{color:#727a88;font-size:11.5px;margin-top:4px}
+.ol2 .wkgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:9px;align-items:start}
+.ol2 .wkday{background:#121317;border:1px solid #23262d;border-radius:11px;padding:9px 9px 6px;transition:.12s}
+.ol2 .wkday.today{border-color:#4a3514;background:#17130b}
+.ol2 .wkday.drop{outline:1.5px dashed #2E6FB0;outline-offset:2px;background:#13202f}
+.ol2 .wkday h4{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#727a88;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.ol2 .wkday h4 .dn{color:#cdd3dd;font-weight:700;font-size:13px}
+.ol2 .wkdrop{min-height:46px}
+.ol2 .wkcard{background:#1b1d23;border:1px solid #262a31;border-radius:8px;padding:7px 9px;margin-bottom:7px;font-size:11.5px;font-weight:500;cursor:grab;line-height:1.35}
+.ol2 .wkcard:hover{border-color:#30353d;background:#202329}
+.ol2 .unsched{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;padding:12px;background:#121317;border:1px dashed #30353d;border-radius:12px;min-height:52px;align-items:flex-start}
+.ol2 .unsched.drop{outline:1.5px dashed #2E6FB0;background:#13202f}
+.ol2 .unsched .wkcard{margin:0}
+.ol2 .pgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.ol2 .pcard{background:#15161b;border:1px solid #262a31;border-radius:14px;padding:16px 18px}
+.ol2 .phead{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.ol2 .pav{width:38px;height:38px;border-radius:50%;background:#33405a;color:#cdd8ea;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ol2 .pav.me{background:#3a2b12;color:#f2a33c}
+.ol2 .pname{font-weight:700;font-size:15px}
+.ol2 .prole{color:#727a88;font-size:11.5px;margin-top:1px}
+.ol2 .pstats{display:flex;gap:16px;margin-bottom:11px}
+.ol2 .pstat{font-size:11px;color:#727a88}
+.ol2 .pstat b{display:block;font-size:18px;color:#e9ecf2;font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1px}
+.ol2 .pli{display:flex;align-items:center;gap:9px;padding:7px 0;border-top:1px solid #1d2027;font-size:12.5px;cursor:pointer}
+.ol2 .pli:hover{color:#fff}
+.ol2 .pli .pdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+@media (max-width:720px){
+  .ol2 .tiles{grid-template-columns:1fr 1fr}
+  .ol2 .glance{grid-template-columns:1fr 1fr}
+  .ol2 .wkgrid{grid-template-columns:1fr 1fr}
+  .ol2 .pgrid{grid-template-columns:1fr}
+}
+</style>
 <script>
 (function(){
   if(window.__ol2) return; window.__ol2=true;
@@ -8734,11 +8778,14 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       '<aside class="side">'+
         '<div class="brand"><span class="star">✦</span> Operation Levi</div>'+
         '<nav class="nav" id="ol2Nav">'+
-          '<a data-v="board" class="on">▦ Board</a>'+
+          '<a data-v="home" class="on">⌂ Home</a>'+
           '<a data-v="myday">◴ My Day</a>'+
+          '<a data-v="week">▤ My Week</a>'+
+          '<a data-v="board">▦ Board</a>'+
           '<a data-v="review">✎ Needs review <span class="tag" id="ol2RevN">0</span></a>'+
-          '<a data-v="libraries">◆ Libraries</a>'+
           '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
+          '<a data-v="people">◍ People</a>'+
+          '<a data-v="libraries">◆ Libraries</a>'+
         '</nav>'+
         '<button class="spk" id="ol2Spk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg> Speak a task</button>'+
         '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
@@ -8753,17 +8800,20 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2Triage" style="display:none"></div>'+
         '<div id="ol2Lib" style="display:none"></div>'+
         '<div id="ol2MyDay" style="display:none"></div>'+
+        '<div id="ol2Home" style="display:none"></div>'+
+        '<div id="ol2Week" style="display:none"></div>'+
+        '<div id="ol2People" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
-    function open(){ shell.classList.add('on'); showBoard(); }
+    function open(){ shell.classList.add('on'); showHome(); }
     function close(){ shell.classList.remove('on'); }
     pill.onclick=open;
     document.getElementById('ol2Exit').onclick=close;
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='triage'){ showTriage(); } else if(v==='libraries'){ showLibraries(); } else if(v==='myday'){ showMyDay(); } else { showBoard(v==='review'?'review':'board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='people'){ showPeople(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -8821,11 +8871,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         board.appendChild(col);
       });
     }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function go(v){ var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
+    function stColor(s){ return s==='done'?'#46b98a':s==='review'?'#f2a33c':(s==='active'||s==='today')?'#5a9be0':s==='waiting'?'#e0a02c':'#727a88'; }
+    function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
     function showBoard(focus){
-      document.getElementById('ol2Review').style.display='none';
-      document.getElementById('ol2Triage').style.display='none';
-      document.getElementById('ol2Lib').style.display='none';
-      document.getElementById('ol2MyDay').style.display='none';
+      hideAllPanels();
       document.getElementById('ol2BoardView').style.display='';
       boardFocus=focus||'board';
       var all=ITEMS();
@@ -8857,10 +8908,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       });
     }
     function showLibraries(){
-      document.getElementById('ol2BoardView').style.display='none';
-      document.getElementById('ol2Review').style.display='none';
-      document.getElementById('ol2Triage').style.display='none';
-      document.getElementById('ol2MyDay').style.display='none';
+      hideAllPanels();
       var lib=document.getElementById('ol2Lib'); lib.style.display='';
       var dot=LIBTABS.reduce(function(o,t){ o[t.k]=t.dot; return o; },{});
       var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>The knowledge layer — loaded only when a task needs it. Edit in the full editor.</p></div>'+
@@ -8879,10 +8927,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     }
 
     function showTriage(){
-      document.getElementById('ol2BoardView').style.display='none';
-      document.getElementById('ol2Review').style.display='none';
-      document.getElementById('ol2Lib').style.display='none';
-      document.getElementById('ol2MyDay').style.display='none';
+      hideAllPanels();
       var tr=document.getElementById('ol2Triage'); tr.style.display='';
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsClaude).length;
@@ -8922,10 +8967,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
     function top3Ids(){ try{ return (typeof top3Manual!=='undefined'&&top3Manual)?top3Manual.map(String):[]; }catch(e){ return []; } }
     function showMyDay(){
-      document.getElementById('ol2BoardView').style.display='none';
-      document.getElementById('ol2Review').style.display='none';
-      document.getElementById('ol2Triage').style.display='none';
-      document.getElementById('ol2Lib').style.display='none';
+      hideAllPanels();
       var md=document.getElementById('ol2MyDay'); md.style.display='';
       var all=ITEMS(); var today=todayStr(); var ids=top3Ids();
       var pinned=ids.map(function(id){ return all.filter(function(x){ return String(x.id)===id; })[0]; }).filter(Boolean);
@@ -8949,13 +8991,143 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       });
     }
 
+    // ── Home / landing ──
+    function showHome(){
+      hideAllPanels();
+      var home=document.getElementById('ol2Home'); home.style.display='';
+      var all=ITEMS();
+      var review=all.filter(function(i){ return i.status==='review'; });
+      var triage=all.filter(function(i){ return i.status==='backlog'; });
+      var today=todayStr();
+      var dueToday=all.filter(function(i){ return i.status!=='done' && (i.dueDate===today || i.status==='today'); });
+      var inProg=all.filter(function(i){ return ['active','today','waiting'].indexOf(i.status)>=0; });
+      var done=all.filter(function(i){ return i.status==='done'; });
+      var toDo=all.filter(function(i){ return ['backlog','thisweek'].indexOf(i.status)>=0; });
+      var hour=new Date().getHours(); var greet=hour<12?'Good morning':(hour<18?'Good afternoon':'Good evening');
+      var dstr=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+      var bits=[];
+      if(review.length) bits.push(review.length+' draft'+(review.length===1?'':'s')+' to review');
+      if(dueToday.length) bits.push(dueToday.length+' due today');
+      if(triage.length) bits.push(triage.length+' to triage');
+      var summary=bits.length?('You have '+bits.join(', ')+'.'):'You’re all caught up — nothing pressing right now.';
+      var tiles=[
+        {v:'review',num:review.length,lbl:'Needs review',c:'#f2a33c'},
+        {v:'myday',num:dueToday.length,lbl:'Due today',c:'#5a9be0'},
+        {v:'triage',num:triage.length,lbl:'To triage',c:'#b07ad6'},
+        {v:'board',num:inProg.length,lbl:'In progress',c:'#46b98a'}
+      ];
+      var ids=top3Ids();
+      var pinned=ids.map(function(id){ return all.filter(function(x){ return String(x.id)===id; })[0]; }).filter(Boolean);
+      var top3=pinned.slice();
+      if(top3.length<3){ var fill=all.filter(function(i){ return i.status!=='done' && top3.indexOf(i)<0 && (i.dueDate===today || i.status==='today' || i.status==='active' || i.status==='thisweek'); }); top3=top3.concat(fill).slice(0,3); }
+      var captured=all.filter(function(i){ return i.sourceType && i.status!=='done'; }).slice(0,4);
+      var h='<div class="hrow"><div><h1 class="syne">'+greet+', '+esc(meName())+'</h1><p>'+esc(dstr)+' · '+esc(summary)+'</p></div>'+
+        '<button class="gbtn amber" id="ol2HomeSpeak"><span style="font-size:15px">✦</span> Speak a task</button></div>';
+      h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-go="'+t.v+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
+      h+='<div class="ulbl" style="margin:22px 0 9px">Focus today</div>';
+      if(!top3.length){ h+='<div class="empty">Nothing scheduled — speak a task, or pin one in My Day.</div>'; }
+      else { h+='<div class="md-top3">'+top3.map(function(it,idx){ return '<div class="md-card" data-open="'+esc(it.id)+'"><div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+' · '+esc(it.status||'')+'</div></div></div>'; }).join('')+'</div>'; }
+      h+='<div class="ulbl" style="margin:24px 0 9px">This week at a glance</div>';
+      h+='<div class="glance">'+seg('To do',toDo.length,'#9aa3b2')+seg('In progress',inProg.length,'#5a9be0')+seg('Needs review',review.length,'#f2a33c')+seg('Done',done.length,'#46b98a')+'</div>';
+      if(captured.length){
+        h+='<div class="ulbl" style="margin:24px 0 9px">Just captured from Outlook</div>';
+        h+=captured.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.sourceType==='calendar'?'📅 calendar':'✉ email')+(it.aiStatus==='drafted'?' · ✦ draft ready':'')+'</div></div>'+badges(it)+'</div>'; }).join('');
+      }
+      home.innerHTML=h;
+      document.getElementById('ol2HomeSpeak').onclick=function(){ openCapture(); };
+      [].forEach.call(home.querySelectorAll('.tile[data-go]'),function(el){ el.onclick=function(){ go(el.getAttribute('data-go')); }; });
+      [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
+    }
+
+    // ── My Week / weekly horizon ──
+    var weekOffset=0;
+    function wkCardHtml(it){ return '<div class="wkcard" draggable="true" data-id="'+esc(it.id)+'"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+stColor(it.status)+';margin-right:6px;vertical-align:middle"></span>'+esc(it.title||'Untitled')+'</div>'; }
+    function wireWk(wk){
+      [].forEach.call(wk.querySelectorAll('.wkcard[draggable]'),function(el){
+        el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', el.getAttribute('data-id')); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
+        el.ondragend=function(){ el.style.opacity=''; };
+        el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===el.getAttribute('data-id'); })[0]; if(it) openReview(it); };
+      });
+      [].forEach.call(wk.querySelectorAll('.wkday[data-day]'),function(col){
+        col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
+        col.ondragleave=function(){ col.classList.remove('drop'); };
+        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var it=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(it){ it.dueDate=col.getAttribute('data-day'); if(it.status==='backlog') it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Scheduled for '+dueLabel(it.dueDate)); } showWeek(); };
+      });
+      var un=document.getElementById('ol2Unsched');
+      if(un){ un.ondragover=function(e){ e.preventDefault(); un.classList.add('drop'); }; un.ondragleave=function(){ un.classList.remove('drop'); }; un.ondrop=function(e){ e.preventDefault(); un.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var it=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(it){ it.dueDate=''; if(it.status==='backlog') it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Moved to unscheduled'); } showWeek(); }; }
+    }
+    function showWeek(){
+      hideAllPanels();
+      var wk=document.getElementById('ol2Week'); wk.style.display='';
+      var all=ITEMS();
+      var d=new Date(); d.setHours(0,0,0,0); var dow=(d.getDay()+6)%7; var start=new Date(d); start.setDate(d.getDate()-dow+weekOffset*7);
+      var days=[]; for(var i=0;i<7;i++){ var dd=new Date(start); dd.setDate(start.getDate()+i); days.push(dd); }
+      var todayS=fmt(new Date());
+      var endD=new Date(start); endD.setDate(start.getDate()+6);
+      var range=start.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' – '+endD.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+      var lbl=weekOffset===0?'This week':(weekOffset===1?'Next week':(weekOffset===-1?'Last week':range));
+      var unsched=all.filter(function(i){ return i.status==='thisweek' && !i.dueDate; });
+      var dn=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      var h='<div class="hrow"><div><h1 class="syne">My Week</h1><p>'+esc(lbl)+' · '+esc(range)+' — drag a task onto a day to schedule it.</p></div>'+
+        '<div style="display:flex;gap:8px"><button class="gbtn" id="ol2WkPrev">‹</button><button class="gbtn" id="ol2WkToday">Today</button><button class="gbtn" id="ol2WkNext">›</button></div></div>';
+      h+='<div class="ulbl" style="margin-bottom:8px">Unscheduled this week <span style="color:#727a88">('+unsched.length+')</span></div>';
+      h+='<div class="unsched" id="ol2Unsched">'+(unsched.length?unsched.map(wkCardHtml).join(''):'<span style="color:#727a88;font-size:12px">Nothing unscheduled — nice.</span>')+'</div>';
+      h+='<div class="wkgrid">'+days.map(function(dd,idx){ var ds=fmt(dd); var cards=all.filter(function(i){ return i.status!=='done' && i.dueDate===ds; });
+        return '<div class="wkday'+(ds===todayS?' today':'')+'" data-day="'+ds+'"><h4>'+dn[idx]+' <span class="dn">'+dd.getDate()+'</span></h4><div class="wkdrop">'+cards.map(wkCardHtml).join('')+'</div></div>'; }).join('')+'</div>';
+      wk.innerHTML=h;
+      document.getElementById('ol2WkPrev').onclick=function(){ weekOffset--; showWeek(); };
+      document.getElementById('ol2WkNext').onclick=function(){ weekOffset++; showWeek(); };
+      document.getElementById('ol2WkToday').onclick=function(){ weekOffset=0; showWeek(); };
+      wireWk(wk);
+    }
+
+    // ── People / delegation ──
+    function showPeople(){
+      hideAllPanels();
+      var pp=document.getElementById('ol2People'); pp.style.display='';
+      var open=ITEMS().filter(function(i){ return i.status!=='done'; });
+      var me=meName();
+      var names=[];
+      try{ var ga=(typeof getAllAssignees==='function')?(getAllAssignees()||[]):[]; ga.forEach(function(n){ if(n&&names.indexOf(n)<0) names.push(n); }); }catch(e){}
+      open.forEach(function(i){ var o=owner(i); if(o&&names.indexOf(o)<0) names.push(o); (i.assignees||[]).forEach(function(a){ if(a&&names.indexOf(a)<0) names.push(a); }); });
+      if(names.indexOf(me)<0) names.unshift(me);
+      names.sort(function(a,b){ return a===me?-1:(b===me?1:0); });
+      var profiles={}; try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles){ if(Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles.forEach(function(p){ if(p&&p.name) profiles[p.name]=p; }); } else { profiles=peopleProfiles; } } }catch(e){}
+      var h='<div class="hrow"><div><h1 class="syne">People</h1><p>Who owns what, and what’s waiting on whom. Open any card to delegate.</p></div></div><div class="pgrid">';
+      names.forEach(function(nm){
+        var mine=open.filter(function(i){ return owner(i)===nm; });
+        if(!mine.length && nm!==me) return;
+        var inprog=mine.filter(function(i){ return ['active','today'].indexOf(i.status)>=0; }).length;
+        var waiting=mine.filter(function(i){ return i.status==='waiting'; }).length;
+        var rev=mine.filter(function(i){ return i.status==='review'; }).length;
+        var waitOn=open.filter(function(i){ return i.waitingFrom===nm && owner(i)!==nm; }).length;
+        var prof=profiles[nm]||{}; var role=prof.role||prof.title||(nm===me?'You':'');
+        var isMe=nm===me; var list=mine.slice(0,5);
+        h+='<div class="pcard">'+
+          '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+'</div><div class="prole">'+esc(role||'—')+'</div></div></div>'+
+          '<div class="pstats"><div class="pstat"><b>'+mine.length+'</b>open</div><div class="pstat"><b>'+inprog+'</b>in progress</div><div class="pstat"><b>'+waiting+'</b>waiting</div>'+(rev?('<div class="pstat"><b>'+rev+'</b>review</div>'):'')+'</div>'+
+          (waitOn?('<div style="font-size:11.5px;color:#e0a02c;margin-bottom:8px">⏳ '+waitOn+' item'+(waitOn===1?'':'s')+' waiting on '+esc(isMe?'you':nm)+'</div>'):'')+
+          '<div class="plist">'+(list.length?list.map(function(it){ return '<div class="pli" data-open="'+esc(it.id)+'"><span class="pdot" style="background:'+stColor(it.status)+'"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.title||'Untitled')+'</span><span style="color:#727a88;font-size:11px;flex-shrink:0">'+esc(it.dueDate?dueLabel(it.dueDate):it.status)+'</span></div>'; }).join(''):'<div style="color:#727a88;font-size:12px;padding-top:6px">No open items.</div>')+'</div>'+
+          (mine.length>5?('<div style="color:#727a88;font-size:11.5px;margin-top:8px">+'+(mine.length-5)+' more</div>'):'')+
+          '</div>';
+      });
+      h+='</div>';
+      pp.innerHTML=h;
+      [].forEach.call(pp.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
+    }
+
+    function deleteCard(card){
+      try{ if(typeof items!=='undefined' && items && items.splice){ for(var n=items.length-1;n>=0;n--){ if(String(items[n].id)===String(card.id)) items.splice(n,1); } } }catch(e){}
+      try{ if(typeof top3Manual!=='undefined' && top3Manual && top3Manual.splice){ for(var m=top3Manual.length-1;m>=0;m--){ if(String(top3Manual[m])===String(card.id)) top3Manual.splice(m,1); } } }catch(e){}
+      persist();
+      try{ if(typeof renderCurrentView==='function') renderCurrentView(); else if(typeof renderBoard==='function') renderBoard(); }catch(e){}
+      toast('🗑 Task deleted'); updateCounts(); showBoard();
+    }
+
     function openReview(card){
       var parts=assemble(card);
       var rev=document.getElementById('ol2Review');
-      document.getElementById('ol2BoardView').style.display='none';
-      document.getElementById('ol2Triage').style.display='none';
-      document.getElementById('ol2Lib').style.display='none';
-      document.getElementById('ol2MyDay').style.display='none';
+      hideAllPanels();
       rev.style.display='';
       var STATUSES=[['backlog','Backlog'],['thisweek','This week'],['active','Active'],['today','Today'],['waiting','Waiting'],['review','Needs review'],['done','Done']];
       var OWNERS=(function(){ var a=[]; try{ a=(typeof getAllAssignees==='function'?(getAllAssignees()||[]):[]); }catch(e){} var o=owner(card); if(o&&a.indexOf(o)<0) a=[o].concat(a); if(!a.length) a=[o||'Levi']; return a; })();
@@ -8981,6 +9153,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
               '<span class="chip">◷ '+parts.prefs.length+' preference'+(parts.prefs.length===1?'':'s')+'</span>'+
             '</div>'+
             '<a href="javascript:void(0)" id="edClassic" style="display:inline-block;margin-top:12px;color:#8a91a0;font-size:11.5px;text-decoration:underline">Edit all fields in classic →</a>'+
+            '<div style="margin-top:14px;border-top:1px solid #262a31;padding-top:13px"><button type="button" id="ol2Del" style="background:none;border:1px solid #5a2b2b;color:#e07a63;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">🗑 Delete task</button></div>'+
           '</div></div>'+
           '<div>'+
             '<div class="draft'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?esc(card.aiArtifact.content):'No draft yet — Run with Claude to generate one.')+'</div>'+
@@ -9004,6 +9177,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
         document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
         document.getElementById('edClassic').onclick=function(){ shell.classList.remove('on'); try{ if(typeof openDetail==='function') openDetail(card.id); }catch(e){} };
+        var db=document.getElementById('ol2Del');
+        if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='🗑 Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
       })();
       var msg=document.getElementById('ol2RevMsg');
       function showMsg(t,kind){ msg.style.display='block'; msg.style.color=kind==='err'?'#e07a63':'#f2c98a'; msg.innerHTML=t; }
