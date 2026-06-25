@@ -9130,8 +9130,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var t3=document.getElementById('ol2Top3');
       if(!top3.length){ t3.innerHTML='<div class="empty">Nothing scheduled yet — speak a task, or pin one below.</div>'; }
       var t3order=top3.map(function(x){ return String(x.id); });
-      top3.forEach(function(it,idx){ var pin=top3Ids().indexOf(String(it.id))>=0; var el=document.createElement('div'); el.className='md-card'; el.draggable=true; el.innerHTML='<div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+' · '+esc(it.status||'')+'</div></div>'+avatar(it)+'<button class="md-pin'+(pin?' on':'')+'" title="'+(pin?'Remove from Top 3':'Pin to Top 3')+'">'+(pin?'★':'☆')+'</button>';
+      top3.forEach(function(it,idx){ var pin=top3Ids().indexOf(String(it.id))>=0; var el=document.createElement('div'); el.className='md-card'; el.draggable=true; el.innerHTML='<div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+' · <span class="lp-due" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(dueLabel(it.dueDate)):'＋ date')+'</span> · '+esc(it.status||'')+'</div></div>'+avatar(it)+'<button class="md-pin'+(pin?' on':'')+'" title="'+(pin?'Remove from Top 3':'Pin to Top 3')+'">'+(pin?'★':'☆')+'</button>';
         el.querySelector('.md-pin').onclick=function(ev){ ev.stopPropagation(); lpToggleTop3(it.id); showMyDay(); };
+        (function(){ var dD=el.querySelector('.lp-due'); if(dD){ dD.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dD); }; } })();
         el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
         el.ondragend=function(){ el.style.opacity=''; el.style.borderTop=''; el.style.borderBottom=''; };
         el.ondragover=function(e){ e.preventDefault(); var r=el.getBoundingClientRect(); var before=e.clientY<(r.top+r.height/2); el.style.borderTop=before?'2px solid #f2a33c':''; el.style.borderBottom=before?'':'2px solid #f2a33c'; };
@@ -9142,8 +9143,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var tl=document.getElementById('ol2TodayList');
       if(!todayCards.length){ tl.innerHTML='<div class="empty">No tasks due today.</div>'; }
       todayCards.forEach(function(it){ var isPinned=ids.indexOf(String(it.id))>=0; var el=document.createElement('div'); el.className='md-row';
-        el.innerHTML='<button class="md-pin'+(isPinned?' on':'')+'" title="Pin to Top 3">'+(isPinned?'★':'☆')+'</button><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it);
+        el.innerHTML='<button class="md-pin'+(isPinned?' on':'')+'" title="Pin to Top 3">'+(isPinned?'★':'☆')+'</button><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+esc(it.category||'')+' · <span class="lp-due" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(dueLabel(it.dueDate)):'＋ date')+'</span></div></div>'+badges(it);
         el.querySelector('.md-pin').onclick=function(ev){ ev.stopPropagation(); try{ if(typeof toggleTop3Pick==='function') toggleTop3Pick(it.id); else { var p=(typeof top3Manual!=='undefined'&&top3Manual)?top3Manual:[]; var k=p.map(String).indexOf(String(it.id)); if(k>=0) p.splice(k,1); else if(p.length<3) p.push(it.id); persist(); } }catch(e){} showMyDay(); };
+        (function(){ var dD=el.querySelector('.lp-due'); if(dD){ dD.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dD); }; } })();
         el.onclick=function(){ openReview(it); };
         tl.appendChild(el);
       });
