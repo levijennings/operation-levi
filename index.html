@@ -1355,7 +1355,8 @@
                     requireProof: item.requireProof || false,
                     proof: item.proof || null,
                     pinned: item.pinned || false,
-                    aiConfidence: item.aiConfidence || null,
+                    aiConfidence: item.aiConfidence != null ? item.aiConfidence : null,
+                    aiAssess: item.aiAssess || null,
                     _timerStart: item._timerStart || null,
                     availableForEA: item.availableForEA || false,
                     submittedBy: item.submittedBy || '',
@@ -1562,7 +1563,8 @@
                     requireProof: item.requireProof || false,
                     proof: item.proof || null,
                     pinned: item.pinned || false,
-                    aiConfidence: item.aiConfidence || null,
+                    aiConfidence: item.aiConfidence != null ? item.aiConfidence : null,
+                    aiAssess: item.aiAssess || null,
                     _timerStart: item._timerStart || null,
                     availableForEA: item.availableForEA || false,
                     submittedBy: item.submittedBy || '',
@@ -8732,6 +8734,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .drow .lk a{font-size:11px;color:#5a9be0;background:#13202e;border:1px solid #1e3a4d;border-radius:6px;padding:3px 8px;text-decoration:none;white-space:nowrap}
 .ol2 .lp-pin{background:none;border:none;color:#5a6270;font-size:15px;cursor:pointer;flex-shrink:0;line-height:1;padding:0;align-self:center}
 .ol2 .lp-pin.on{color:#f2a33c}
+.ol2 .lp-conf{display:flex;align-items:center;gap:10px}
+.ol2 .lp-conf .bar{flex:1;height:8px;background:#23262e;border-radius:5px;overflow:hidden}
+.ol2 .lp-conf .bar>div{height:100%;border-radius:5px}
+.ol2 .lp-qh{font-size:10.5px;color:#8a91a0;text-transform:uppercase;letter-spacing:.05em;margin-top:9px}
+.ol2 .lp-q{margin:5px 0 0 16px;padding:0;font-size:12.5px;color:#cfd5de}
+.ol2 .lp-q li{margin-bottom:4px}
 .ol2 .lp-sec{margin-top:14px;border-top:1px solid #262a31;padding-top:12px}
 .ol2 .lp-sech{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a91a0;margin-bottom:8px}
 .ol2 .lp-mini{background:#23262e;border:1px solid #30353d;color:#cfd5de;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
@@ -9002,6 +9010,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   function lpLinks(it){ var out=[]; [['Notion',it.notionUrl],['Figma',it.figmaUrl],['Google Doc',it.googleDocsUrl],['Word',it.msDocsUrl],['Excel',it.msExcelUrl]].forEach(function(p){ if(p[1]) out.push({label:p[0],url:p[1]}); }); (it.urls||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.label||u.name||lpLinkLabel(u.url),url:u.url}); }); (it.documents||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.name||u.label||'Document',url:u.url}); }); return out; }
   function lpMins(m){ m=Math.round(m||0); var h=Math.floor(m/60), mm=m%60; return (h?(h+'h '):'')+mm+'m'; }
   function lpWhen(ts){ if(!ts) return ''; try{ var d=new Date(ts); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+  function lpAssess(card, cb){ var L0={}; try{ L0=(typeof L==='function')?(L()||{}):{}; }catch(e){} var libs={ skills:(L0.skills||[]).map(function(s){return s.name;}).filter(Boolean), templates:(L0.templates||[]).map(function(t){return t.name;}).filter(Boolean), context:(L0.context||[]).map(function(c){return c.name;}).filter(Boolean) }; var rk=(typeof RUN_KEY!=='undefined')?RUN_KEY:'operation-levi'; fetch('/api/assess',{method:'POST',headers:{'content-type':'application/json','x-ol-key':rk},body:JSON.stringify({task:{title:card.title,notes:card.notes,category:card.category},libraries:libs})}).then(function(r){return r.json();}).then(function(j){ if(cb) cb(j); }).catch(function(){ if(cb) cb(null); }); }
   function lpProof(card){ var url=window.prompt('This task requires proof. Paste a Zoom (or other) link:', (card.proof&&card.proof.url)||''); if(url===null||!url.trim()) return false; var note=window.prompt('Add an explanation of what was completed:', (card.proof&&card.proof.note)||''); if(note===null) return false; var u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; card.proof={url:u,note:(note||'').trim(),by:meName(),ts:Date.now()}; return true; }
   var homeExpandedPerson=null;
   function lpAudit(card, action){ if(!card.timeline) card.timeline=[]; card.timeline.push({by:meName(),ts:Date.now(),action:action}); }
@@ -9179,7 +9188,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard'; el.draggable=true; el.style.borderLeft='3px solid '+lpCatColor(it.category);
           var t3on=top3Ids().indexOf(String(it.id))>=0;
-          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#f2a33c">⏱ running</span>':'')+(it.availableForEA?'<span class="due" style="color:#b07ad6" title="Open for EA pickup">EA</span>':'')+(it.submittedBy?'<span class="due" style="color:#e0a02c" title="Submitted for review">submitted</span>':'')+badges(it)+'</div>';
+          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#f2a33c">⏱ running</span>':'')+(it.availableForEA?'<span class="due" style="color:#b07ad6" title="Open for EA pickup">EA</span>':'')+(it.submittedBy?'<span class="due" style="color:#e0a02c" title="Submitted for review">submitted</span>':'')+(it.aiConfidence!=null?'<span class="due" style="color:'+(it.aiConfidence>=75?'#46b98a':(it.aiConfidence>=40?'#e0a02c':'#e07a63'))+'" title="Claude readiness">'+it.aiConfidence+'%</span>':'')+badges(it)+'</div>';
           var t3btn=el.querySelector('.lp-t3'); if(t3btn){ t3btn.onclick=function(ev){ ev.stopPropagation(); lpToggleTop3(it.id); renderColumns(); }; }
           var dueEl=el.querySelector('.lp-due'); if(dueEl){ dueEl.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dueEl); }; }
           el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
@@ -9540,6 +9549,11 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function lpExtrasHtml(card){
       var links=lpLinks(card); var tl=card.timeLog||[]; var tracked=tl.reduce(function(s,e){return s+(e.mins||0);},0); var running=!!card._timerStart; var cm=card.comments||[];
       var h='';
+      var _conf=card.aiConfidence, _ass=card.aiAssess||{};
+      h+='<div class="lp-sec" style="border-top:none;padding-top:0"><div class="lp-sech"><span>AI readiness</span><button type="button" class="lp-mini" id="edAssess">'+(_conf==null?'✦ Assess with Claude':'Re-assess')+'</button></div>';
+      if(_conf==null){ h+='<div class="lp-empty">See how confident Claude is it can do this — and what it needs from you.</div>'; }
+      else { var _cc=_conf>=75?'#46b98a':(_conf>=40?'#e0a02c':'#e07a63'); h+='<div class="lp-conf"><div class="bar"><div style="width:'+_conf+'%;background:'+_cc+'"></div></div><span style="color:'+_cc+';font-weight:700">'+_conf+'%</span></div>'; if(_ass.reason) h+='<div style="font-size:12px;color:#aab2c0;margin-top:6px">'+esc(_ass.reason)+'</div>'; if(_ass.questions&&_ass.questions.length){ h+='<div class="lp-qh">Claude needs to know</div><ul class="lp-q">'+_ass.questions.map(function(q){ return '<li>'+esc(q)+'</li>'; }).join('')+'</ul>'; } var _sg=_ass.suggest||{}; var _ch=[]; if(_sg.skill)_ch.push('◆ '+_sg.skill); if(_sg.template)_ch.push('▭ '+_sg.template); if(_sg.context)_ch.push('❖ '+_sg.context); if(_ch.length) h+='<div class="lp-qh">Suggested from your libraries</div><div class="lp-links" style="margin-top:5px">'+_ch.map(function(c){ return '<span class="lp-link" style="cursor:default">'+esc(c)+'</span>'; }).join('')+'</div>'; }
+      h+='</div>';
       h+='<div class="lp-sec"><div class="lp-sech"><span>Links</span><button type="button" class="lp-mini" id="edAddLink">+ Add link</button></div>';
       h+='<div class="lp-links">'+(links.length?links.map(function(l){ return '<a class="lp-link" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.label)+' ↗</a>'; }).join(''):'<span class="lp-empty">No links yet — add a Google Doc / Sheet / Slides, Figma, etc.</span>')+'</div></div>';
       h+='<div class="lp-sec"><div class="lp-sech"><span>Time</span></div><div class="lp-time"><span class="lp-lbl">Estimate (hrs)</span><input class="ein" id="edEst" type="number" min="0" step="0.25" value="'+(card.timeEstimate||'')+'" style="width:90px"/><button type="button" class="lp-timerbtn'+(running?' on':'')+'" id="edTimer">'+(running?'⏹ Stop timer':'▶ Start timer')+'</button><span class="lp-tracked">'+(tracked?('Tracked: '+lpMins(tracked)):'')+(running?' · running…':'')+'</span></div>';
@@ -9571,6 +9585,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var eaT=document.getElementById('edEA'); if(eaT){ eaT.onchange=function(){ card.availableForEA=this.checked; lpAudit(card, this.checked?'Opened for EA pickup':'Closed EA pickup'); try{ persist(); }catch(e){} }; }
       var clm=document.getElementById('edClaim'); if(clm){ clm.onclick=function(){ card.assignees=[meName()]; card.responsible=meName(); card.availableForEA=false; lpAudit(card,'Claimed by '+meName()); try{ persist(); }catch(e){} toast('You claimed this task'); openReview(card); }; }
       var subB=document.getElementById('edSubmit'); if(subB){ subB.onclick=function(){ card.status='review'; card.submittedBy=meName(); card.columnEnteredAt=Date.now(); lpAudit(card,'Submitted for review'); try{ persist(); }catch(e){} toast('Submitted for review'); openReview(card); }; }
+      var asb=document.getElementById('edAssess'); if(asb){ asb.onclick=function(){ asb.textContent='Assessing…'; asb.disabled=true; lpAssess(card,function(j){ if(j&&typeof j.confidence!=='undefined'){ card.aiConfidence=(j.confidence==null?null:Number(j.confidence)); card.aiAssess={reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; lpAudit(card,'AI assessed readiness'+(card.aiConfidence==null?'':': '+card.aiConfidence+'%')); try{ persist(); }catch(e){} openReview(card); } else { asb.textContent='Re-assess'; asb.disabled=false; toast('Could not assess (check ANTHROPIC_API_KEY in Vercel)'); } }); }; }
     }
     function openReview(card){
       var parts=assemble(card);
@@ -9778,6 +9793,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       setCapMode(doit?'do-it':'track-it');
       $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
       $c('ol2capH').textContent='Got it — here’s the card'; $c('ol2capSub').textContent='Claude structured your sentence. Confirm to save.';
+      (function(){ var box=$c('ol2capPv'); if(!box) return; var el=document.getElementById('ol2capAssess'); if(!el){ el=document.createElement('div'); el.id='ol2capAssess'; el.style.cssText='margin-top:10px;font-size:12.5px;color:#8a91a0'; box.appendChild(el); } el.textContent='✦ Assessing readiness…'; lpAssess({title:capDraft.title,notes:'',category:capDraft.cat},function(j){ if(!j||j.confidence==null){ el.textContent=''; if(capDraft) capDraft.assess=null; return; } if(capDraft) capDraft.assess={confidence:Number(j.confidence),reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; var cc=j.confidence>=75?'#46b98a':(j.confidence>=40?'#e0a02c':'#e07a63'); el.innerHTML='<span style="color:'+cc+';font-weight:700">Claude confidence: '+j.confidence+'%</span>'+(j.reason?(' — '+esc(j.reason)):'')+((j.questions&&j.questions.length)?('<div style="margin-top:5px;color:#e0a02c">Needs: '+esc(j.questions[0])+'</div>'):''); }); })();
     }
     function capConfirm(){
       if(!capDraft) return; var own=capDraft.owner||meName();
@@ -9787,6 +9803,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
         columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
         execMode:capMode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:capDraft.ctx?[capDraft.ctx.name]:[] };
+      if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
       persist(); closeCapture(); showBoard();
       if(capMode==='do-it'){
