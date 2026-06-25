@@ -1321,7 +1321,7 @@
                     peopleProfiles[person] = {
                         role: profile.role || '',
                         email: profile.email || '',
-                        hoursPerWeek: profile.hoursPerWeek || 40, capacityCadence: profile.capacityCadence || 'weekly', rate: profile.rate || 0,
+                        hoursPerWeek: profile.hoursPerWeek || 40, capacityCadence: profile.capacityCadence || 'weekly', rate: profile.rate || 0, isEA: profile.isEA || false,
                         resources: profile.resources || [],
                         profileNotes: profile.profileNotes || '',
                         meetingNotes: profile.meetingNotes || [],
@@ -1357,6 +1357,8 @@
                     pinned: item.pinned || false,
                     aiConfidence: item.aiConfidence || null,
                     _timerStart: item._timerStart || null,
+                    availableForEA: item.availableForEA || false,
+                    submittedBy: item.submittedBy || '',
                     startDate: item.startDate || '',
                     dueDate: item.dueDate || '',
                     deliverable: item.deliverable || '',
@@ -1542,7 +1544,8 @@
                 peopleProfiles[person] = {
                     role: profile.role || '', email: profile.email || '', phone: profile.phone || '',
                     team: profile.team || '', meetingNotes: profile.meetingNotes || [],
-                    resources: profile.resources || [], avatar: profile.avatar || ''
+                    resources: profile.resources || [], avatar: profile.avatar || '',
+                    hoursPerWeek: profile.hoursPerWeek || 40, capacityCadence: profile.capacityCadence || 'weekly', rate: profile.rate || 0, isEA: profile.isEA || false, profileNotes: profile.profileNotes || '', trackCapacity: profile.trackCapacity !== undefined ? profile.trackCapacity : (person === 'Levi')
                 };
             });
 
@@ -1561,6 +1564,8 @@
                     pinned: item.pinned || false,
                     aiConfidence: item.aiConfidence || null,
                     _timerStart: item._timerStart || null,
+                    availableForEA: item.availableForEA || false,
+                    submittedBy: item.submittedBy || '',
                 startDate: item.startDate || '', dueDate: item.dueDate || '', deliverable: item.deliverable || '',
                 notes: item.notes || '', priority: item.priority || 0, timeEstimate: item.timeEstimate || 0,
                 tshirtSize: item.tshirtSize || 'XS', raci: item.raci || { R: [], A: '', C: [], I: [] },
@@ -9018,7 +9023,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var h='<div style="width:660px;max-width:95vw;background:#15171c;border:1px solid #2a2e38;border-radius:16px;padding:22px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
     h+='<div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">'+av+'<div style="flex:1"><div style="font-size:19px;font-weight:700" class="syne">'+esc(name)+'</div><input class="ein" id="lpPfRole" placeholder="Role / title" value="'+esc(prof.role||'')+'" style="margin-top:6px"/></div><button id="lpPfClose" class="lp-mini">✕ Close</button></div>';
     h+='<div class="lp-pfstats"><div><b>'+st.open+'</b>open</div><div><b>'+st.done+'</b>done</div><div><b>'+st.estH+'</b>est hrs</div><div><b>'+(Math.round(st.spentH*10)/10)+'</b>spent hrs</div><div><b>'+(Math.round(st.remH*10)/10)+'</b>left hrs</div></div>';
-    h+='<div class="lp-sec"><div class="lp-sech"><span>Capacity & rate</span></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end"><div><div class="lp-lbl">Capacity (hrs)</div><input class="ein" id="lpPfCap" type="number" min="0" step="1" value="'+(cap||'')+'" style="width:100px"/></div><div><div class="lp-lbl">Per</div><select class="esel" id="lpPfCad" style="width:120px"><option value="weekly"'+(cad==='weekly'?' selected':'')+'>Weekly</option><option value="biweekly"'+(cad==='biweekly'?' selected':'')+'>Bi-weekly</option><option value="monthly"'+(cad==='monthly'?' selected':'')+'>Monthly</option></select></div>'+(admin?('<div><div class="lp-lbl">Hourly rate ($) · <span style="color:#727a88">private</span></div><input class="ein" id="lpPfRate" type="number" min="0" step="1" value="'+(rate||'')+'" style="width:110px"/></div>'):'')+'<button class="gbtn amber" id="lpPfSave">Save</button></div>';
+    h+='<div class="lp-sec"><div class="lp-sech"><span>Capacity & rate</span></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end"><div><div class="lp-lbl">Capacity (hrs)</div><input class="ein" id="lpPfCap" type="number" min="0" step="1" value="'+(cap||'')+'" style="width:100px"/></div><div><div class="lp-lbl">Per</div><select class="esel" id="lpPfCad" style="width:120px"><option value="weekly"'+(cad==='weekly'?' selected':'')+'>Weekly</option><option value="biweekly"'+(cad==='biweekly'?' selected':'')+'>Bi-weekly</option><option value="monthly"'+(cad==='monthly'?' selected':'')+'>Monthly</option></select></div>'+(admin?('<div><div class="lp-lbl">Hourly rate ($) · <span style="color:#727a88">private</span></div><input class="ein" id="lpPfRate" type="number" min="0" step="1" value="'+(rate||'')+'" style="width:110px"/></div>'):'')+'<label class="lp-check" style="align-self:center;margin-right:6px"><input type="checkbox" id="lpPfEA"'+(prof.isEA?' checked':'')+'/> EA / Assistant</label><button class="gbtn amber" id="lpPfSave">Save</button></div>';
     if(cap){ var utilPct=Math.round((st.remH/cap)*100); h+='<div style="font-size:12px;color:#8a91a0;margin-top:8px">Remaining work ('+(Math.round(st.remH*10)/10)+' hrs) is '+utilPct+'% of '+cap+' hrs '+capPer+' capacity.</div>'; }
     h+='</div>';
     h+='<div class="lp-sec"><div class="lp-sech"><span>Work & cost</span><select class="esel" id="lpPfTf" style="width:150px"><option value="all"'+(tf==='all'?' selected':'')+'>All time</option><option value="week"'+(tf==='week'?' selected':'')+'>This week</option><option value="month"'+(tf==='month'?' selected':'')+'>This month</option></select></div><div style="font-size:13px;color:#cfd5de;margin-bottom:10px">Tracked: <b>'+(Math.round(rangeSpentH*10)/10)+' hrs</b>'+(admin?(' · Cost: <b>$'+Math.round(rangeCost).toLocaleString()+'</b>'):'')+'</div><div class="lp-pfproj">'+(Object.keys(byCat).map(function(c){ var bb=byCat[c]; var sh=bb.spentMin/60; return '<div class="row"><span class="dot" style="background:'+lpCatColor(c)+'"></span><span class="c">'+esc(c)+'</span><span class="v">'+bb.n+' tasks · '+(Math.round(bb.est*10)/10)+' est · '+(Math.round(sh*10)/10)+' h spent'+(admin?(' · $'+Math.round(sh*rate).toLocaleString()):'')+'</span></div>'; }).join('')||'<span class="lp-empty">No tasks.</span>')+'</div></div>';
@@ -9027,7 +9032,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
     document.getElementById('lpPfClose').onclick=function(){ ov.remove(); };
     document.getElementById('lpPfTf').onchange=function(){ lpPersonProfile(name, this.value); };
-    document.getElementById('lpPfSave').onclick=function(){ try{ if(typeof peopleProfiles==='undefined'||!peopleProfiles||Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles=lpProfilesObj(); } }catch(e){} if(!peopleProfiles[name]) peopleProfiles[name]={}; peopleProfiles[name].role=document.getElementById('lpPfRole').value.trim(); peopleProfiles[name].hoursPerWeek=parseFloat(document.getElementById('lpPfCap').value)||0; peopleProfiles[name].capacityCadence=document.getElementById('lpPfCad').value; var rr=document.getElementById('lpPfRate'); if(rr) peopleProfiles[name].rate=parseFloat(rr.value)||0; try{ persist(); }catch(e){} toast('Profile saved'); ov.remove(); try{ var pp=document.getElementById('ol2People'); if(pp&&pp.style.display!=='none') showPeople(); }catch(e){} try{ var hm=document.getElementById('ol2Home'); if(hm&&hm.style.display!=='none') showHome(); }catch(e){} };
+    document.getElementById('lpPfSave').onclick=function(){ try{ if(typeof peopleProfiles==='undefined'||!peopleProfiles||Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles=lpProfilesObj(); } }catch(e){} if(!peopleProfiles[name]) peopleProfiles[name]={}; peopleProfiles[name].role=document.getElementById('lpPfRole').value.trim(); peopleProfiles[name].hoursPerWeek=parseFloat(document.getElementById('lpPfCap').value)||0; peopleProfiles[name].capacityCadence=document.getElementById('lpPfCad').value; var rr=document.getElementById('lpPfRate'); if(rr) peopleProfiles[name].rate=parseFloat(rr.value)||0; var eaC=document.getElementById('lpPfEA'); if(eaC) peopleProfiles[name].isEA=eaC.checked; try{ persist(); }catch(e){} toast('Profile saved'); ov.remove(); try{ var pp=document.getElementById('ol2People'); if(pp&&pp.style.display!=='none') showPeople(); }catch(e){} try{ var hm=document.getElementById('ol2Home'); if(hm&&hm.style.display!=='none') showHome(); }catch(e){} };
   }
   // ── Weather (Open-Meteo, no key) ──
   function lpWxLoc(){ try{ var s=JSON.parse(localStorage.getItem('lp_weather_loc')||'null'); if(s&&s.lat) return s; }catch(e){} return LP_WX_DEFAULT; }
@@ -9174,7 +9179,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard'; el.draggable=true; el.style.borderLeft='3px solid '+lpCatColor(it.category);
           var t3on=top3Ids().indexOf(String(it.id))>=0;
-          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#f2a33c">⏱ running</span>':'')+badges(it)+'</div>';
+          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#f2a33c">⏱ running</span>':'')+(it.availableForEA?'<span class="due" style="color:#b07ad6" title="Open for EA pickup">EA</span>':'')+(it.submittedBy?'<span class="due" style="color:#e0a02c" title="Submitted for review">submitted</span>':'')+badges(it)+'</div>';
           var t3btn=el.querySelector('.lp-t3'); if(t3btn){ t3btn.onclick=function(ev){ ev.stopPropagation(); lpToggleTop3(it.id); renderColumns(); }; }
           var dueEl=el.querySelector('.lp-due'); if(dueEl){ dueEl.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dueEl); }; }
           el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
@@ -9511,7 +9516,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var prof=profiles[nm]||{}; var role=prof.role||prof.title||(nm===me?'You':'');
         var isMe=nm===me; var list=mine.slice(0,5);
         h+='<div class="pcard">'+
-          '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div style="flex:1"><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+'</div><div class="prole">'+esc(role||'—')+'</div></div><button class="lp-mini lp-profbtn" data-person="'+esc(nm)+'">Profile →</button></div>'+
+          '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div style="flex:1"><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+(prof.isEA?' <span style="font-size:9px;font-weight:700;color:#b07ad6;border:1px solid #b07ad6;border-radius:4px;padding:0 4px;vertical-align:middle">EA</span>':'')+'</div><div class="prole">'+esc(role||'—')+'</div></div><button class="lp-mini lp-profbtn" data-person="'+esc(nm)+'">Profile →</button></div>'+
           '<div class="pstats"><div class="pstat"><b>'+mine.length+'</b>open</div><div class="pstat"><b>'+inprog+'</b>in progress</div><div class="pstat"><b>'+waiting+'</b>waiting</div>'+(rev?('<div class="pstat"><b>'+rev+'</b>review</div>'):'')+'<div class="pstat"><b>'+st.estH+'</b>est h</div><div class="pstat"><b>'+(Math.round(st.spentH*10)/10)+'</b>spent h</div><div class="pstat"><b>'+(Math.round(st.remH*10)/10)+'</b>left h</div></div>'+
           (waitOn?('<div style="font-size:11.5px;color:#e0a02c;margin-bottom:8px">⏳ '+waitOn+' item'+(waitOn===1?'':'s')+' waiting on '+esc(isMe?'you':nm)+'</div>'):'')+
           '<div class="plist">'+(list.length?list.map(function(it){ return '<div class="pli" data-open="'+esc(it.id)+'"><span class="pdot" style="background:'+stColor(it.status)+'"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.title||'Untitled')+'</span><span style="color:#727a88;font-size:11px;flex-shrink:0">'+esc(it.dueDate?dueLabel(it.dueDate):it.status)+'</span></div>'; }).join(''):'<div style="color:#727a88;font-size:12px;padding-top:6px">No open items.</div>')+'</div>'+
@@ -9549,6 +9554,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       h+='<div class="lp-sts">'+sts.map(function(s,i){ var full=s.done&&(!s.reviewer||s.reviewedBy); var pend=s.done&&s.reviewer&&!s.reviewedBy; return '<div class="lp-st"><input type="checkbox" class="lp-stck" data-i="'+i+'"'+(s.done?' checked':'')+'/><div class="b"><div class="t'+(full?' done':'')+'">'+esc(s.title||'')+'</div><div class="m">'+(s.dueDate?('📅 '+esc(lpDueFull(s.dueDate))):'')+(s.assignee?(' · @'+esc(s.assignee)):'')+(s.reviewer?(' · review: @'+esc(s.reviewer)):'')+(pend?' · <span style="color:#e0a02c">awaiting review</span>':'')+(s.reviewedBy?(' · ✔ '+esc(s.reviewedBy)):'')+'</div></div>'+(pend?'<button class="lp-mini lp-stapp" data-i="'+i+'">Approve</button>':'')+'<button class="lp-stdel" data-i="'+i+'" title="Remove">✕</button></div>'; }).join('')+'</div>';
       h+='<div class="lp-staddrow"><input class="ein" id="stT" placeholder="New subtask…"/><input class="ein" id="stD" type="date" title="Due"/><input class="ein" id="stA" placeholder="assignee"/><input class="ein" id="stR" placeholder="reviewer"/><button type="button" class="lp-mini" id="stAdd">Add</button></div></div>';
       var tlh=card.timeline||[];
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Delegation</span></div><label class="lp-check"><input type="checkbox" id="edEA"'+(card.availableForEA?' checked':'')+'/> Open for EA pickup</label><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><button type="button" class="lp-mini" id="edClaim">✋ Claim this task</button>'+((card.status!=='review'&&card.status!=='done')?'<button type="button" class="lp-mini" id="edSubmit">📤 Submit for review</button>':'')+'</div>'+(card.submittedBy?('<div style="font-size:11.5px;color:#8a91a0;margin-top:6px">Submitted for review by '+esc(card.submittedBy)+'</div>'):'')+'</div>';
       h+='<div class="lp-sec"><div class="lp-sech"><span>Activity / audit trail</span></div><div class="lp-hist">'+(tlh.length?tlh.slice().reverse().slice(0,50).map(function(a){ return '<div class="lp-hrow"><span class="a">'+esc(a.action||'')+'</span><span class="w">'+esc(a.by||'')+' · '+lpWhen(a.ts)+'</span></div>'; }).join(''):'<span class="lp-empty">No activity recorded yet.</span>')+'</div></div>';
       return h;
     }
@@ -9562,6 +9568,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       [].forEach.call(document.querySelectorAll('.lp-stck'),function(ck){ ck.onchange=function(){ var i=+ck.getAttribute('data-i'); var s=(card.subtasks||[])[i]; if(!s) return; s.done=ck.checked; if(!s.done) s.reviewedBy=''; lpAudit(card,(s.done?'Completed':'Reopened')+' subtask: '+s.title); try{ persist(); }catch(e){} openReview(card); }; });
       [].forEach.call(document.querySelectorAll('.lp-stapp'),function(bn){ bn.onclick=function(){ var i=+bn.getAttribute('data-i'); var s=(card.subtasks||[])[i]; if(!s) return; s.reviewedBy=meName(); lpAudit(card,'Approved subtask: '+s.title); try{ persist(); }catch(e){} openReview(card); }; });
       [].forEach.call(document.querySelectorAll('.lp-stdel'),function(bn){ bn.onclick=function(){ var i=+bn.getAttribute('data-i'); if(!card.subtasks) return; var t=(card.subtasks[i]||{}).title||''; card.subtasks.splice(i,1); lpAudit(card,'Removed subtask: '+t); try{ persist(); }catch(e){} openReview(card); }; });
+      var eaT=document.getElementById('edEA'); if(eaT){ eaT.onchange=function(){ card.availableForEA=this.checked; lpAudit(card, this.checked?'Opened for EA pickup':'Closed EA pickup'); try{ persist(); }catch(e){} }; }
+      var clm=document.getElementById('edClaim'); if(clm){ clm.onclick=function(){ card.assignees=[meName()]; card.responsible=meName(); card.availableForEA=false; lpAudit(card,'Claimed by '+meName()); try{ persist(); }catch(e){} toast('You claimed this task'); openReview(card); }; }
+      var subB=document.getElementById('edSubmit'); if(subB){ subB.onclick=function(){ card.status='review'; card.submittedBy=meName(); card.columnEnteredAt=Date.now(); lpAudit(card,'Submitted for review'); try{ persist(); }catch(e){} toast('Submitted for review'); openReview(card); }; }
     }
     function openReview(card){
       var parts=assemble(card);
@@ -9629,6 +9638,11 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 
       function renderActions(){
         var acts=document.getElementById('ol2Acts'); acts.innerHTML='';
+        if(card.status==='review'){
+          if(card.submittedBy){ var sn=document.createElement('span'); sn.style.cssText='color:#8a91a0;font-size:12px;align-self:center'; sn.textContent='Submitted by '+card.submittedBy; acts.appendChild(sn); }
+          var ap=document.createElement('button'); ap.className='gbtn amber'; ap.textContent='✓ Approve (Done)'; ap.onclick=function(){ if(card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)) return; } card.status='done'; card.columnEnteredAt=Date.now(); lpAudit(card,'Approved & marked done'); persist(); updateCounts(); toast('Approved'); showBoard('review'); }; acts.appendChild(ap);
+          var rt=document.createElement('button'); rt.className='gbtn'; rt.textContent='↩ Return for changes'; rt.onclick=function(){ card.status='active'; card.columnEnteredAt=Date.now(); lpAudit(card,'Returned for changes'); persist(); updateCounts(); toast('Returned to In progress'); openReview(card); }; acts.appendChild(rt);
+        }
         var hasDraft=!!(card.aiArtifact&&card.aiArtifact.content);
         if(!hasDraft){
           var run=document.createElement('button'); run.className='gbtn amber'; run.textContent='✦ Run with Claude';
