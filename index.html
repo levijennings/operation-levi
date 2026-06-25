@@ -8740,6 +8740,10 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .lp-qh{font-size:10.5px;color:#8a91a0;text-transform:uppercase;letter-spacing:.05em;margin-top:9px}
 .ol2 .lp-q{margin:5px 0 0 16px;padding:0;font-size:12.5px;color:#cfd5de}
 .ol2 .lp-q li{margin-bottom:4px}
+.ol2 .lhelp{font-size:12.5px;color:#8a91a0;margin:0 0 14px;line-height:1.5}
+.ol2 .lchips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ol2 .lchip{font-size:10px;color:#aab2c0;background:#23262e;border:1px solid #30353d;border-radius:5px;padding:1px 6px}
+.ol2 .litem{cursor:pointer}
 .ol2 .lp-sec{margin-top:14px;border-top:1px solid #262a31;padding-top:12px}
 .ol2 .lp-sech{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a91a0;margin-bottom:8px}
 .ol2 .lp-mini{background:#23262e;border:1px solid #30353d;color:#cfd5de;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
@@ -9249,7 +9253,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function triIcon(it){ var id=String(it.id||''); if(id.charAt(0)==='v') return '🎤'; if(it.type==='phone-call') return '☎'; if(it.type==='book-meeting') return '📅'; return '▦'; }
     function updateCounts(){ var all=ITEMS(); var t=document.getElementById('ol2TriN'); if(t) t.textContent=all.filter(function(i){ return i.status==='backlog'; }).length; var rv=document.getElementById('ol2RevN'); if(rv) rv.textContent=all.filter(function(i){ return i.status==='review'; }).length; }
     // ── Libraries (native browse) ──
-    var LIBTABS=[{k:'skills',label:'Skills',dot:'#5a9be0'},{k:'templates',label:'Templates',dot:'#f2a33c'},{k:'preferences',label:'Preferences',dot:'#46b98a'},{k:'context',label:'Context',dot:'#b07ad6'}];
+    var LIBTABS=[{k:'skills',label:'Skills',dot:'#5a9be0'},{k:'templates',label:'Templates',dot:'#f2a33c'},{k:'preferences',label:'Tone & Voice',dot:'#46b98a'},{k:'context',label:'Context',dot:'#b07ad6'}];
     var curLib='skills';
     function ltrunc(s){ s=String(s==null?'':s).replace(/\s+/g,' ').trim(); return s.length>130?s.slice(0,127)+'…':s; }
     function libRows(k){
@@ -9261,23 +9265,61 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         return {title:it.name||'Skill', desc:ltrunc(it.description||it.whenToUse||it.body||'')};
       });
     }
+    function lpLibCats(){ var cats=['All']; try{ var t=(typeof teams!=='undefined'&&teams)?Object.keys(teams):['ACST','DVLMNT','Personal']; t.forEach(function(c){ if(cats.indexOf(c)<0) cats.push(c); }); }catch(e){} return cats; }
+    function lpLibEdit(type, item){
+      var libo=L(); if(!libo[type]) libo[type]=[];
+      var isNew=!item; item=item||{}; var cats=lpLibCats();
+      function field(label,id,val,ph,tag,opts){ tag=tag||'input'; var f='<div style="margin-bottom:12px"><label class="lp-lbl">'+esc(label)+'</label>'; if(tag==='select'){ f+='<select class="esel" id="'+id+'">'+opts.map(function(o){ return '<option value="'+esc(o)+'"'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>'; } else if(tag==='textarea'){ f+='<textarea class="ein" id="'+id+'" style="min-height:72px;resize:vertical"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'>'+esc(val||'')+'</textarea>'; } else { f+='<input class="ein" id="'+id+'" value="'+esc(val||'')+'"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'/>'; } return f+'</div>'; }
+      var titleMap={skills:'Skill',templates:'Template',preferences:'Tone & Voice',context:'Context'};
+      var ov=document.createElement('div'); ov.id='lpLibOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter';
+      var h='<div style="width:600px;max-width:95vw;background:#15171c;border:1px solid #2a2e38;border-radius:16px;padding:22px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
+      h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New ':'Edit ')+esc(titleMap[type]||type)+'</h2><button id="lpLibClose" class="lp-mini">Close</button></div>';
+      if(type==='skills'){ h+=field('Name','lfName',item.name,'e.g. Draft client proposal'); h+=field('When to use','lfDesc',item.description||item.whenToUse,'When should Claude use this skill?','textarea'); h+=field('Instructions','lfBody',item.body,'How Claude should do it, step by step','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); h+=field('Tags (comma-separated)','lfTags',item.tags,'proposal, sales, pitch'); }
+      else if(type==='templates'){ h+=field('Name','lfName',item.name,'e.g. SOW template'); h+=field('Description','lfDesc',item.description,'What this template is for','textarea'); h+=field('Format','lfFormat',item.format,'email / doc / slide'); h+=field('Template body','lfBody',item.body,'The structure Claude fills in','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); }
+      else if(type==='preferences'){ h+=field('Name','lfName',item.key||item.name,'e.g. Brand voice'); h+=field('Tone & voice guidance','lfVal',item.value,'e.g. Warm, concise, confident; no jargon; first-person plural','textarea'); h+=field('Applies to','lfScope',item.scope||'global',null,'select',['global'].concat(cats.filter(function(c){ return c!=='All'; }))); }
+      else { h+=field('Name','lfName',item.name,'e.g. Orbital (client)'); h+=field('Type','lfType',item.type||'project',null,'select',['client','project','person','decision','glossary','source']); h+=field('Summary','lfSum',item.summary,'One line Claude can use as quick context','textarea'); h+=field('Details','lfDet',item.details,'Full reference: facts, background, do/donts','textarea'); h+=field('Links / sources (one URL per line)','lfLinks',(item.links||[]).map(function(l){ return (typeof l==='string')?l:((l&&l.url)||''); }).filter(Boolean).join('\n'),'https://...','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); }
+      h+='<div style="display:flex;gap:10px;margin-top:6px;align-items:center">'+(isNew?'':'<button id="lpLibDel" style="background:none;border:1px solid #5a2b2b;color:#e07a63;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete</button>')+'<button id="lpLibSave" class="gbtn amber" style="margin-left:auto">Save</button></div></div>';
+      ov.innerHTML=h; document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.getElementById('lpLibClose').onclick=function(){ ov.remove(); };
+      var del=document.getElementById('lpLibDel'); if(del) del.onclick=function(){ var arr=libo[type]; for(var i=arr.length-1;i>=0;i--){ if(arr[i]===item || (item.id&&arr[i].id===item.id)) arr.splice(i,1); } try{ persist(); }catch(e){} ov.remove(); showLibraries(); toast('Deleted'); };
+      document.getElementById('lpLibSave').onclick=function(){ function g(id){ var e=document.getElementById(id); return e?e.value:''; }
+        var rec=item.id?item:{ id:'lib'+Date.now().toString(36) };
+        if(type==='skills'){ rec.name=g('lfName').trim(); rec.description=g('lfDesc').trim(); rec.whenToUse=rec.description; rec.body=g('lfBody'); rec.category=g('lfCat'); rec.tags=g('lfTags').trim(); }
+        else if(type==='templates'){ rec.name=g('lfName').trim(); rec.description=g('lfDesc').trim(); rec.format=g('lfFormat').trim(); rec.body=g('lfBody'); rec.category=g('lfCat'); }
+        else if(type==='preferences'){ rec.key=g('lfName').trim(); rec.name=rec.key; rec.value=g('lfVal').trim(); rec.scope=g('lfScope'); }
+        else { rec.name=g('lfName').trim(); rec.type=g('lfType'); rec.summary=g('lfSum').trim(); rec.details=g('lfDet'); rec.links=g('lfLinks').split('\n').map(function(s){ return s.trim(); }).filter(Boolean); rec.category=g('lfCat'); }
+        if(!rec.name){ toast('Name is required'); return; }
+        rec.updatedAt=Date.now(); if(!rec.createdAt) rec.createdAt=Date.now();
+        if(!item.id) libo[type].push(rec);
+        try{ persist(); }catch(e){} ov.remove(); showLibraries(); toast('Saved');
+      };
+    }
     function showLibraries(){
       hideAllPanels();
       var lib=document.getElementById('ol2Lib'); lib.style.display='';
+      var help={skills:'Skills tell Claude HOW to do a task. Claude matches one to a task by its workspace and tags when you Run with Claude.',templates:'Templates give Claude a structure to fill in. A skill pulls in its linked template by name.',preferences:'Tone & Voice guides how Claude writes. Applied account-wide or to a single workspace.',context:'Context is reference knowledge — clients, projects, decisions, links and sources. Claude pulls it in when a task mentions it by name.'};
       var dot=LIBTABS.reduce(function(o,t){ o[t.k]=t.dot; return o; },{});
-      var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>The knowledge layer — loaded only when a task needs it. Edit in the full editor.</p></div>'+
-        '<button class="gbtn" id="ol2LibEdit">＋ Add / edit</button></div>'+
-        '<div class="ltabs" id="ol2LibTabs">'+LIBTABS.map(function(t){ return '<div class="ltab'+(t.k===curLib?' on':'')+'" data-l="'+t.k+'"><span class="ldot" style="background:'+t.dot+'"></span>'+t.label+' <span style="color:#727a88;font-size:11px">'+((L()[t.k]||[]).length)+'</span></div>'; }).join('')+'</div>'+
-        '<div class="lgrid" id="ol2LibGrid"></div>';
+      var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>Your Claude knowledge layer. Add Skills, Templates, Tone & Voice and Context; Claude pulls them in automatically when it works a task.</p></div><button class="gbtn amber" id="ol2LibAdd">+ Add</button></div>';
+      html+='<div class="ltabs" id="ol2LibTabs">'+LIBTABS.map(function(t){ return '<div class="ltab'+(t.k===curLib?' on':'')+'" data-l="'+t.k+'"><span class="ldot" style="background:'+t.dot+'"></span>'+t.label+' <span style="color:#727a88;font-size:11px">'+((L()[t.k]||[]).length)+'</span></div>'; }).join('')+'</div>';
+      html+='<div class="lhelp" id="ol2LibHelp"></div><div class="lgrid" id="ol2LibGrid"></div>';
       lib.innerHTML=html;
+      function chip(t){ return '<span class="lchip">'+esc(t)+'</span>'; }
       function renderGrid(){
-        var g=document.getElementById('ol2LibGrid'); var rows=libRows(curLib); g.innerHTML='';
-        if(!rows.length){ g.innerHTML='<div class="empty" style="grid-column:1/-1;padding:36px">No '+curLib+' yet — add one in the editor.</div>'; return; }
-        rows.forEach(function(r){ var el=document.createElement('div'); el.className='litem'; el.innerHTML='<div class="lt"><span class="ldot" style="background:'+dot[curLib]+'"></span>'+esc(r.title)+'</div>'+(r.desc?'<div class="ld">'+esc(r.desc)+'</div>':''); el.onclick=function(){ clickFab('vlFab'); }; g.appendChild(el); });
+        document.getElementById('ol2LibHelp').textContent=help[curLib]||'';
+        var arr=L()[curLib]||[]; var g=document.getElementById('ol2LibGrid'); g.innerHTML='';
+        var lbl=(LIBTABS.filter(function(x){ return x.k===curLib; })[0]||{label:curLib}).label;
+        if(!arr.length){ g.innerHTML='<div class="empty" style="grid-column:1/-1;padding:30px">No '+lbl+' yet — click + Add to create one.</div>'; return; }
+        arr.forEach(function(it){ var title,desc,chips=[];
+          if(curLib==='skills'){ title=it.name; desc=it.description||it.whenToUse; if(it.category&&it.category!=='All') chips.push(it.category); (String(it.tags||'').split(/[,\s]+/).filter(Boolean)).slice(0,3).forEach(function(t){ chips.push('#'+t); }); }
+          else if(curLib==='templates'){ title=it.name; desc=it.description; if(it.format) chips.push(it.format); if(it.category&&it.category!=='All') chips.push(it.category); }
+          else if(curLib==='preferences'){ title=it.key||it.name; desc=it.value; chips.push((!it.scope||it.scope==='global')?'Account-wide':it.scope); }
+          else { title=it.name; desc=it.summary; if(it.type) chips.push(it.type); if(it.links&&it.links.length) chips.push(it.links.length+' link'+(it.links.length>1?'s':'')); if(it.category&&it.category!=='All') chips.push(it.category); }
+          var el=document.createElement('div'); el.className='litem'; el.innerHTML='<div class="lt"><span class="ldot" style="background:'+dot[curLib]+'"></span>'+esc(title||'Untitled')+'</div>'+(desc?'<div class="ld">'+esc(ltrunc(desc))+'</div>':'')+(chips.length?'<div class="lchips">'+chips.map(chip).join('')+'</div>':''); el.onclick=function(){ lpLibEdit(curLib, it); }; g.appendChild(el); });
       }
       renderGrid();
       document.getElementById('ol2LibTabs').addEventListener('click',function(e){ var t=e.target.closest('.ltab'); if(!t) return; curLib=t.getAttribute('data-l'); [].forEach.call(lib.querySelectorAll('.ltab'),function(x){ x.classList.toggle('on', x===t); }); renderGrid(); });
-      document.getElementById('ol2LibEdit').onclick=function(){ clickFab('vlFab'); };
+      document.getElementById('ol2LibAdd').onclick=function(){ lpLibEdit(curLib, null); };
     }
 
     function showTriage(){
