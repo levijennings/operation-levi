@@ -1351,6 +1351,12 @@
                     aiArtifact: item.aiArtifact || null,
                     aiUsed: item.aiUsed || null,
                     linkedContext: item.linkedContext || [],
+                    comments: item.comments || [],
+                    requireProof: item.requireProof || false,
+                    proof: item.proof || null,
+                    pinned: item.pinned || false,
+                    aiConfidence: item.aiConfidence || null,
+                    _timerStart: item._timerStart || null,
                     startDate: item.startDate || '',
                     dueDate: item.dueDate || '',
                     deliverable: item.deliverable || '',
@@ -1549,6 +1555,12 @@
                     aiArtifact: item.aiArtifact || null,
                     aiUsed: item.aiUsed || null,
                     linkedContext: item.linkedContext || [],
+                    comments: item.comments || [],
+                    requireProof: item.requireProof || false,
+                    proof: item.proof || null,
+                    pinned: item.pinned || false,
+                    aiConfidence: item.aiConfidence || null,
+                    _timerStart: item._timerStart || null,
                 startDate: item.startDate || '', dueDate: item.dueDate || '', deliverable: item.deliverable || '',
                 notes: item.notes || '', priority: item.priority || 0, timeEstimate: item.timeEstimate || 0,
                 tshirtSize: item.tshirtSize || 'XS', raci: item.raci || { R: [], A: '', C: [], I: [] },
@@ -8713,6 +8725,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .drow .s{font-size:11.5px;color:#727a88;margin-top:2px}
 .ol2 .drow .lk{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .ol2 .drow .lk a{font-size:11px;color:#5a9be0;background:#13202e;border:1px solid #1e3a4d;border-radius:6px;padding:3px 8px;text-decoration:none;white-space:nowrap}
+.ol2 .lp-pin{background:none;border:none;color:#5a6270;font-size:15px;cursor:pointer;flex-shrink:0;line-height:1;padding:0;align-self:center}
+.ol2 .lp-pin.on{color:#f2a33c}
 .ol2 .lp-sec{margin-top:14px;border-top:1px solid #262a31;padding-top:12px}
 .ol2 .lp-sech{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a91a0;margin-bottom:8px}
 .ol2 .lp-mini{background:#23262e;border:1px solid #30353d;color:#cfd5de;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
@@ -9043,7 +9057,25 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   // ── Gantt view ──
   function renderGantt(){ var board=document.getElementById('ol2Board'); if(!board) return; board.className=''; function pd(s){ var d=new Date((s||'')+'T00:00:00'); return isNaN(d)?null:d; } var b=lpRangeBounds(); var min=new Date(b.start); min.setHours(0,0,0,0); var max=new Date(b.end); max.setHours(0,0,0,0); var dayMs=86400000; var totalDays=Math.round((max-min)/dayMs)+1; var px= totalDays<=21?34:(totalDays<=40?20:(totalDays<=100?9:(totalDays<=200?5:3))); var width=totalDays*px; var all=ITEMS().filter(function(it){ if(!matchesFilter(it)||it.status==='done') return false; var s=pd(it.startDate)||pd(it.dueDate); var e=pd(it.dueDate)||pd(it.startDate); if(!s||!e) return false; var sN=new Date(s.getFullYear(),s.getMonth(),s.getDate()), eN=new Date(e.getFullYear(),e.getMonth(),e.getDate()); return !(eN<min||sN>max); }); all.sort(function(a,b2){ var ad=pd(a.dueDate)||pd(a.startDate), bd=pd(b2.dueDate)||pd(b2.startDate); return (ad?ad.getTime():0)-(bd?bd.getTime():0); }); var ticks=''; for(var i=0;i<totalDays;i++){ var d=new Date(min); d.setDate(min.getDate()+i); if(d.getDate()===1||i===0){ ticks+='<div class="tick" style="left:'+(i*px)+'px">'+d.toLocaleDateString(undefined,{month:'short'})+(totalDays>120?(" '"+String(d.getFullYear()).slice(2)):(i===0?(' '+d.getDate()):''))+'</div>'; } } var todayN=new Date(); todayN.setHours(0,0,0,0); var todayOff=Math.round((todayN-min)/dayMs); var todayLine=(todayOff>=0&&todayOff<totalDays)?('<div class="gtoday" style="left:'+(todayOff*px)+'px"></div>'):''; var rows=all.length?all.map(function(it){ var s=pd(it.startDate)||pd(it.dueDate); var e=pd(it.dueDate)||pd(it.startDate); var sN=new Date(s.getFullYear(),s.getMonth(),s.getDate()); var eN=new Date(e.getFullYear(),e.getMonth(),e.getDate()); var off=Math.round((sN-min)/dayMs); var endoff=Math.round((eN-min)/dayMs); if(off<0)off=0; if(endoff>totalDays-1)endoff=totalDays-1; var len=Math.max(1,endoff-off+1); return '<div class="grow"><div class="glabel" title="'+esc(it.title||'')+'">'+esc(it.title||'Untitled')+'</div><div class="gtrack" style="width:'+width+'px">'+todayLine+'<div class="gbar" data-open="'+esc(it.id)+'" title="'+esc(it.title||'')+(it.dueDate?(' · due '+esc(lpDueFull(it.dueDate))):'')+'" style="left:'+(off*px)+'px;width:'+(Math.max(6,len*px-2))+'px;background:'+lpCatColor(it.category)+'">'+(px>=14?esc(it.title||''):'')+'</div></div></div>'; }).join(''):'<div class="empty" style="padding:34px">No scheduled items in this range.</div>'; board.innerHTML=lpRangeBar()+'<div class="lp-gantt"><div class="ghead"><div class="glabel" style="font-weight:700;color:#8a91a0">Task</div><div class="gticks" style="width:'+width+'px">'+ticks+todayLine+'</div></div>'+rows+'</div>'; lpWireRangeBar(board, renderGantt); [].forEach.call(board.querySelectorAll('.gbar[data-open]'),function(bb){ bb.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(bb.getAttribute('data-open'));})[0]; if(it) openReview(it); }; }); }
   // ── Done view (grouped by workspace, with deliverable links) ──
-  function showDone(){ hideAllPanels(); var dv=document.getElementById('ol2Done'); if(!dv) return; dv.style.display=''; var done=ITEMS().filter(function(i){ return i.status==='done'; }); var cats=[]; done.forEach(function(i){ var c=i.category||'Other'; if(cats.indexOf(c)<0) cats.push(c); }); if(doneFilter!=='all' && cats.indexOf(doneFilter)<0) doneFilter='all'; var h='<div class="hrow"><div><h1 class="syne">Done</h1><p>Completed work, grouped by workspace — with links to deliverables.</p></div></div>'; h+='<div class="lp-donef"><button data-df="all" class="'+(doneFilter==='all'?'on':'')+'">All workspaces</button>'+cats.map(function(c){ return '<button data-df="'+esc(c)+'" class="'+(doneFilter===c?'on':'')+'">'+esc(c)+' <span style="color:'+lpCatColor(c)+'">●</span></button>'; }).join('')+'</div>'; if(!done.length){ h+='<div class="empty" style="padding:40px">Nothing completed yet.</div>'; } var groups=(doneFilter==='all')?cats:[doneFilter]; groups.forEach(function(c){ var items=done.filter(function(i){ return (i.category||'Other')===c; }); items.sort(function(a,b){ return (b.columnEnteredAt||0)-(a.columnEnteredAt||0); }); if(!items.length) return; h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:'+lpCatColor(c)+'"><span class="dot" style="background:'+lpCatColor(c)+'"></span>'+esc(c)+' <span class="n">'+items.length+'</span></div>'; items.forEach(function(it){ var links=lpLinks(it); h+='<div class="drow" data-open="'+esc(it.id)+'"><div class="main"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'')+(it.deliverable?(' · '+esc(it.deliverable)):'')+'</div></div>'+(links.length?('<div class="lk">'+links.map(function(l){ return '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(l.label)+' ↗</a>'; }).join('')+'</div>'):'')+'</div>'; }); h+='</div>'; }); dv.innerHTML=h; [].forEach.call(dv.querySelectorAll('.lp-donef button'),function(b){ b.onclick=function(){ doneFilter=b.getAttribute('data-df'); showDone(); }; }); [].forEach.call(dv.querySelectorAll('.drow[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it) openReview(it); }; }); }
+  function renderDoneView(){
+    var board=document.getElementById('ol2Board'); if(!board) return; board.className='';
+    var done=ITEMS().filter(function(i){ return i.status==='done'; });
+    var cats=[]; done.forEach(function(i){ var c=i.category||'Other'; if(cats.indexOf(c)<0) cats.push(c); });
+    if(doneFilter!=='all' && cats.indexOf(doneFilter)<0) doneFilter='all';
+    function rowHtml(it){ var links=lpLinks(it); return '<div class="drow" data-open="'+esc(it.id)+'"><button class="lp-pin'+(it.pinned?' on':'')+'" data-pin="'+esc(it.id)+'" title="'+(it.pinned?'Unpin deliverable':'Pin deliverable for quick reference')+'">'+(it.pinned?'★':'☆')+'</button><div class="main"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+(it.dueDate?(' · '+esc(lpDueFull(it.dueDate))):'')+(it.deliverable?(' · '+esc(it.deliverable)):'')+'</div></div>'+(links.length?('<div class="lk">'+links.map(function(l){ return '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(l.label)+' ↗</a>'; }).join('')+'</div>'):'')+'</div>'; }
+    var h='<div class="lp-donef"><button data-df="all" class="'+(doneFilter==='all'?'on':'')+'">All workspaces</button>'+cats.map(function(c){ return '<button data-df="'+esc(c)+'" class="'+(doneFilter===c?'on':'')+'">'+esc(c)+' <span style="color:'+lpCatColor(c)+'">●</span></button>'; }).join('')+'</div>';
+    var pinned=done.filter(function(i){ return i.pinned && (doneFilter==='all'||(i.category||'Other')===doneFilter); });
+    if(pinned.length){ h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:#f2a33c"><span class="dot" style="background:#f2a33c"></span>★ Highlighted deliverables <span class="n">'+pinned.length+'</span></div>'+pinned.map(rowHtml).join('')+'</div>'; }
+    if(!done.length){ h+='<div class="empty" style="padding:40px">Nothing completed yet.</div>'; }
+    var groups=(doneFilter==='all')?cats:[doneFilter];
+    groups.forEach(function(c){ var items=done.filter(function(i){ return (i.category||'Other')===c; }); items.sort(function(a,b){ return (b.columnEnteredAt||0)-(a.columnEnteredAt||0); }); if(!items.length) return; h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:'+lpCatColor(c)+'"><span class="dot" style="background:'+lpCatColor(c)+'"></span>'+esc(c)+' <span class="n">'+items.length+'</span></div>'+items.map(rowHtml).join('')+'</div>'; });
+    board.innerHTML=h;
+    [].forEach.call(board.querySelectorAll('.lp-donef button'),function(b){ b.onclick=function(){ doneFilter=b.getAttribute('data-df'); renderDoneView(); }; });
+    [].forEach.call(board.querySelectorAll('.lp-pin[data-pin]'),function(b){ b.onclick=function(e){ e.stopPropagation(); var it=ITEMS().filter(function(x){return String(x.id)===String(b.getAttribute('data-pin'));})[0]; if(!it) return; it.pinned=!it.pinned; try{ persist(); }catch(err){} renderDoneView(); }; });
+    [].forEach.call(board.querySelectorAll('.drow[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it) openReview(it); }; });
+  }
+  function showDone(){ showBoard('done'); }
+  function _showDoneLegacy(){ hideAllPanels(); var dv=document.getElementById('ol2Done'); if(!dv) return; dv.style.display=''; var done=ITEMS().filter(function(i){ return i.status==='done'; }); var cats=[]; done.forEach(function(i){ var c=i.category||'Other'; if(cats.indexOf(c)<0) cats.push(c); }); if(doneFilter!=='all' && cats.indexOf(doneFilter)<0) doneFilter='all'; var h='<div class="hrow"><div><h1 class="syne">Done</h1><p>Completed work, grouped by workspace — with links to deliverables.</p></div></div>'; h+='<div class="lp-donef"><button data-df="all" class="'+(doneFilter==='all'?'on':'')+'">All workspaces</button>'+cats.map(function(c){ return '<button data-df="'+esc(c)+'" class="'+(doneFilter===c?'on':'')+'">'+esc(c)+' <span style="color:'+lpCatColor(c)+'">●</span></button>'; }).join('')+'</div>'; if(!done.length){ h+='<div class="empty" style="padding:40px">Nothing completed yet.</div>'; } var groups=(doneFilter==='all')?cats:[doneFilter]; groups.forEach(function(c){ var items=done.filter(function(i){ return (i.category||'Other')===c; }); items.sort(function(a,b){ return (b.columnEnteredAt||0)-(a.columnEnteredAt||0); }); if(!items.length) return; h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:'+lpCatColor(c)+'"><span class="dot" style="background:'+lpCatColor(c)+'"></span>'+esc(c)+' <span class="n">'+items.length+'</span></div>'; items.forEach(function(it){ var links=lpLinks(it); h+='<div class="drow" data-open="'+esc(it.id)+'"><div class="main"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'')+(it.deliverable?(' · '+esc(it.deliverable)):'')+'</div></div>'+(links.length?('<div class="lk">'+links.map(function(l){ return '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(l.label)+' ↗</a>'; }).join('')+'</div>'):'')+'</div>'; }); h+='</div>'; }); dv.innerHTML=h; [].forEach.call(dv.querySelectorAll('.lp-donef button'),function(b){ b.onclick=function(){ doneFilter=b.getAttribute('data-df'); showDone(); }; }); [].forEach.call(dv.querySelectorAll('.drow[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it) openReview(it); }; }); }
 
   function boot(){
     var pill=document.createElement('button'); pill.className='ol2-pill'; pill.innerHTML='<span>✦</span> 2.0'; pill.title='Open the AI-native 2.0 view'; document.body.appendChild(pill);
@@ -9057,8 +9089,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="myday">◴ My Day</a>'+
           '<a data-v="week">▤ My Week</a>'+
           '<a data-v="board">▦ Project Board</a>'+
-          '<a data-v="done">✓ Done</a>'+
-          '<a data-v="review">✎ Needs review <span class="tag" id="ol2RevN">0</span></a>'+
+          '<span id="ol2RevN" style="display:none">0</span>'+
           '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
           '<a data-v="people">◍ People</a>'+
           '<a data-v="libraries">◆ Libraries</a>'+
@@ -9069,7 +9100,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       '<main class="main">'+
         '<div id="ol2BoardView">'+
           '<div class="hrow"><div><h1 id="ol2H">Project Board</h1><p id="ol2Sub">Speak a task, and Claude turns it into a card — and often does it.</p></div></div>'+
-          '<div class="ol2-bviews" id="ol2BViews"><button data-bv="cols">▦ Board</button><button data-bv="cal">🗓 Calendar</button><button data-bv="gantt">▬ Gantt</button></div>'+
+          '<div class="ol2-bviews" id="ol2BViews"><button data-bv="cols">▦ Board</button><button data-bv="cal">🗓 Calendar</button><button data-bv="gantt">▬ Gantt</button><button data-bv="review">✎ Needs Review</button><button data-bv="done">✓ Done</button></div>'+
           '<div class="ol2-filter" id="ol2Filter"><input id="ol2Search" placeholder="Search tasks…" autocomplete="off"/><select id="ol2FCat"><option value="all">All categories</option></select><select id="ol2FOwner"><option value="all">All owners</option></select><button id="ol2FClear" style="display:none">Clear</button></div>'+
           '<div class="cols" id="ol2Board"></div>'+
         '</div>'+
@@ -9130,7 +9161,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function renderColumns(){
       var board=document.getElementById('ol2Board'); board.className='cols'; board.innerHTML='';
       var all=ITEMS();
-      var showCols=(boardFocus==='review')?[COLS[2]]:COLS;
+      var showCols=(boardFocus==='review')?COLS.filter(function(c){ return c.set==='review'; }):COLS;
       showCols.forEach(function(c){
         var col=document.createElement('div'); col.className='col';
         var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0 && matchesFilter(i); });
@@ -9138,7 +9169,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#727a88':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
         col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
         col.ondragleave=function(){ col.classList.remove('drop'); };
-        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); if(c.set==='done' && cardx.requireProof && !(cardx.proof&&cardx.proof.url)) lpProof(cardx); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
+        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ if(c.set==='done' && cardx.requireProof && !(cardx.proof&&cardx.proof.url) && !lpProof(cardx)){ renderColumns(); return; } cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
         if(!cards.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='—'; col.appendChild(e); }
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard'; el.draggable=true; el.style.borderLeft='3px solid '+lpCatColor(it.category);
@@ -9162,7 +9193,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var dragged=ITEMS().filter(function(x){ return String(x.id)===String(draggedId); })[0];
       if(!dragged || String(draggedId)===String(targetId)) return;
       var changed=false;
-      if(col.st.indexOf(dragged.status)<0){ dragged.status=col.set; dragged.columnEnteredAt=Date.now(); changed=true; if(dragged.status==='done' && dragged.requireProof && !(dragged.proof&&dragged.proof.url)) lpProof(dragged); }
+      if(col.st.indexOf(dragged.status)<0){ if(col.set==='done' && dragged.requireProof && !(dragged.proof&&dragged.proof.url) && !lpProof(dragged)){ renderColumns(); return; } dragged.status=col.set; dragged.columnEnteredAt=Date.now(); changed=true; }
       var list=ITEMS().filter(function(i){ return col.st.indexOf(i.status)>=0 && matchesFilter(i) && String(i.id)!==String(draggedId); });
       list.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); });
       var idx=-1; for(var j=0;j<list.length;j++){ if(String(list[j].id)===String(targetId)){ idx=j; break; } }
@@ -9173,25 +9204,29 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
     function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
-    function go(v){ var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
+    function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#46b98a':s==='review'?'#f2a33c':(s==='active'||s==='today')?'#5a9be0':s==='waiting'?'#e0a02c':'#727a88'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
     function showBoard(focus){
       hideAllPanels();
       document.getElementById('ol2BoardView').style.display='';
-      boardFocus=focus||'board';
+      if(focus==='review') boardView2='review'; else if(focus==='done') boardView2='done'; else if(focus==='board') boardView2=(boardView2==='review'||boardView2==='done')?'cols':boardView2;
+      if(!boardView2) boardView2='cols';
       var all=ITEMS();
-      document.getElementById('ol2RevN').textContent=all.filter(function(i){ return i.status==='review'; }).length;
+      var _rvn=document.getElementById('ol2RevN'); if(_rvn) _rvn.textContent=all.filter(function(i){ return i.status==='review'; }).length;
       document.getElementById('ol2TriN').textContent=all.filter(function(i){ return i.status==='backlog'; }).length;
-      document.getElementById('ol2H').textContent=(boardFocus==='review')?'Needs review':'Project Board';
-      document.getElementById('ol2Sub').textContent=(boardFocus==='review')?'Claude drafted these. Open one to review, refine, and send.':'Drag cards across stages, or switch to Calendar / Gantt for timelines.';
-      document.getElementById('ol2Filter').style.display=(boardFocus==='review')?'none':'';
-      var bv=document.getElementById('ol2BViews'); if(bv){ bv.style.display=(boardFocus==='review')?'none':''; [].forEach.call(bv.querySelectorAll('button'),function(b){ b.classList.toggle('on', b.getAttribute('data-bv')===boardView2); b.onclick=function(){ boardView2=b.getAttribute('data-bv'); showBoard(boardFocus); }; }); }
+      var titles={cols:'Project Board',cal:'Project Board',gantt:'Project Board',review:'Needs review',done:'Done'};
+      var subs={cols:'Drag cards across stages, or switch view for timeline, review and done.',cal:'Calendar view — pick a range up top.',gantt:'Gantt view — pick a range up top.',review:'Claude drafted these. Open one to review, refine, and send.',done:'Completed work, grouped by workspace — pin deliverables for quick reference.'};
+      document.getElementById('ol2H').textContent=titles[boardView2]||'Project Board';
+      document.getElementById('ol2Sub').textContent=subs[boardView2]||'';
+      document.getElementById('ol2Filter').style.display=(boardView2==='done'||boardView2==='review')?'none':'';
+      var bv=document.getElementById('ol2BViews'); if(bv){ bv.style.display=''; [].forEach.call(bv.querySelectorAll('button'),function(b){ b.classList.toggle('on', b.getAttribute('data-bv')===boardView2); b.onclick=function(){ boardView2=b.getAttribute('data-bv'); showBoard(); }; }); }
       populateFilters();
-      if(boardFocus==='review'){ renderColumns(); }
-      else if(boardView2==='cal'){ renderCalendar(); }
-      else if(boardView2==='gantt'){ renderGantt(); }
-      else { renderColumns(); }
+      if(boardView2==='cal'){ boardFocus='board'; renderCalendar(); }
+      else if(boardView2==='gantt'){ boardFocus='board'; renderGantt(); }
+      else if(boardView2==='done'){ boardFocus='board'; renderDoneView(); }
+      else if(boardView2==='review'){ boardFocus='review'; renderColumns(); }
+      else { boardFocus='board'; renderColumns(); }
     }
 
     // ── EA triage ──
