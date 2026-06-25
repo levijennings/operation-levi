@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operation Levi — Task Management</title>
+    <title>Levi's Projects — Task Management</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1003,8 +1003,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Operation Levi">
-    <meta name="theme-color" content="#0D0D0D">
+    <meta name="apple-mobile-web-app-title" content="Levi's Projects">
+    <meta name="theme-color" content="#0A0A0A">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -1012,7 +1015,7 @@
         <!-- SIDEBAR -->
         <div class="sidebar" id="mainSidebar">
             <div class="sidebar-header">
-                <span class="sidebar-title" style="font-size:15px;font-weight:700;letter-spacing:-.01em;">✦ Operation Levi</span>
+                <span class="sidebar-title" style="font-size:15px;font-weight:700;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 512 512" style="flex-shrink:0;"><path d="M150 120 H210 V332 H360 V392 H150 Z" fill="#fff"/><circle cx="300" cy="160" r="26" fill="#DC2626"/><circle cx="360" cy="160" r="26" fill="#059669"/><circle cx="330" cy="214" r="26" fill="#2563EB"/></svg>Levi's Projects</span>
                 <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                 </button>
@@ -1059,7 +1062,7 @@
                     <span>People</span>
                 </button>
             </nav>
-            <div class="sidebar-filters">Categories</div>
+            <div class="sidebar-filters">Workspaces</div>
             <div style="padding: 0 8px;">
                 <div class="filter-item active" data-filter="">
                     <span>All</span>
@@ -1077,6 +1080,8 @@
                     <span>Personal</span>
                 </div>
             </div>
+            <div class="sidebar-filters">People</div>
+            <div id="assigneeFilters" style="padding: 0 8px;"></div>
             <div class="sidebar-footer">
                 <div class="xp-badge">
                     <div>XP</div>
@@ -1107,8 +1112,8 @@
         <!-- AUTH OVERLAY -->
         <div id="authOverlay" style="position:fixed;inset:0;z-index:99999;background:#060606;display:flex;align-items:center;justify-content:center;font-family:'Inter',-apple-system,sans-serif;">
             <div style="background:#1C1C1C;border:1px solid #2a2a2a;border-radius:16px;padding:48px 40px;width:380px;max-width:90vw;text-align:center;">
-                <div style="font-size:28px;margin-bottom:4px;">✦</div>
-                <h1 style="color:#F0F0F0;font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.5px;">Operation Levi</h1>
+                <div style="margin:0 auto 10px;width:52px;height:52px;"><svg viewBox="0 0 512 512" width="52" height="52"><rect width="512" height="512" rx="112" fill="#0A0A0A"/><path d="M150 120 H210 V332 H360 V392 H150 Z" fill="#fff"/><circle cx="300" cy="160" r="22" fill="#DC2626"/><circle cx="360" cy="160" r="22" fill="#059669"/><circle cx="330" cy="214" r="22" fill="#2563EB"/></svg></div>
+                <h1 style="color:#F0F0F0;font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-.5px;">Levi's Projects</h1>
                 <p style="color:#555;font-size:13px;margin-bottom:32px;">Sign in to your workspace</p>
                 <input id="authEmail" type="email" placeholder="Email address" autocomplete="email"
                     style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:11px 14px;color:#F0F0F0;font-size:14px;margin-bottom:10px;outline:none;box-sizing:border-box;"
@@ -1229,7 +1234,7 @@
             window._installPrompt = e;
         });
         window.addEventListener('appinstalled', () => {
-            if (typeof showToast === 'function') showToast('✅ Operation Levi installed!');
+            if (typeof showToast === 'function') showToast('✅ Levi\'s Projects installed!');
         });
 
         // ═══════════════════════════════════════════════════════════════════════════
@@ -1249,6 +1254,7 @@
         let dailyHistory = [];
         let xpData = { total: 0, streak: 0, lastDate: '', achievements: [] };
         let currentFilter = '';
+        let currentAssignee = '';
         let boardPersonFilter = '';
         let weekPersonFilter = '';
         let currentView = 'dashboard';
@@ -1666,7 +1672,7 @@
                 <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;width:760px;max-width:100%;position:relative;">
                     <button onclick="document.getElementById('opManualModal').remove()" style="position:absolute;top:16px;right:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--text);font-size:13px;">✕ Close</button>
                     <div style="font-family:inherit;color:var(--text);line-height:1.7;max-width:680px;">
-                        <h1 style="font-size:22px;font-weight:700;margin:0 0 4px 0;">Operation Levi — Operating Manual</h1>
+                        <h1 style="font-size:22px;font-weight:700;margin:0 0 4px 0;">Levi's Projects — Operating Manual</h1>
                         <p style="color:var(--text-2);font-size:13px;margin:0 0 32px 0;">Setup guide, cloud sync architecture, troubleshooting, and session fixes.</p>
 
                         <h2 style="font-size:15px;font-weight:600;margin:24px 0 8px 0;padding-bottom:6px;border-bottom:1px solid var(--border);">Step 1 — Run the database schema in Supabase</h2>
@@ -2006,7 +2012,38 @@ saveData() → localStorage (immediate, always)
         }
 
         function getFilteredItems() {
-            return currentFilter ? items.filter(i => i.category === currentFilter) : items;
+            let list = currentFilter ? items.filter(i => i.category === currentFilter) : items;
+            if (currentAssignee) {
+                list = list.filter(i => {
+                    const people = [...(i.assignees || []), ...((i.raci && i.raci.R) || []), (i.raci && i.raci.A)].filter(Boolean);
+                    return people.includes(currentAssignee);
+                });
+            }
+            return list;
+        }
+
+        // Render the People (assignee) filter list in the sidebar
+        function renderAssigneeFilters() {
+            const c = document.getElementById('assigneeFilters');
+            if (!c) return;
+            const people = (typeof getAllAssignees === 'function') ? getAllAssignees() : [];
+            const esc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            let h = `<div class="filter-item ${!currentAssignee ? 'active' : ''}" onclick="setAssigneeFilter('')"><span>Everyone</span></div>`;
+            people.forEach(p => {
+                const avatar = (typeof getAvatarHTML === 'function') ? getAvatarHTML(p, 16) : '';
+                h += `<div class="filter-item ${currentAssignee === p ? 'active' : ''}" onclick="setAssigneeFilter('${esc(p)}')">
+                    <span style="display:inline-flex;width:16px;height:16px;flex-shrink:0;">${avatar}</span>
+                    <span>${p}</span>
+                </div>`;
+            });
+            c.innerHTML = h;
+        }
+
+        function setAssigneeFilter(name) {
+            currentAssignee = (currentAssignee === name) ? '' : name;
+            renderAssigneeFilters();
+            updateFilterBanner();
+            renderCurrentView();
         }
 
         function getCategoryBadgeClass(category) {
@@ -3055,13 +3092,13 @@ saveData() → localStorage (immediate, always)
             const sizePadding = sizeStyles[item.tshirtSize] || 'padding: 12px';
 
             const dragAttrs = draggable ? `draggable="true" title="Drag to move column" ondragstart="event.dataTransfer.setData('text/plain','${item.id}');this.classList.add('dragging');" ondragend="this.classList.remove('dragging');"` : '';
-            const isTop3 = window._top3Today && window._top3Today.includes(item.id);
+            const inTop3 = Array.isArray(top3Manual) && top3Manual.includes(item.id);
             let html = `<div class="card category-${category}" ${dragAttrs} onclick="openDetail('${item.id}')" style="${typeBorderColor?`border-left:3px solid ${typeBorderColor};`:''}${sizePadding};${isOverdue?'padding-top:24px;':''}position:relative;${isOverdue?'background:linear-gradient(135deg,var(--acst-subtle) 0%,var(--surface) 60%);':''}">` +
                 (isOverdue ? `<div style="position:absolute;top:0;left:0;right:0;background:#DC2626;color:white;font-size:9px;font-weight:800;padding:3px 8px;border-radius:var(--radius) var(--radius) 0 0;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:white;flex-shrink:0;animation:overdueP 1.5s ease-in-out infinite;"></span>OVERDUE</div>` : '') +
                 `
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
                     <div style="display:flex;align-items:center;gap:6px;">
-                        ${isTop3 ? '<span style="font-size:10px;background:#F59E0B;color:#000;padding:1px 5px;border-radius:3px;font-weight:700;" title="Top 3 Today">★</span>' : ''}
+                        <span onclick="toggleTop3FromCard('${item.id}',event)" title="${inTop3 ? 'In Top 3 — click to remove' : 'Click to set as a Top 3 for today'}" style="cursor:pointer;font-size:14px;line-height:1;user-select:none;${inTop3 ? 'color:#F59E0B;' : 'color:var(--text-3);opacity:.4;'}">★</span>
                         <div class="badge ${categoryClass}" style="font-size:10px;padding:1px 6px;">${category}</div>
                         ${item.priority>=2?`<span style="width:6px;height:6px;border-radius:50%;background:${priorityColors[item.priority]};display:inline-block;" title="Priority ${item.priority}"></span>`:''}
                     </div>
@@ -6594,6 +6631,46 @@ saveData() → localStorage (immediate, always)
             saveData();
         }
 
+        // Quick Top-3 toggle directly from a card's star (manual designation).
+        function toggleTop3FromCard(itemId, ev) {
+            if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+            if (!Array.isArray(top3Manual)) top3Manual = [];
+            const wasIn = top3Manual.includes(itemId);
+            if (wasIn) {
+                top3Manual = top3Manual.filter(id => id !== itemId);
+            } else {
+                if (top3Manual.length >= 3) {
+                    showToast('Top 3 is full — remove one first');
+                    return;
+                }
+                top3Manual.push(itemId);
+            }
+            saveData();
+            try { renderCurrentView(); } catch (e) {}
+            showToast(wasIn ? 'Removed from Top 3' : '★ Set as a Top 3 for today');
+        }
+
+        // Branded HTML email wrapper for Levi's Projects outbound mail (image-free, email-client safe).
+        window.lpEmailWrap = function (bodyHtml, opts) {
+            opts = opts || {};
+            var pre = opts.preheader ? String(opts.preheader) : '';
+            var dots =
+                '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#DC2626;margin-right:3px;"></span>' +
+                '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#059669;margin-right:3px;"></span>' +
+                '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#2563EB;margin-right:10px;"></span>';
+            return '' +
+'<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+'<body style="margin:0;padding:0;background:#F5F5F5;">' +
+(pre ? '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + pre + '</div>' : '') +
+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:24px 0;"><tr><td align="center">' +
+'<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:92%;background:#FFFFFF;border:1px solid #E4E4E7;border-radius:12px;overflow:hidden;">' +
+'<tr><td style="background:#0A0A0A;padding:18px 24px;font-family:Inter,Helvetica,Arial,sans-serif;font-size:17px;font-weight:700;color:#FFFFFF;letter-spacing:-.01em;">' +
+dots + 'Levi&#39;s Projects</td></tr>' +
+'<tr><td style="padding:28px 28px 8px;color:#0A0A0A;font-size:14px;line-height:1.6;font-family:Inter,Helvetica,Arial,sans-serif;">' + (bodyHtml || '') + '</td></tr>' +
+'<tr><td style="padding:18px 28px 26px;font-family:Inter,Helvetica,Arial,sans-serif;"><div style="border-top:1px solid #E4E4E7;padding-top:14px;color:#9CA0A8;font-size:11px;line-height:1.5;">Sent from <strong style="color:#5A5A5A;">Levi&#39;s Projects</strong> &middot; levisprojects.com</div></td></tr>' +
+'</table></td></tr></table></body></html>';
+        };
+
         // ═══════════════════════════════════════════════════════════════════════════
         // HABITS
         // ═══════════════════════════════════════════════════════════════════════════
@@ -6946,12 +7023,12 @@ saveData() → localStorage (immediate, always)
             const overdue = items.filter(i => i.dueDate && i.dueDate < today && i.status !== 'done' && i.type !== 'habit');
             const dueToday = items.filter(i => i.dueDate === today && i.status !== 'done' && i.type !== 'habit');
             if (overdue.length > 0) {
-                new Notification('⚠️ Operation Levi — Overdue', {
+                new Notification('⚠️ Levi\'s Projects — Overdue', {
                     body: `${overdue.length} item${overdue.length>1?'s':''} overdue: ${overdue.slice(0,2).map(i=>i.title).join(', ')}${overdue.length>2?' + more':''}`,
                     tag: 'overdue'
                 });
             } else if (dueToday.length > 0) {
-                new Notification('📋 Operation Levi — Due Today', {
+                new Notification('📋 Levi\'s Projects — Due Today', {
                     body: `${dueToday.length} item${dueToday.length>1?'s':''} due today. You've got this.`,
                     tag: 'duetoday'
                 });
@@ -7664,24 +7741,34 @@ saveData() → localStorage (immediate, always)
 
         function updateFilterBanner() {
             const banner = document.getElementById('filterBanner');
-            if (!currentFilter) {
+            if (!currentFilter && !currentAssignee) {
                 banner.style.display = 'none';
                 return;
             }
             const categoryColors = { ACST: '#EF4444', DVLMNT: '#00E5C3', Personal: '#3B82F6' };
             const categoryIcons = { ACST: '🔴', DVLMNT: '💚', Personal: '💙' };
-            const color = categoryColors[currentFilter] || '#999';
-            const icon = categoryIcons[currentFilter] || '⊙';
+            const color = currentFilter ? (categoryColors[currentFilter] || '#999') : '#6B7280';
+            const parts = [];
+            if (currentFilter) {
+                const icon = categoryIcons[currentFilter] || '⊙';
+                parts.push(`<span style="color:${color};font-weight:700;">${icon} ${currentFilter}</span>`);
+            }
+            if (currentAssignee) {
+                parts.push(`<span style="font-weight:700;">👤 ${currentAssignee}</span>`);
+            }
             banner.style.display = 'flex';
             banner.style.backgroundColor = color + '15';
             banner.style.borderBottomColor = color;
-            document.getElementById('filterBannerContent').innerHTML = `<span style="color:${color};font-weight:700;">${icon} Viewing: ${currentFilter}</span>`;
+            document.getElementById('filterBannerContent').innerHTML = `<span style="color:var(--text-3);font-weight:600;">Viewing:</span> ` + parts.join(`<span style="color:var(--text-3);"> · </span>`);
         }
 
         function clearFilter() {
             currentFilter = '';
+            currentAssignee = '';
             document.querySelectorAll('[data-filter]').forEach(f => f.classList.remove('active'));
-            document.querySelector('[data-filter=""]').classList.add('active');
+            const allBtn = document.querySelector('[data-filter=""]');
+            if (allBtn) allBtn.classList.add('active');
+            renderAssigneeFilters();
             updateFilterBanner();
             renderCurrentView();
         }
@@ -7907,6 +7994,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         // Pre-populate Claude API key if not already set
         // API key is set by user via Settings — not hardcoded
         setupEventListeners();
+        renderAssigneeFilters();
         renderDashboard();
 
         // First-run: prompt avatar setup if no avatars exist
@@ -8491,7 +8579,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var to=''; try{ (L().context||[]).forEach(function(c){ if(!to && c.email && (card.title||'').toLowerCase().indexOf(String(c.name||'').toLowerCase())>=0) to=c.email; }); }catch(e){}
     var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:9004;background:rgba(5,6,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:inherit';
     var box=document.createElement('div'); box.style.cssText='width:560px;max-width:94vw;background:#121317;border:1px solid #2a2e38;border-radius:16px;padding:22px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)';
-    box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#8a91a0;font-size:12.5px;margin-bottom:14px">Opens your email app with everything pre-filled. Review there and hit send — Operation Levi never sends on its own.</div>';
+    box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#8a91a0;font-size:12.5px;margin-bottom:14px">Opens your email app with everything pre-filled. Review there and hit send — Levi\'s Projects never sends on its own.</div>';
     function field(label,tag,val,ph){ var w=document.createElement('div'); w.style.marginBottom='11px'; var l=document.createElement('label'); l.textContent=label; l.style.cssText='display:block;font-size:11px;color:#8a91a0;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em'; var inp=document.createElement(tag); inp.style.cssText='width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#e9ecf2;font-size:14px;font-family:inherit'; if(tag==='textarea'){inp.style.minHeight='150px';inp.style.lineHeight='1.5';inp.style.resize='vertical';} if(val!=null) inp.value=val; if(ph) inp.placeholder=ph; w.appendChild(l); w.appendChild(inp); box.appendChild(w); return inp; }
     var toI=field('To','input',to,'name@client.com');
     var ccI=field('CC (optional)','input','','');
@@ -8776,7 +8864,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     var shell=document.createElement('div'); shell.className='ol2'; shell.id='ol2Shell';
     shell.innerHTML=
       '<aside class="side">'+
-        '<div class="brand"><span class="star">✦</span> Operation Levi</div>'+
+        '<div class="brand"><span class="star">✦</span> Levi\'s Projects</div>'+
         '<nav class="nav" id="ol2Nav">'+
           '<a data-v="home" class="on">⌂ Home</a>'+
           '<a data-v="myday">◴ My Day</a>'+
@@ -9245,7 +9333,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       go.onclick=function(){
         if(!toI.value.trim()){ msg.style.display='block'; msg.style.color='#e0a02c'; msg.textContent='Add a recipient first.'; return; }
         go.textContent='Sending…'; go.disabled=true; cancel.disabled=true; msg.style.display='none';
-        var html=String(bodyI.value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        var rawBody=String(bodyI.value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+        var html=(typeof window.lpEmailWrap==='function')?window.lpEmailWrap(rawBody,{preheader:(subI.value||'')}):rawBody;
         fetch('/api/send',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({to:toI.value.trim(),cc:ccI.value.trim(),subject:subI.value,html:html,text:bodyI.value})})
           .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
           .then(function(res){
