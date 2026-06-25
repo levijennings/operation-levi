@@ -8927,7 +8927,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 </style>
 <style>
 /* 2.0 — home / week / people surfaces */
-.ol2 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:4px 0 8px}
+.ol2 .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:4px 0 8px}
+.ol2 .tile .num{font-size:24px}
 .ol2 .tile{background:#15161b;border:1px solid #262a31;border-radius:13px;padding:15px 16px;cursor:pointer;transition:.14s}
 .ol2 .tile:hover{border-color:#30353d;background:#1b1d23;transform:translateY(-1px)}
 .ol2 .tile .num{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;line-height:1}
@@ -9445,6 +9446,17 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     }
 
     // ── Home / landing ──
+    function lpHomeList(title, list){
+      var ov=document.createElement('div'); ov.id='lpListOv'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:Inter';
+      var h='<div style="width:640px;max-width:95vw;background:#15171c;border:1px solid #2a2e38;border-radius:16px;padding:20px;color:#e9ecf2;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
+      h+='<div style="display:flex;align-items:center;margin-bottom:12px"><h2 class="syne" style="font-size:17px;flex:1;margin:0">'+esc(title)+' <span style="color:#727a88;font-weight:600">'+list.length+'</span></h2><button id="lpListClose" class="lp-mini">Close</button></div>';
+      if(!list.length){ h+='<div class="empty" style="padding:24px">Nothing here right now.</div>'; }
+      else { h+=list.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'" style="margin-bottom:6px"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it)+'</div>'; }).join(''); }
+      h+='</div>'; ov.innerHTML=h; document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.getElementById('lpListClose').onclick=function(){ ov.remove(); };
+      [].forEach.call(ov.querySelectorAll('.md-row[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; ov.remove(); if(it) openReview(it); }; });
+    }
     function showHome(){
       hideAllPanels();
       var home=document.getElementById('ol2Home'); home.style.display='';
@@ -9464,10 +9476,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(triage.length) bits.push(triage.length+' to triage');
       var summary=bits.length?('You have '+bits.join(', ')+'.'):'You’re all caught up — nothing pressing right now.';
       var tiles=[
-        {v:'review',num:review.length,lbl:'Needs review',c:'#f2a33c'},
-        {v:'myday',num:dueToday.length,lbl:'Due today',c:'#5a9be0'},
-        {v:'triage',num:triage.length,lbl:'To triage',c:'#b07ad6'},
-        {v:'board',num:inProg.length,lbl:'In progress',c:'#46b98a'}
+        {k:'todo',num:toDo.length,lbl:'To do',c:'#9aa3b2'},
+        {k:'inprogress',num:inProg.length,lbl:'In progress',c:'#5a9be0'},
+        {k:'review',num:review.length,lbl:'Needs review',c:'#f2a33c'},
+        {k:'duetoday',num:dueToday.length,lbl:'Due today',c:'#5a9be0'},
+        {k:'triage',num:triage.length,lbl:'To triage',c:'#b07ad6'},
+        {k:'done',num:done.length,lbl:'Done',c:'#46b98a'}
       ];
       var ids=top3Ids();
       var pinned=ids.map(function(id){ return all.filter(function(x){ return String(x.id)===id; })[0]; }).filter(Boolean);
@@ -9476,12 +9490,10 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var captured=all.filter(function(i){ return i.sourceType && i.status!=='done'; }).slice(0,4);
       var h='<div class="hrow"><div><h1 class="syne">'+greet+', '+esc(meName())+'</h1><p>'+esc(dstr)+' · '+esc(summary)+'</p></div>'+
         '<button class="gbtn amber" id="ol2HomeSpeak"><span style="font-size:15px">✦</span> Speak a task</button></div>';
-      h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-go="'+t.v+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
+      h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-list="'+t.k+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
       h+='<div class="ulbl" style="margin:22px 0 9px">Focus today</div>';
       if(!top3.length){ h+='<div class="empty">Nothing scheduled — speak a task, or pin one in My Day.</div>'; }
       else { h+='<div class="md-top3">'+top3.map(function(it,idx){ return '<div class="md-card" data-open="'+esc(it.id)+'"><div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+' · '+esc(it.status||'')+'</div></div></div>'; }).join('')+'</div>'; }
-      h+='<div class="ulbl" style="margin:24px 0 9px">This week at a glance</div>';
-      h+='<div class="glance">'+seg('To do',toDo.length,'#9aa3b2')+seg('In progress',inProg.length,'#5a9be0')+seg('Needs review',review.length,'#f2a33c')+seg('Done',done.length,'#46b98a')+'</div>';
       if(captured.length){
         h+='<div class="ulbl" style="margin:24px 0 9px">Just captured from Outlook</div>';
         h+=captured.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.sourceType==='calendar'?'📅 calendar':'✉ email')+(it.aiStatus==='drafted'?' · ✦ draft ready':'')+'</div></div>'+badges(it)+'</div>'; }).join('');
@@ -9496,7 +9508,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       })();
       home.innerHTML=h;
       document.getElementById('ol2HomeSpeak').onclick=function(){ openCapture(); };
-      [].forEach.call(home.querySelectorAll('.tile[data-go]'),function(el){ el.onclick=function(){ go(el.getAttribute('data-go')); }; });
+      [].forEach.call(home.querySelectorAll('.tile[data-list]'),function(el){ el.onclick=function(){ var k=el.getAttribute('data-list'); var map={ todo:{t:'To do',f:function(i){return ['backlog','thisweek'].indexOf(i.status)>=0;}}, inprogress:{t:'In progress',f:function(i){return ['active','today','waiting'].indexOf(i.status)>=0;}}, review:{t:'Needs review',f:function(i){return i.status==='review';}}, duetoday:{t:'Due today',f:function(i){return i.status!=='done'&&(i.dueDate===today||i.status==='today');}}, triage:{t:'To triage',f:function(i){return i.status==='backlog';}}, done:{t:'Done',f:function(i){return i.status==='done';}} }; var m=map[k]; if(m) lpHomeList(m.t, all.filter(m.f)); }; });
       [].forEach.call(home.querySelectorAll('.lp-tcard[data-person]'),function(el){ el.onclick=function(){ lpPersonProfile(el.getAttribute('data-person')); }; });
       [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
