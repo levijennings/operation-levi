@@ -24,10 +24,13 @@ module.exports = async (req, res) => {
       context = body.context || null, preferences = body.preferences || [], model = body.model;
   var previousDraft = body.previousDraft || '', instruction = (body.instruction || '').trim();
 
-  var sys = "You are the execution assistant inside Operation Levi, a task app for the company dvlmnt. "
-    + "Produce a high-quality first DRAFT for the task below. Do NOT send, publish, or take any action — output the draft only. "
+  var sys = "You are the execution assistant inside Levi's Projects, a task app for the company dvlmnt. "
+    + "Work in two parts and label them with markdown headings. First, '## Plan' — 3 to 6 concise bullet steps for how you'll complete the task. Then, '## Result' — actually DO the task and return the real output. "
+    + "You have a web_search tool. USE IT for any task that needs current or external information: finding products/listings for sale, prices, availability, contact info, research, comparisons, current facts. Return concrete findings (names, prices, locations, dates) and cite sources with their URLs. "
+    + "For writing tasks (emails, docs, posts), the Result is the finished draft. For research tasks, the Result is the gathered information laid out clearly (a table or list with links). "
+    + "Do NOT send, publish, purchase, sign in, or take any real-world action — produce the result only so the user can review and act. "
     + "Follow the SKILL instructions, use the TEMPLATE structure if given, match the BRAND / CONTEXT (voice, terms, sensitivities), and honour the PREFERENCES. "
-    + "If a CURRENT DRAFT and a REVISION are provided, revise that draft to satisfy the revision while preserving everything else, and output the full revised draft only. "
+    + "If a CURRENT DRAFT and a REVISION are provided, revise that draft to satisfy the revision while preserving everything else, and output the full revised result only. "
     + "If something essential is missing, make a reasonable assumption and note it briefly at the end under 'Assumptions'.";
 
   // Pull the chosen skill's REAL instructions if a catalog source is linked and the stored body is thin.
@@ -62,12 +65,13 @@ module.exports = async (req, res) => {
     var r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: mdl, max_tokens: 2000, system: sys, messages: [{ role: 'user', content: u }] })
+      body: JSON.stringify({ model: mdl, max_tokens: 4000, system: sys, messages: [{ role: 'user', content: u }], tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }] })
     });
     var j = await r.json();
     if (!r.ok) { res.status(502).json({ error: 'anthropic', detail: (j && j.error && j.error.message) || ('HTTP ' + r.status) }); return; }
-    var text = (j.content && j.content[0] && j.content[0].text) ? j.content[0].text : '';
-    res.status(200).json({ draft: text, model: mdl });
+    var text = (j.content || []).filter(function (b) { return b && b.type === 'text' && b.text; }).map(function (b) { return b.text; }).join('\n').trim();
+    var searches = (j.content || []).filter(function (b) { return b && (b.type === 'web_search_tool_result' || b.type === 'server_tool_use'); }).length;
+    res.status(200).json({ draft: text, model: mdl, searched: searches > 0 });
   } catch (e) {
     res.status(502).json({ error: 'fetch', detail: String((e && e.message) || e) });
   }
