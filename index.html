@@ -8700,6 +8700,40 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .drow .s{font-size:11.5px;color:#727a88;margin-top:2px}
 .ol2 .drow .lk{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .ol2 .drow .lk a{font-size:11px;color:#5a9be0;background:#13202e;border:1px solid #1e3a4d;border-radius:6px;padding:3px 8px;text-decoration:none;white-space:nowrap}
+.ol2 .lp-sec{margin-top:14px;border-top:1px solid #262a31;padding-top:12px}
+.ol2 .lp-sech{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a91a0;margin-bottom:8px}
+.ol2 .lp-mini{background:#23262e;border:1px solid #30353d;color:#cfd5de;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
+.ol2 .lp-empty{color:#727a88;font-size:12px}
+.ol2 .lp-links{display:flex;flex-wrap:wrap;gap:7px}
+.ol2 .lp-link{font-size:11.5px;color:#5a9be0;background:#13202e;border:1px solid #1e3a4d;border-radius:6px;padding:4px 9px;text-decoration:none;white-space:nowrap}
+.ol2 .lp-time{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ol2 .lp-time .lp-lbl{font-size:11px;color:#8a91a0}
+.ol2 .lp-timerbtn{background:#1d2a1f;border:1px solid #2f5a39;color:#7fd99a;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter}
+.ol2 .lp-timerbtn.on{background:#3a1414;border-color:#7a2b2b;color:#e07a63}
+.ol2 .lp-tracked{font-size:12px;color:#aab2c0}
+.ol2 .lp-tl{margin-top:9px;display:flex;flex-direction:column;gap:5px}
+.ol2 .lp-tlrow{display:flex;gap:8px;align-items:baseline;font-size:11.5px}
+.ol2 .lp-tlrow .m{color:#f2a33c;font-weight:700;min-width:54px}
+.ol2 .lp-tlrow .n{flex:1;color:#cfd5de}
+.ol2 .lp-tlrow .w{color:#727a88;font-size:10.5px}
+.ol2 .lp-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#cfd5de;cursor:pointer}
+.ol2 .lp-proof{margin-top:8px;font-size:12px;display:flex;gap:8px;align-items:baseline}
+.ol2 .lp-proof a{color:#7fd99a;text-decoration:none;font-weight:600}
+.ol2 .lp-proof span{color:#aab2c0}
+.ol2 .lp-cmadd{display:flex;gap:8px;margin-bottom:9px}
+.ol2 .lp-cmadd .ein{flex:1}
+.ol2 .lp-cmlist{display:flex;flex-direction:column;gap:8px}
+.ol2 .lp-cm{background:#15171c;border:1px solid #20232a;border-radius:9px;padding:8px 11px}
+.ol2 .lp-cm .b{font-size:10.5px;color:#727a88;margin-bottom:3px}
+.ol2 .lp-cm .x{font-size:13px;color:#e3e7ee;white-space:pre-wrap;line-height:1.45}
+.ol2 .lp-team{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.ol2 .lp-tcard{display:flex;align-items:center;gap:11px;background:#1b1d23;border:1px solid #262a31;border-radius:12px;padding:12px 14px;cursor:pointer;transition:.14s}
+.ol2 .lp-tcard:hover{border-color:#30353d}
+.ol2 .lp-tcard.on{border-color:#f2a33c}
+.ol2 .lp-tcard .nm{font-size:13.5px;font-weight:600;color:#e9ecf2}
+.ol2 .lp-tcard .st{font-size:11.5px;color:#8a91a0;margin-top:2px}
+.ol2 .lp-tcard .st b{color:#cfd5de}
+.ol2 .lp-expand{margin-top:10px}
 .ol2 .badge{font-size:10px;font-weight:600;padding:2.5px 8px;border-radius:20px;margin-left:auto}
 .ol2 .b-amber{background:#2c2009;color:#f2a33c;border:1px solid #4a3514}
 .ol2 .b-blue{background:#16263a;color:#5a9be0;border:1px solid #244463}
@@ -8910,7 +8944,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   function lpDueFull(d){ if(!d) return ''; try{ var dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; return dt.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }catch(e){ return d; } }
   function lpCatColor(c){ if(c==='ACST') return '#DC2626'; if(c==='DVLMNT') return '#10b981'; if(c==='Personal') return '#3b82f6'; return '#727a88'; }
   function lpHost(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return 'link'; } }
-  function lpLinks(it){ var out=[]; [['Notion',it.notionUrl],['Figma',it.figmaUrl],['Google Doc',it.googleDocsUrl],['Word',it.msDocsUrl],['Excel',it.msExcelUrl]].forEach(function(p){ if(p[1]) out.push({label:p[0],url:p[1]}); }); (it.urls||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpHost(u),url:u}); else if(u&&u.url) out.push({label:u.label||u.name||lpHost(u.url),url:u.url}); }); (it.documents||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpHost(u),url:u}); else if(u&&u.url) out.push({label:u.name||u.label||'Document',url:u.url}); }); return out; }
+  function lpLinkLabel(u){ u=String(u||''); if(/docs\.google\.com\/spreadsheets/.test(u)) return 'Google Sheet'; if(/docs\.google\.com\/presentation/.test(u)) return 'Google Slides'; if(/docs\.google\.com\/document/.test(u)) return 'Google Doc'; if(/figma\.com/.test(u)) return 'Figma'; if(/notion\.(so|site)/.test(u)) return 'Notion'; if(/zoom\.us|zoom\.com/.test(u)) return 'Zoom'; return lpHost(u); }
+  function lpLinks(it){ var out=[]; [['Notion',it.notionUrl],['Figma',it.figmaUrl],['Google Doc',it.googleDocsUrl],['Word',it.msDocsUrl],['Excel',it.msExcelUrl]].forEach(function(p){ if(p[1]) out.push({label:p[0],url:p[1]}); }); (it.urls||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.label||u.name||lpLinkLabel(u.url),url:u.url}); }); (it.documents||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.name||u.label||'Document',url:u.url}); }); return out; }
+  function lpMins(m){ m=Math.round(m||0); var h=Math.floor(m/60), mm=m%60; return (h?(h+'h '):'')+mm+'m'; }
+  function lpWhen(ts){ if(!ts) return ''; try{ var d=new Date(ts); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+  function lpProof(card){ var url=window.prompt('This task requires proof. Paste a Zoom (or other) link:', (card.proof&&card.proof.url)||''); if(url===null||!url.trim()) return false; var note=window.prompt('Add an explanation of what was completed:', (card.proof&&card.proof.note)||''); if(note===null) return false; var u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; card.proof={url:u,note:(note||'').trim(),by:meName(),ts:Date.now()}; return true; }
+  var homeExpandedPerson=null;
   // ── Weather (Open-Meteo, no key) ──
   function lpWxLoc(){ try{ var s=JSON.parse(localStorage.getItem('lp_weather_loc')||'null'); if(s&&s.lat) return s; }catch(e){} return LP_WX_DEFAULT; }
   function lpWxIcon(code){ code=Number(code); if(code===0) return ['☀️','Clear']; if(code===1||code===2) return ['⛅','Partly cloudy']; if(code===3) return ['☁️','Cloudy']; if(code===45||code===48) return ['🌫️','Fog']; if(code>=51&&code<=57) return ['🌦️','Drizzle']; if(code>=61&&code<=67) return ['🌧️','Rain']; if(code>=71&&code<=77) return ['🌨️','Snow']; if(code>=80&&code<=82) return ['🌧️','Showers']; if(code>=85&&code<=86) return ['🌨️','Snow']; if(code>=95) return ['⛈️','Storm']; return ['•','']; }
@@ -9020,12 +9059,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#727a88':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
         col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
         col.ondragleave=function(){ col.classList.remove('drop'); };
-        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
+        col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ cardx.status=c.set; cardx.columnEnteredAt=Date.now(); if(c.set==='done' && cardx.requireProof && !(cardx.proof&&cardx.proof.url)) lpProof(cardx); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
         if(!cards.length){ var e=document.createElement('div'); e.className='empty'; e.textContent='—'; col.appendChild(e); }
         cards.forEach(function(it){
           var el=document.createElement('div'); el.className='tcard'; el.draggable=true; el.style.borderLeft='3px solid '+lpCatColor(it.category);
           var t3on=top3Ids().indexOf(String(it.id))>=0;
-          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+badges(it)+'</div>';
+          el.innerHTML='<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#f2a33c':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#f2a33c">⏱ running</span>':'')+badges(it)+'</div>';
           var t3btn=el.querySelector('.lp-t3'); if(t3btn){ t3btn.onclick=function(ev){ ev.stopPropagation(); lpToggleTop3(it.id); renderColumns(); }; }
           var dueEl=el.querySelector('.lp-due'); if(dueEl){ dueEl.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dueEl); }; }
           el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
@@ -9044,7 +9083,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var dragged=ITEMS().filter(function(x){ return String(x.id)===String(draggedId); })[0];
       if(!dragged || String(draggedId)===String(targetId)) return;
       var changed=false;
-      if(col.st.indexOf(dragged.status)<0){ dragged.status=col.set; dragged.columnEnteredAt=Date.now(); changed=true; }
+      if(col.st.indexOf(dragged.status)<0){ dragged.status=col.set; dragged.columnEnteredAt=Date.now(); changed=true; if(dragged.status==='done' && dragged.requireProof && !(dragged.proof&&dragged.proof.url)) lpProof(dragged); }
       var list=ITEMS().filter(function(i){ return col.st.indexOf(i.status)>=0 && matchesFilter(i) && String(i.id)!==String(draggedId); });
       list.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); });
       var idx=-1; for(var j=0;j<list.length;j++){ if(String(list[j].id)===String(targetId)){ idx=j; break; } }
@@ -9275,9 +9314,18 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         h+='<div class="ulbl" style="margin:24px 0 9px">Just captured from Outlook</div>';
         h+=captured.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.sourceType==='calendar'?'📅 calendar':'✉ email')+(it.aiStatus==='drafted'?' · ✦ draft ready':'')+'</div></div>'+badges(it)+'</div>'; }).join('');
       }
+      (function(){
+        var people=(typeof getAllAssignees==='function'?getAllAssignees():[]).slice();
+        function pItems(p){ return all.filter(function(it){ var ppl=[].concat(it.assignees||[], (it.raci&&it.raci.R)||[], (it.raci&&it.raci.A)?[it.raci.A]:[], it.responsible?[it.responsible]:[]); return ppl.indexOf(p)>=0; }); }
+        var wkSt=['thisweek','priority','active','today','waiting'];
+        h+='<div class="ulbl" style="margin:26px 0 9px">Team workload</div>';
+        h+='<div class="lp-team">'+people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var dnc=its.filter(function(i){ return i.status==='done'; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week · <b>'+dnc+'</b> done</div></div></div>'; }).join('')+'</div>';
+        if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it)+'</div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
+      })();
       home.innerHTML=h;
       document.getElementById('ol2HomeSpeak').onclick=function(){ openCapture(); };
       [].forEach.call(home.querySelectorAll('.tile[data-go]'),function(el){ el.onclick=function(){ go(el.getAttribute('data-go')); }; });
+      [].forEach.call(home.querySelectorAll('.lp-tcard[data-person]'),function(el){ el.onclick=function(){ var p=el.getAttribute('data-person'); homeExpandedPerson=(homeExpandedPerson===p)?null:p; showHome(); }; });
       [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
 
@@ -9368,6 +9416,27 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       toast('🗑 Task deleted'); updateCounts(); showBoard();
     }
 
+    function lpExtrasHtml(card){
+      var links=lpLinks(card); var tl=card.timeLog||[]; var tracked=tl.reduce(function(s,e){return s+(e.mins||0);},0); var running=!!card._timerStart; var cm=card.comments||[];
+      var h='';
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Links</span><button type="button" class="lp-mini" id="edAddLink">+ Add link</button></div>';
+      h+='<div class="lp-links">'+(links.length?links.map(function(l){ return '<a class="lp-link" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.label)+' ↗</a>'; }).join(''):'<span class="lp-empty">No links yet — add a Google Doc / Sheet / Slides, Figma, etc.</span>')+'</div></div>';
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Time</span></div><div class="lp-time"><span class="lp-lbl">Estimate (hrs)</span><input class="ein" id="edEst" type="number" min="0" step="0.25" value="'+(card.timeEstimate||'')+'" style="width:90px"/><button type="button" class="lp-timerbtn'+(running?' on':'')+'" id="edTimer">'+(running?'⏹ Stop timer':'▶ Start timer')+'</button><span class="lp-tracked">'+(tracked?('Tracked: '+lpMins(tracked)):'')+(running?' · running…':'')+'</span></div>';
+      if(tl.length){ h+='<div class="lp-tl">'+tl.slice().reverse().map(function(e){ return '<div class="lp-tlrow"><span class="m">'+lpMins(e.mins||0)+'</span><span class="n">'+esc(e.note||'')+'</span><span class="w">'+esc(e.by||'')+' · '+lpWhen(e.end||e.start)+'</span></div>'; }).join('')+'</div>'; }
+      h+='</div>';
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Completion proof</span></div><label class="lp-check"><input type="checkbox" id="edReqProof"'+(card.requireProof?' checked':'')+'/> Require a proof link + explanation to mark Done</label>';
+      if(card.proof&&card.proof.url){ h+='<div class="lp-proof"><a href="'+esc(card.proof.url)+'" target="_blank" rel="noopener">✔ Proof ↗</a><span>'+esc(card.proof.note||'')+'</span></div>'; }
+      h+='</div>';
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Comments &amp; updates</span></div><div class="lp-cmadd"><input class="ein" id="edCmIn" placeholder="Add a comment…"/><button type="button" class="lp-mini" id="edCmAdd">Post</button></div><div class="lp-cmlist">'+(cm.length?cm.slice().reverse().map(function(c){ return '<div class="lp-cm"><div class="b">'+esc(c.by||'')+' · '+lpWhen(c.ts)+'</div><div class="x">'+esc(c.text||'')+'</div></div>'; }).join(''):'<span class="lp-empty">No comments yet.</span>')+'</div></div>';
+      return h;
+    }
+    function lpWireExtras(card){
+      var al=document.getElementById('edAddLink'); if(al){ al.onclick=function(){ var u=window.prompt('Paste a link (Google Doc / Sheet / Slides, Figma, Zoom, etc.):',''); if(!u||!u.trim()) return; u=u.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; if(!card.urls) card.urls=[]; card.urls.push({label:lpLinkLabel(u),url:u}); try{ persist(); }catch(e){} openReview(card); }; }
+      var est=document.getElementById('edEst'); if(est){ est.onchange=function(){ card.timeEstimate=parseFloat(this.value)||0; try{ persist(); }catch(e){} }; }
+      var tm=document.getElementById('edTimer'); if(tm){ tm.onclick=function(){ if(card._timerStart){ var mins=Math.max(1,Math.round((Date.now()-card._timerStart)/60000)); var note=window.prompt('Stopping timer ('+lpMins(mins)+'). Enter an update comment (required):',''); if(note===null||!note.trim()){ toast('A comment is required to stop the timer'); return; } if(!card.timeLog) card.timeLog=[]; card.timeLog.push({start:card._timerStart,end:Date.now(),mins:mins,note:note.trim(),by:meName()}); if(!card.comments) card.comments=[]; card.comments.push({text:'⏱ '+lpMins(mins)+' — '+note.trim(),by:meName(),ts:Date.now()}); delete card._timerStart; try{ persist(); }catch(e){} toast('Logged '+lpMins(mins)); openReview(card); } else { card._timerStart=Date.now(); try{ persist(); }catch(e){} toast('Timer started'); openReview(card); } }; }
+      var rp=document.getElementById('edReqProof'); if(rp){ rp.onchange=function(){ card.requireProof=this.checked; try{ persist(); }catch(e){} }; }
+      var ca=document.getElementById('edCmAdd'), ci=document.getElementById('edCmIn'); if(ca&&ci){ var post=function(){ var t=ci.value.trim(); if(!t) return; if(!card.comments) card.comments=[]; card.comments.push({text:t,by:meName(),ts:Date.now()}); try{ persist(); }catch(e){} openReview(card); }; ca.onclick=post; ci.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); post(); } }; }
+    }
     function openReview(card){
       var parts=assemble(card);
       var rev=document.getElementById('ol2Review');
@@ -9390,6 +9459,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
             '<label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/>'+
             '<label class="erl">Category</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select>'+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:58px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
+            lpExtrasHtml(card)+
             '<div class="ulbl">Claude uses</div>'+
             '<div class="used">'+
               '<span class="chip'+(parts.skill?'':' miss')+'">◆ '+(parts.skill?esc(parts.skill.name):'no skill')+'</span>'+
@@ -9414,7 +9484,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var et=document.getElementById('edTitle');
         et.oninput=function(){ card.title=et.value; var h=document.getElementById('ol2RevTitle'); if(h) h.textContent=et.value||'Untitled'; };
         et.onchange=function(){ persist(); };
-        document.getElementById('edStatus').onchange=function(){ card.status=this.value; card.columnEnteredAt=Date.now(); persist(); updateCounts(); };
+        document.getElementById('edStatus').onchange=function(){ var nv=this.value; if(nv==='done' && card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)){ this.value=card.status; return; } } card.status=nv; card.columnEnteredAt=Date.now(); persist(); updateCounts(); if(nv==='done') openReview(card); };
         document.getElementById('edOwner').onchange=function(){ card.assignees=[this.value]; card.responsible=this.value; persist(); };
         document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; persist(); };
         document.getElementById('edCat').onchange=function(){ card.category=this.value; persist(); };
@@ -9426,6 +9496,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var db=document.getElementById('ol2Del');
         if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='🗑 Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
       })();
+      lpWireExtras(card);
       var msg=document.getElementById('ol2RevMsg');
       function showMsg(t,kind){ msg.style.display='block'; msg.style.color=kind==='err'?'#e07a63':'#f2c98a'; msg.innerHTML=t; }
       function setBusy(b,label){ var d=document.getElementById('ol2Draft'); if(b){ d.classList.add('run'); d.textContent=label||'Claude is working…'; } }
