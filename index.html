@@ -9205,6 +9205,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="myday">◴ My Day</a>'+
           '<a data-v="week">▤ My Week</a>'+
           '<a data-v="board">▦ Project Board</a>'+
+          '<a data-v="goals">◎ Goals</a>'+
           '<span id="ol2RevN" style="display:none">0</span>'+
           '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
           '<a data-v="people">◍ People</a>'+
@@ -9228,6 +9229,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2Week" style="display:none"></div>'+
         '<div id="ol2People" style="display:none"></div>'+
         '<div id="ol2Done" style="display:none"></div>'+
+        '<div id="ol2Goals" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -9238,7 +9240,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -9319,7 +9321,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       try{ persist(); }catch(e){}
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
-    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
     function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#46b98a':s==='review'?'#f2a33c':(s==='active'||s==='today')?'#5a9be0':s==='waiting'?'#e0a02c':'#727a88'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
@@ -9551,6 +9553,72 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
       document.getElementById('lpListClose').onclick=function(){ ov.remove(); };
       [].forEach.call(ov.querySelectorAll('.md-row[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; ov.remove(); if(it) openReview(it); }; });
+    }
+    // ── Goals (annual, fulfilled by the linked work beneath them) ──
+    function lpGoalStats(goal){
+      var linked=ITEMS().filter(function(i){ return (i.goalIds||[]).indexOf(goal.id)>=0; });
+      var done=linked.filter(function(i){ return i.status==='done'; });
+      var totalW=0,doneW=0;
+      linked.forEach(function(i){ var p=null; try{ p=(typeof getItemProgress==='function')?getItemProgress(i):null; }catch(e){} var t=(p&&p.total)?p.total:1; totalW+=t; if(i.status==='done') doneW+=t; else if(p&&p.pct===100) doneW+=t; });
+      var pct=totalW>0?Math.round(doneW/totalW*100):(linked.length?Math.round(done.length/linked.length*100):0);
+      var today=new Date(); today.setHours(0,0,0,0);
+      var overdue=linked.filter(function(i){ return i.dueDate && new Date(i.dueDate+'T00:00:00')<today && i.status!=='done'; });
+      var open=linked.filter(function(i){ return i.status!=='done'; });
+      var crit=open.slice().sort(function(a,b){ var ad=a.dueDate?+new Date(a.dueDate+'T00:00:00'):Infinity, bd=b.dueDate?+new Date(b.dueDate+'T00:00:00'):Infinity; return ad-bd; })[0]||null;
+      var now=Date.now(),stalledDays=0,stalledItem=null;
+      open.forEach(function(i){ if(i.columnEnteredAt){ var d=Math.floor((now-i.columnEnteredAt)/86400000); if(d>stalledDays){ stalledDays=d; stalledItem=i; } } });
+      return {linked:linked,open:open,done:done,pct:pct,overdue:overdue,crit:crit,stalledDays:stalledDays,stalledItem:stalledItem};
+    }
+    function lpGoalYear(goal){ return goal.targetDate?new Date(goal.targetDate+'T00:00:00').getFullYear():new Date().getFullYear(); }
+    function lpGoalQuarters(goal,linked){
+      var yr=lpGoalYear(goal); var qc=[0,0,0,0],qd=[0,0,0,0];
+      linked.forEach(function(i){ if(!i.dueDate) return; var d=new Date(i.dueDate+'T00:00:00'); if(d.getFullYear()!==yr) return; var q=Math.floor(d.getMonth()/3); qc[q]++; if(i.status==='done') qd[q]++; });
+      return {year:yr,counts:qc,done:qd};
+    }
+    function lpGoalNarrative(s){
+      if(!s.linked.length) return 'No work linked yet — link tasks so this goal can track itself.';
+      if(s.pct>=100) return '✓ All linked work complete.';
+      var parts=[s.done.length+' of '+s.linked.length+' tasks done'];
+      if(s.overdue.length) parts.push(s.overdue.length+' overdue');
+      if(s.crit) parts.push('critical path: “'+(s.crit.title||'a task')+'”'+(s.crit.dueDate?(' (due '+lpDueFull(s.crit.dueDate)+')'):''));
+      if(s.stalledDays>=7&&s.stalledItem) parts.push('“'+(s.stalledItem.title||'a task')+'” hasn’t moved in '+s.stalledDays+'d');
+      return parts.join(' · ');
+    }
+    function lpGoalAtRisk(goal,s){
+      if(s.pct>=100) return false;
+      if(s.overdue.length) return true;
+      if(goal.targetDate){ var wk=(new Date(goal.targetDate+'T00:00:00')-new Date())/(7*86400000); if(wk>0&&wk<8&&s.pct<60) return true; }
+      return false;
+    }
+    function showGoals(){
+      hideAllPanels();
+      var view=document.getElementById('ol2Goals'); view.style.display='';
+      var gs=(typeof goals!=='undefined'&&goals)?goals.slice():[];
+      var rows=gs.map(function(g){ var s=lpGoalStats(g); return {g:g,s:s,risk:lpGoalAtRisk(g,s)}; });
+      rows.sort(function(a,b){ if(a.risk!==b.risk) return a.risk?-1:1; return (a.g.priority||0)-(b.g.priority||0); });
+      var yr=rows.length?lpGoalYear(rows[0].g):new Date().getFullYear();
+      var atRisk=rows.filter(function(r){ return r.risk; }).length;
+      var qn=['Q1','Q2','Q3','Q4']; var curQ=Math.floor(new Date().getMonth()/3);
+      var h='<div class="hrow"><div><h1 class="syne">Goals</h1><p>'+yr+' · progress is earned by the work linked beneath each goal'+(atRisk?(' · <span style="color:#e07a63">'+atRisk+' at risk</span>'):'')+'</p></div><button class="gbtn" id="ol2GoalNew">＋ New goal</button></div>';
+      if(!rows.length){ h+='<div class="empty" style="padding:40px">No goals yet. Create one, then link the projects and tasks that fulfill it.</div>'; }
+      rows.forEach(function(r){
+        var g=r.g,s=r.s; var col=lpCatColor(g.category); var barCol=s.overdue.length?'#e07a63':(s.pct>=100?'#46b98a':'#f2a33c'); var q=lpGoalQuarters(g,s.linked);
+        h+='<div style="background:#101115;border:1px solid '+(r.risk?'#5a3030':'#262a31')+';border-left:3px solid '+col+';border-radius:13px;padding:16px 18px;margin-bottom:12px">';
+        h+='<div style="display:flex;align-items:flex-start;gap:14px"><div style="flex:1;min-width:0">';
+        h+='<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><span class="syne" style="font-size:16px;font-weight:700;color:#e9ecf2">'+esc(g.title||'Untitled goal')+'</span>'+(g.category?('<span style="font-size:10.5px;font-weight:600;color:'+col+';border:1px solid '+col+';border-radius:6px;padding:1px 7px">'+esc(g.category)+'</span>'):'')+(r.risk?'<span style="font-size:10.5px;font-weight:700;color:#e07a63;border:1px solid #5a3030;border-radius:6px;padding:1px 7px">AT RISK</span>':'')+'</div>';
+        if(g.description) h+='<div style="font-size:12.5px;color:#8a91a0;margin-top:4px">'+esc(g.description)+'</div>';
+        h+='</div><div style="text-align:right;flex-shrink:0"><div class="syne" style="font-size:26px;font-weight:800;color:'+barCol+';line-height:1">'+s.pct+'%</div><div style="font-size:9.5px;color:#727a88;text-transform:uppercase;letter-spacing:.05em">fulfilled</div>'+(g.targetDate?('<div style="font-size:10.5px;color:#727a88;margin-top:3px">🎯 '+lpDueFull(g.targetDate)+'</div>'):'')+'</div></div>';
+        h+='<div style="height:6px;background:#1d2129;border-radius:4px;overflow:hidden;margin:11px 0 9px"><div style="height:100%;width:'+s.pct+'%;background:'+barCol+';border-radius:4px"></div></div>';
+        h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px">';
+        for(var qi=0;qi<4;qi++){ var c=q.counts[qi],d=q.done[qi]; var qp=c>0?Math.round(d/c*100):0; var isCur=(qi===curQ&&q.year===new Date().getFullYear()); h+='<div style="background:'+(isCur?'#1d2129':'#15171c')+';border:1px solid '+(isCur?'#30353d':'#22262e')+';border-radius:8px;padding:6px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:10.5px;font-weight:700;color:'+(isCur?'#e9ecf2':'#727a88')+'">'+qn[qi]+'</span><span style="font-size:10px;color:#727a88">'+(c?d+'/'+c:'—')+'</span></div><div style="height:3px;background:#0d0f13;border-radius:3px;margin-top:5px;overflow:hidden"><div style="height:100%;width:'+qp+'%;background:'+(qp>=100?'#46b98a':col)+'"></div></div></div>'; }
+        h+='</div>';
+        h+='<div style="font-size:12px;color:'+(s.overdue.length?'#e0a07a':'#aab2c0')+';display:flex;gap:7px;align-items:baseline"><span style="color:#f2a33c;flex-shrink:0">✦</span><span>'+esc(lpGoalNarrative(s))+'</span></div>';
+        if(s.open.length){ h+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px">'+s.open.slice(0,6).map(function(it){ var t=it.title||'Untitled'; return '<button class="ol2-goaltask" data-open="'+esc(it.id)+'" style="background:#15171c;border:1px solid #262a31;border-radius:20px;padding:3px 10px;font-size:11px;color:#aab2c0;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:'+lpCatColor(it.category)+'"></span>'+esc(t.length>34?(t.slice(0,34)+'…'):t)+'</button>'; }).join('')+(s.open.length>6?('<span style="font-size:11px;color:#727a88;padding:3px 6px">+'+(s.open.length-6)+' more</span>'):'')+'</div>'; }
+        h+='</div>';
+      });
+      view.innerHTML=h;
+      var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ try{ if(typeof openNewGoalModal==='function'){ close(); openNewGoalModal(); } }catch(e){} };
+      [].forEach.call(view.querySelectorAll('.ol2-goaltask[data-open]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
     function showHome(){
       hideAllPanels();
