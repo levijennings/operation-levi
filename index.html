@@ -1267,6 +1267,8 @@
         let _workspaceId = null;  // UUID of the workspace this user belongs to
         let _userRole    = 'member'; // 'admin' | 'member'
         let _userName    = '';    // display name (matches task assignees)
+        let _userCategory = null;  // workspace/category scope for non-admins (null/'All' = every category)
+        let _userVisibility = 'all'; // 'all' = see all tasks in their category | 'assigned' = only tasks assigned to them
         let _memberFullItems = null; // non-admin backstop: full item list pre-filter
         let _cloudSaveTimer  = null;
         let ganttWeeks = 13;
@@ -1482,7 +1484,7 @@
         async function _loadWorkspaceMembership() {
             const { data: member, error } = await _sb
                 .from('workspace_members')
-                .select('workspace_id, role, name')
+                .select('workspace_id, role, name, category, visibility')
                 .eq('user_id', _currentUser.id)
                 .single();
 
@@ -1493,9 +1495,11 @@
                 return;
             }
 
-            _workspaceId = member.workspace_id;
-            _userRole    = member.role;
-            _userName    = member.name;
+            _workspaceId    = member.workspace_id;
+            _userRole       = member.role;
+            _userName       = member.name;
+            _userCategory   = member.category || null;
+            _userVisibility = member.visibility || 'all';
 
             await _syncFromCloud();
             _hideAuthOverlay();
@@ -1505,6 +1509,35 @@
         /** Pull the workspace JSON blob from Supabase and refresh app state */
         async function _syncFromCloud() {
             if (!_workspaceId || !_sb) return;
+
+            // ── Non-admin members: read ONLY their permitted rows from the RLS-protected `tasks`
+            //    table. The database (not the browser) decides what they can see, based on their
+            //    category + visibility. Members never receive the full workspace blob. ──
+            if (_userRole !== 'admin') {
+                const { data: rows, error: tErr } = await _sb
+                    .from('tasks')
+                    .select('card')
+                    .eq('workspace_id', _workspaceId);
+                if (tErr) {
+                    const errEl = document.getElementById('authError');
+                    if (errEl) errEl.textContent = 'Could not load your tasks. Contact your admin.';
+                    return;
+                }
+                items = (rows || []).map(r => Object.assign(
+                    { assignees: [], subtasks: [], raci: { R: [], A: '', C: [], I: [] }, status: 'backlog' },
+                    r.card || {}
+                ));
+                // Members get a focused, task-only view; workspace-wide collections stay empty.
+                goals = []; teams = { ACST: [], DVLMNT: [], Personal: [] };
+                dailyHistory = []; weekHistory = []; top3Manual = [];
+                widgetLayouts = {}; events = [];
+                libraries = { skills: [], templates: [], preferences: [], context: [] };
+                peopleProfiles = {};
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries }));
+                renderAll();
+                showToast('✦ Synced from cloud');
+                return;
+            }
 
             const { data, error } = await _sb
                 .from('workspace_data')
@@ -1590,15 +1623,9 @@
                 templateId: item.templateId || '', completedAt: item.completedAt || '',
             }));
 
-            // Non-admin members only see tasks assigned to them
-            if (_userRole !== 'admin') {
-                _memberFullItems = [...items]; // keep full set for merge-back on save
-                const nameLower = _userName.toLowerCase();
-                items = items.filter(item =>
-                    (item.assignees || []).some(a => a.toLowerCase() === nameLower) ||
-                    (item.responsible || '').toLowerCase() === nameLower
-                );
-            }
+            // Admin sees everything (loaded above). Mirror the full item set into the per-row
+            // `tasks` table so members reading it get the admin's latest (dual-write / Option B).
+            _syncTasksTable(items);
 
             // Mirror to localStorage so the app works offline after first load
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries }));
@@ -1607,24 +1634,58 @@
             showToast('✦ Synced from cloud');
         }
 
+        /** Mirror the in-memory items into the per-row `tasks` table (RLS-enforced source for members).
+         *  Admins push the whole set and prune deleted rows; members upsert only what they can write. */
+        async function _syncTasksTable(itemList, opts = {}) {
+            if (!_workspaceId || !_sb) return;
+            try {
+                const rows = (itemList || []).filter(it => it && it.id != null).map(it => ({
+                    id: String(it.id),
+                    workspace_id: _workspaceId,
+                    category: it.category || null,
+                    assignees: it.assignees || [],
+                    status: it.status || null,
+                    title: it.title || '',
+                    card: it,
+                    updated_at: new Date().toISOString()
+                }));
+                if (rows.length) {
+                    const { error } = await _sb.from('tasks').upsert(rows, { onConflict: 'id' });
+                    if (error) { console.warn('[tasks sync] upsert failed:', error.message); return; }
+                }
+                // Admin is the source of truth: remove rows for tasks that no longer exist.
+                if (_userRole === 'admin' && !opts.membersOnly) {
+                    const keep = new Set(rows.map(r => r.id));
+                    const { data: existing } = await _sb.from('tasks').select('id').eq('workspace_id', _workspaceId);
+                    const remove = (existing || []).map(e => e.id).filter(id => !keep.has(id));
+                    if (remove.length) await _sb.from('tasks').delete().in('id', remove);
+                }
+            } catch (e) {
+                console.warn('[tasks sync]', e.message);
+            }
+        }
+
         /** Push current app state to Supabase (debounced by _queueCloudSave) */
         async function _pushToCloud() {
             if (!_workspaceId || !_sb) return;
 
-            // Non-admin: merge their visible items back into the full dataset before saving
-            let itemsToSave = items;
-            if (_userRole !== 'admin' && _memberFullItems) {
-                const updatedMap = Object.fromEntries(items.map(i => [i.id, i]));
-                itemsToSave = _memberFullItems.map(i => updatedMap[i.id] || i);
+            // Members no longer hold (or can read) the full blob — they write their permitted
+            // items straight back to the RLS-protected `tasks` table.
+            if (_userRole !== 'admin') {
+                await _syncTasksTable(items, { membersOnly: true });
+                return;
             }
 
+            // Admin: persist the full workspace blob …
             const { error } = await _sb.from('workspace_data').upsert({
                 workspace_id: _workspaceId,
-                data: { items: itemsToSave, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries },
+                data: { items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries },
                 updated_at: new Date().toISOString()
             }, { onConflict: 'workspace_id' });
-
             if (error) console.warn('[Supabase] save failed:', error.message);
+
+            // … and mirror items into the per-row tasks table (dual-write) so members stay current.
+            _syncTasksTable(items);
         }
 
         /** Debounce cloud saves — waits 2 s after last saveData() call */
@@ -1663,19 +1724,25 @@
             if (!_sb || !_workspaceId) return;
             const el = document.getElementById('settingsTeamList');
             if (!el) return;
-            _sb.from('workspace_members').select('name, role, user_id').eq('workspace_id', _workspaceId)
+            _sb.from('workspace_members').select('name, role, user_id, category, visibility').eq('workspace_id', _workspaceId)
                 .then(({ data, error }) => {
                     if (error || !data) {
                         el.innerHTML = '<div style="font-size:12px;color:var(--text-3);">Error loading members.</div>';
                         return;
                     }
-                    el.innerHTML = data.map(m => `
+                    el.innerHTML = data.map(m => {
+                        const scope = m.role === 'admin'
+                            ? 'Admin · sees everything'
+                            : (m.category ? m.category : 'All workspaces') + ' · ' +
+                              (m.visibility === 'assigned' ? 'assigned tasks only' : 'all tasks');
+                        return `
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
                             <div>
                                 <div style="font-size:13px;font-weight:500;color:var(--text);">${m.name}</div>
-                                <div style="font-size:11px;color:var(--text-3);text-transform:capitalize;">${m.role}</div>
+                                <div style="font-size:11px;color:var(--text-3);">${scope}</div>
                             </div>
-                        </div>`).join('') || '<div style="font-size:12px;color:var(--text-3);">No members found.</div>';
+                        </div>`;
+                    }).join('') || '<div style="font-size:12px;color:var(--text-3);">No members found.</div>';
                 });
         }
 
@@ -1824,13 +1891,32 @@ saveData() → localStorage (immediate, always)
                         <input id="newMemberPwd" type="text" value="${tempPwd}"
                             style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#F0F0F0;font-size:13px;outline:none;box-sizing:border-box;font-family:monospace;">
                     </div>
-                    <div style="margin-bottom:20px;">
+                    <div style="margin-bottom:12px;">
                         <label style="font-size:11px;color:var(--text-3);display:block;margin-bottom:4px;">Role</label>
                         <select id="newMemberRole"
                             style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#F0F0F0;font-size:13px;outline:none;">
                             <option value="member">Member</option>
                             <option value="admin">Admin</option>
                         </select>
+                    </div>
+                    <div style="margin-bottom:12px;">
+                        <label style="font-size:11px;color:var(--text-3);display:block;margin-bottom:4px;">Workspace</label>
+                        <select id="newMemberCategory"
+                            style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#F0F0F0;font-size:13px;outline:none;">
+                            <option value="">All workspaces</option>
+                            <option value="ACST">ACST</option>
+                            <option value="DVLMNT">DVLMNT</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:20px;">
+                        <label style="font-size:11px;color:var(--text-3);display:block;margin-bottom:4px;">Can see</label>
+                        <select id="newMemberVisibility"
+                            style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#F0F0F0;font-size:13px;outline:none;">
+                            <option value="all">All tasks in their workspace</option>
+                            <option value="assigned">Only tasks assigned to them</option>
+                        </select>
+                        <div style="font-size:10px;color:var(--text-3);margin-top:6px;">Admins always see everything; workspace &amp; visibility apply to members.</div>
                     </div>
                     <div id="addMemberError" style="color:#EF4444;font-size:12px;min-height:16px;margin-bottom:10px;"></div>
                     <div style="display:flex;gap:8px;justify-content:flex-end;">
@@ -1848,22 +1934,31 @@ saveData() → localStorage (immediate, always)
             const name  = (document.getElementById('newMemberName').value  || '').trim();
             const email = (document.getElementById('newMemberEmail').value || '').trim();
             const pwd   = (document.getElementById('newMemberPwd').value   || '').trim();
-            const role  = document.getElementById('newMemberRole').value;
+            const role       = document.getElementById('newMemberRole').value;
+            const category   = document.getElementById('newMemberCategory').value || null;
+            const visibility = document.getElementById('newMemberVisibility').value || 'all';
             const errEl = document.getElementById('addMemberError');
             if (!name || !email || !pwd) { errEl.textContent = 'All fields are required.'; return; }
             errEl.textContent = 'Creating account…';
 
-            // Create Supabase auth user
-            const { data: signUpData, error: signUpErr } = await _sb.auth.signUp({ email, password: pwd });
-            if (signUpErr) { errEl.textContent = signUpErr.message; return; }
-            const userId = signUpData?.user?.id;
-            if (!userId) { errEl.textContent = 'Could not create auth user — check Supabase email settings.'; return; }
-
-            // Add to workspace_members
-            const { error: memberErr } = await _sb.from('workspace_members').insert({
-                workspace_id: _workspaceId, user_id: userId, role, name
-            });
-            if (memberErr) { errEl.textContent = memberErr.message; return; }
+            // Create the login + workspace membership server-side via the secure, admin-gated
+            // edge function (service role). The browser never handles the service key, and the
+            // member's category + visibility are saved with their membership.
+            let payload = null, fnErr = null;
+            try {
+                const res = await _sb.functions.invoke('admin-create-user', {
+                    body: { email, password: pwd, name, role, category, visibility, workspace_id: _workspaceId }
+                });
+                payload = res.data; fnErr = res.error;
+                // surface the server's error message when the function returns a non-2xx status
+                if (fnErr && fnErr.context && typeof fnErr.context.json === 'function') {
+                    try { const j = await fnErr.context.json(); if (j && j.error) fnErr = { message: j.error }; } catch (e) {}
+                }
+            } catch (e) { fnErr = { message: e.message }; }
+            if (fnErr || (payload && payload.error)) {
+                errEl.textContent = (payload && payload.error) ? payload.error : (fnErr.message || 'Could not create member.');
+                return;
+            }
 
             document.getElementById('addMemberModal').remove();
             showToast('✓ ' + name + ' added — share their password: ' + pwd);
