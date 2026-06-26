@@ -9627,7 +9627,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var its=ITEMS().filter(function(i){ return i.type!=='habit'; });
       var now=new Date(); var todayStr=now.toISOString().split('T')[0];
       var weeks=[];
-      for(var w=11;w>=0;w--){ var ws=new Date(now); ws.setDate(now.getDate()-now.getDay()-w*7); ws.setHours(0,0,0,0); var we=new Date(ws); we.setDate(ws.getDate()+6); var wss=ws.toISOString().split('T')[0], wes=we.toISOString().split('T')[0]; var c=its.filter(function(i){ return i.completedAt && i.completedAt>=wss && i.completedAt<=wes; }).length; var hc=((typeof dailyHistory!=='undefined'&&dailyHistory)||[]).filter(function(h){ return h.date>=wss && h.date<=wes; }).reduce(function(s,h){ var v=h.completed; if(Array.isArray(v)) v=v.length; v=Number(v); if(!isFinite(v)) v=0; return s+v; },0); var cc=(Number(c)||0)||(Number(hc)||0); weeks.push({label:ws.toLocaleDateString('en-US',{month:'short',day:'numeric'}), c:isFinite(cc)?cc:0}); }
+      // Accurate completions: count each task once, in the week its completedAt falls in.
+      for(var w=11;w>=0;w--){ var ws=new Date(now); ws.setDate(now.getDate()-now.getDay()-w*7); ws.setHours(0,0,0,0); var we=new Date(ws); we.setDate(ws.getDate()+6); var wss=ws.toISOString().split('T')[0], wes=we.toISOString().split('T')[0]; var c=its.filter(function(i){ return i.completedAt && i.completedAt>=wss && i.completedAt<=wes; }).length; weeks.push({label:ws.toLocaleDateString('en-US',{month:'short',day:'numeric'}), c:c}); }
       var last4=weeks.slice(-4), prev4=weeks.slice(-8,-4);
       var vel=last4.length?(last4.reduce(function(s,x){ return s+x.c; },0)/last4.length):0;
       var prevVel=prev4.length?(prev4.reduce(function(s,x){ return s+x.c; },0)/prev4.length):0;
