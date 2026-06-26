@@ -9206,6 +9206,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="week">▤ My Week</a>'+
           '<a data-v="board">▦ Project Board</a>'+
           '<a data-v="goals">◎ Goals</a>'+
+          '<a data-v="pulse">◔ Pulse</a>'+
           '<span id="ol2RevN" style="display:none">0</span>'+
           '<a data-v="triage">↳ EA triage <span class="tag" id="ol2TriN">0</span></a>'+
           '<a data-v="people">◍ People</a>'+
@@ -9230,6 +9231,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2People" style="display:none"></div>'+
         '<div id="ol2Done" style="display:none"></div>'+
         '<div id="ol2Goals" style="display:none"></div>'+
+        '<div id="ol2Pulse" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -9240,7 +9242,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -9321,7 +9323,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       try{ persist(); }catch(e){}
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
-    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
     function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#46b98a':s==='review'?'#f2a33c':(s==='active'||s==='today')?'#5a9be0':s==='waiting'?'#e0a02c':'#727a88'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
@@ -9619,6 +9621,54 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       view.innerHTML=h;
       var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ try{ if(typeof openNewGoalModal==='function'){ close(); openNewGoalModal(); } }catch(e){} };
       [].forEach.call(view.querySelectorAll('.ol2-goaltask[data-open]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
+    }
+    // ── Pulse (analytics, reimagined insight-first) ──
+    function lpPulse(){
+      var its=ITEMS().filter(function(i){ return i.type!=='habit'; });
+      var now=new Date(); var todayStr=now.toISOString().split('T')[0];
+      var weeks=[];
+      for(var w=11;w>=0;w--){ var ws=new Date(now); ws.setDate(now.getDate()-now.getDay()-w*7); ws.setHours(0,0,0,0); var we=new Date(ws); we.setDate(ws.getDate()+6); var wss=ws.toISOString().split('T')[0], wes=we.toISOString().split('T')[0]; var c=its.filter(function(i){ return i.completedAt && i.completedAt>=wss && i.completedAt<=wes; }).length; var hc=((typeof dailyHistory!=='undefined'&&dailyHistory)||[]).filter(function(h){ return h.date>=wss && h.date<=wes; }).reduce(function(s,h){ return s+(h.completed||0); },0); weeks.push({label:ws.toLocaleDateString('en-US',{month:'short',day:'numeric'}), c:Math.max(c,hc)}); }
+      var last4=weeks.slice(-4), prev4=weeks.slice(-8,-4);
+      var vel=last4.length?(last4.reduce(function(s,x){ return s+x.c; },0)/last4.length):0;
+      var prevVel=prev4.length?(prev4.reduce(function(s,x){ return s+x.c; },0)/prev4.length):0;
+      var thisWeek=weeks[weeks.length-1].c;
+      var overdue=its.filter(function(i){ return i.dueDate && i.dueDate<todayStr && i.status!=='done'; });
+      var odCat={}; overdue.forEach(function(i){ odCat[i.category]=(odCat[i.category]||0)+1; });
+      var topOdCat=Object.keys(odCat).sort(function(a,b){ return odCat[b]-odCat[a]; })[0]||null;
+      var done=its.filter(function(i){ return i.status==='done'; }).length;
+      var active=its.filter(function(i){ return i.status!=='done'; }).length;
+      var cats=['ACST','DVLMNT','Personal']; var catC={},catD={}; cats.forEach(function(c){ catC[c]=0; catD[c]=0; }); its.forEach(function(i){ if(catC[i.category]!==undefined){ catC[i.category]++; if(i.status==='done') catD[i.category]++; } });
+      var gs=(typeof goals!=='undefined'&&goals)?goals:[]; var glinkedDone=0,glinkedTotal=0,gAtRisk=0; gs.forEach(function(g){ var s=lpGoalStats(g); glinkedTotal+=s.linked.length; glinkedDone+=s.done.length; if(lpGoalAtRisk(g,s)) gAtRisk++; });
+      return {weeks:weeks,vel:vel,prevVel:prevVel,thisWeek:thisWeek,overdue:overdue,topOdCat:topOdCat,done:done,active:active,cats:cats,catC:catC,catD:catD,goals:gs.length,gAtRisk:gAtRisk,glinkedDone:glinkedDone,glinkedTotal:glinkedTotal};
+    }
+    function lpPulseNarrative(p){
+      var s=['You’ve completed '+p.thisWeek+' task'+(p.thisWeek===1?'':'s')+' this week'];
+      if(p.overdue.length) s.push(p.overdue.length+' '+(p.overdue.length===1?'item is':'items are')+' overdue'+(p.topOdCat?(', mostly in '+p.topOdCat):''));
+      var dir=p.vel>p.prevVel+0.25?'up':(p.vel<p.prevVel-0.25?'down':'steady');
+      var pct=p.prevVel>0?Math.round(Math.abs(p.vel-p.prevVel)/p.prevVel*100):0;
+      s.push('velocity '+(dir==='steady'?('holding at '):(dir+' '+(pct?('~'+pct+'% to '):'to ')))+p.vel.toFixed(1)+'/wk');
+      if(p.goals){ s.push(p.gAtRisk?(p.gAtRisk+' of '+p.goals+' goals at risk'):('all '+p.goals+' goals on pace')); }
+      return s.join(' · ')+'.';
+    }
+    function showPulse(){
+      hideAllPanels();
+      var view=document.getElementById('ol2Pulse'); view.style.display='';
+      var p=lpPulse();
+      var velDir=p.vel>p.prevVel+0.25?'▲':(p.vel<p.prevVel-0.25?'▼':'■'); var velCol=p.vel>p.prevVel+0.25?'#46b98a':(p.vel<p.prevVel-0.25?'#e07a63':'#727a88');
+      var h='<div class="hrow"><div><h1 class="syne">Pulse</h1><p>What’s happening across your work — insight first, numbers to back it up</p></div></div>';
+      h+='<div style="background:linear-gradient(135deg,#1a160d,#15171c);border:1px solid #3a3320;border-radius:14px;padding:16px 18px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start"><span style="color:#f2a33c;font-size:18px;flex-shrink:0;line-height:1.2">✦</span><div style="font-size:14px;color:#e9ecf2;line-height:1.55">'+esc(lpPulseNarrative(p))+'</div></div>';
+      var tiles=[['Active',p.active,'open','#5a9be0'],['Completed',p.done,'all time','#46b98a'],['Overdue',p.overdue.length,'need attention',p.overdue.length?'#e07a63':'#727a88'],['Velocity',p.vel.toFixed(1),'tasks/wk (4wk)','#f2a33c']];
+      h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">'+tiles.map(function(t){ return '<div style="background:#101115;border:1px solid #262a31;border-radius:12px;padding:14px 16px"><div class="syne" style="font-size:26px;font-weight:800;color:'+t[3]+';line-height:1">'+t[1]+'</div><div style="font-size:11.5px;font-weight:600;color:#e9ecf2;margin-top:4px">'+t[0]+'</div><div style="font-size:10px;color:#727a88">'+t[2]+'</div></div>'; }).join('')+'</div>';
+      var maxC=Math.max.apply(null,p.weeks.map(function(w){ return w.c; }).concat([1]));
+      h+='<div style="background:#101115;border:1px solid #262a31;border-radius:12px;padding:16px 18px;margin-bottom:16px"><div style="font-size:12.5px;font-weight:700;color:#e9ecf2;margin-bottom:13px">Completions · last 12 weeks <span style="color:'+velCol+';font-weight:600;font-size:11px;margin-left:6px">'+velDir+' '+p.vel.toFixed(1)+'/wk</span></div><div style="display:flex;align-items:flex-end;gap:5px;height:90px">'+p.weeks.map(function(w,i){ var hh=Math.max(Math.round(w.c/maxC*100),3); var cur=i===p.weeks.length-1; return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px"><div style="font-size:9px;color:#727a88">'+(w.c||'')+'</div><div style="width:100%;height:'+hh+'%;background:'+(cur?'#f2a33c':'#2a2f38')+';border-radius:3px 3px 0 0"></div></div>'; }).join('')+'</div><div style="display:flex;justify-content:space-between;font-size:9px;color:#727a88;margin-top:6px"><span>'+esc(p.weeks[0].label)+'</span><span style="color:#f2a33c;font-weight:600">this week</span></div></div>';
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+      h+='<div style="background:#101115;border:1px solid #262a31;border-radius:12px;padding:16px 18px"><div style="font-size:12.5px;font-weight:700;color:#e9ecf2;margin-bottom:13px">By workspace</div>'+p.cats.map(function(c){ var tot=p.catC[c],dn=p.catD[c]; var pc=tot?Math.round(dn/tot*100):0; var col=lpCatColor(c); return '<div style="margin-bottom:11px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:'+col+';font-weight:600">'+c+'</span><span style="color:#727a88">'+dn+'/'+tot+' done</span></div><div style="height:5px;background:#1d2129;border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pc+'%;background:'+col+'"></div></div></div>'; }).join('')+'</div>';
+      var gpct=p.glinkedTotal?Math.round(p.glinkedDone/p.glinkedTotal*100):0;
+      h+='<div style="background:#101115;border:1px solid #262a31;border-radius:12px;padding:16px 18px"><div style="font-size:12.5px;font-weight:700;color:#e9ecf2;margin-bottom:13px">Goal fulfillment pace</div>';
+      if(!p.goals){ h+='<div style="font-size:12px;color:#727a88">No goals yet.</div>'; }
+      else { h+='<div class="syne" style="font-size:30px;font-weight:800;color:'+(p.gAtRisk?'#e07a63':'#46b98a')+';line-height:1">'+gpct+'%</div><div style="font-size:11px;color:#727a88;margin:4px 0 10px">of linked goal work complete ('+p.glinkedDone+'/'+p.glinkedTotal+')</div><div style="font-size:12px;color:#aab2c0">'+(p.gAtRisk?('⚠ '+p.gAtRisk+' of '+p.goals+' goal'+(p.goals===1?'':'s')+' at risk'):('✓ all '+p.goals+' goal'+(p.goals===1?'':'s')+' on pace'))+'</div>'; }
+      h+='</div></div>';
+      view.innerHTML=h;
     }
     function showHome(){
       hideAllPanels();
