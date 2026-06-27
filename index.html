@@ -9235,10 +9235,30 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       '</main>';
     document.body.appendChild(shell);
 
-    function open(){ shell.classList.add('on'); showHome(); }
-    function close(){ shell.classList.remove('on'); }
+    function open(){ try{ localStorage.setItem('op_levi_view_pref','2.0'); }catch(e){} shell.classList.add('on'); showHome(); }
+    function close(){ try{ localStorage.setItem('op_levi_view_pref','classic'); }catch(e){} shell.classList.remove('on'); }
     pill.onclick=open;
     document.getElementById('ol2Exit').onclick=close;
+
+    // ── Default to 2.0 ── Launch into the 2.0 shell on load and remember the choice.
+    // "Back to classic view" persists a 'classic' preference; the ✦ pill re-enters and
+    // persists '2.0'. We never auto-launch over the sign-in overlay or before data syncs
+    // (the overlay only hides after _syncFromCloud completes).
+    function _ol2ViewPref(){ try{ return localStorage.getItem('op_levi_view_pref'); }catch(e){ return null; } }
+    (function _ol2AutoLaunch(){
+      if(_ol2ViewPref()==='classic') return; // user opted out — stay classic; pill still available
+      var tries=0;
+      (function waitReady(){
+        var ov=document.getElementById('authOverlay');
+        var authVisible = !!ov && getComputedStyle(ov).display!=='none';
+        if(authVisible){ if(tries<80){ tries++; setTimeout(waitReady,250); } return; } // never open over auth
+        if(!shell.classList.contains('on')){
+          open();
+          // catch a late cloud sync: re-render the active view once data has landed
+          setTimeout(function(){ try{ if(shell.classList.contains('on')){ var a=document.querySelector('#ol2Nav a.on'); if(a) a.click(); } }catch(e){} }, 2500);
+        }
+      })();
+    })();
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
