@@ -9205,6 +9205,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="myday">◴ My Day</a>'+
           '<a data-v="week">▤ My Week</a>'+
           '<a data-v="board">▦ Project Board</a>'+
+          '<a data-v="timeline">▬ Timeline</a>'+
           '<a data-v="goals">◎ Goals</a>'+
           '<a data-v="pulse">◔ Pulse</a>'+
           '<span id="ol2RevN" style="display:none">0</span>'+
@@ -9262,7 +9263,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -9576,6 +9577,20 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       document.getElementById('lpListClose').onclick=function(){ ov.remove(); };
       [].forEach.call(ov.querySelectorAll('.md-row[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; ov.remove(); if(it) openReview(it); }; });
     }
+    // ── Claude-authored narratives (Goals status lines + Pulse headline) ──
+    // Computed text renders instantly; this upgrades it to a Claude-written line when available.
+    // Cached per signature so switching views doesn't re-call; degrades silently on any error.
+    var _lpAICache = {};
+    function lpAISummary(kind, sig, data, cb){
+      var ck = kind + ':' + sig;
+      if (_lpAICache[ck]) { cb(_lpAICache[ck]); return; }
+      var rk = (typeof RUN_KEY !== 'undefined') ? RUN_KEY : 'operation-levi';
+      fetch('/api/summarize', { method:'POST', headers:{ 'content-type':'application/json', 'x-ol-key':rk }, body:JSON.stringify({ kind:kind, data:data }) })
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if (j && j.text) { _lpAICache[ck] = j.text; cb(j.text); } else cb(null); })
+        .catch(function(){ cb(null); });
+    }
+
     // ── Goals (annual, fulfilled by the linked work beneath them) ──
     function lpGoalStats(goal){
       var linked=ITEMS().filter(function(i){ return (i.goalIds||[]).indexOf(goal.id)>=0; });
@@ -9634,13 +9649,21 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px">';
         for(var qi=0;qi<4;qi++){ var c=q.counts[qi],d=q.done[qi]; var qp=c>0?Math.round(d/c*100):0; var isCur=(qi===curQ&&q.year===new Date().getFullYear()); h+='<div style="background:'+(isCur?'#1d2129':'#15171c')+';border:1px solid '+(isCur?'#30353d':'#22262e')+';border-radius:8px;padding:6px 8px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:10.5px;font-weight:700;color:'+(isCur?'#e9ecf2':'#727a88')+'">'+qn[qi]+'</span><span style="font-size:10px;color:#727a88">'+(c?d+'/'+c:'—')+'</span></div><div style="height:3px;background:#0d0f13;border-radius:3px;margin-top:5px;overflow:hidden"><div style="height:100%;width:'+qp+'%;background:'+(qp>=100?'#46b98a':col)+'"></div></div></div>'; }
         h+='</div>';
-        h+='<div style="font-size:12px;color:'+(s.overdue.length?'#e0a07a':'#aab2c0')+';display:flex;gap:7px;align-items:baseline"><span style="color:#f2a33c;flex-shrink:0">✦</span><span>'+esc(lpGoalNarrative(s))+'</span></div>';
+        h+='<div style="font-size:12px;color:'+(s.overdue.length?'#e0a07a':'#aab2c0')+';display:flex;gap:7px;align-items:baseline"><span style="color:#f2a33c;flex-shrink:0">✦</span><span id="ol2gn-'+esc(g.id)+'">'+esc(lpGoalNarrative(s))+'</span></div>';
         if(s.open.length){ h+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px">'+s.open.slice(0,6).map(function(it){ var t=it.title||'Untitled'; return '<button class="ol2-goaltask" data-open="'+esc(it.id)+'" style="background:#15171c;border:1px solid #262a31;border-radius:20px;padding:3px 10px;font-size:11px;color:#aab2c0;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:'+lpCatColor(it.category)+'"></span>'+esc(t.length>34?(t.slice(0,34)+'…'):t)+'</button>'; }).join('')+(s.open.length>6?('<span style="font-size:11px;color:#727a88;padding:3px 6px">+'+(s.open.length-6)+' more</span>'):'')+'</div>'; }
         h+='</div>';
       });
       view.innerHTML=h;
       var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ try{ if(typeof openNewGoalModal==='function'){ close(); openNewGoalModal(); } }catch(e){} };
       [].forEach.call(view.querySelectorAll('.ol2-goaltask[data-open]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
+      // Upgrade each goal's computed status line to a Claude-written one (falls back silently).
+      rows.forEach(function(rr){
+        var g=rr.g, s=rr.s; if(!s.linked.length) return;
+        var q=lpGoalQuarters(g,s.linked);
+        var sig=g.id+':'+s.done.length+'/'+s.linked.length+':'+s.overdue.length+':'+(s.crit?s.crit.id:'')+':'+s.stalledDays;
+        var payload={ title:g.title, category:g.category, year:lpGoalYear(g), targetDate:g.targetDate||null, done:s.done.length, total:s.linked.length, overdue:s.overdue.length, criticalPath:s.crit?{title:s.crit.title,due:s.crit.dueDate||null,status:s.crit.status}:null, stalled:(s.stalledDays>=7&&s.stalledItem)?{title:s.stalledItem.title,days:s.stalledDays}:null, quartersByDueDate:{Q1:q.counts[0],Q2:q.counts[1],Q3:q.counts[2],Q4:q.counts[3],done:q.done} };
+        lpAISummary('goal', sig, payload, function(text){ if(text){ var e=document.getElementById('ol2gn-'+g.id); if(e) e.textContent=text; } });
+      });
     }
     // ── Pulse (analytics, reimagined insight-first) ──
     function lpPulse(){
@@ -9677,7 +9700,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var p=lpPulse();
       var velDir=p.vel>p.prevVel+0.25?'▲':(p.vel<p.prevVel-0.25?'▼':'■'); var velCol=p.vel>p.prevVel+0.25?'#46b98a':(p.vel<p.prevVel-0.25?'#e07a63':'#727a88');
       var h='<div class="hrow"><div><h1 class="syne">Pulse</h1><p>What’s happening across your work — insight first, numbers to back it up</p></div></div>';
-      h+='<div style="background:linear-gradient(135deg,#1a160d,#15171c);border:1px solid #3a3320;border-radius:14px;padding:16px 18px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start"><span style="color:#f2a33c;font-size:18px;flex-shrink:0;line-height:1.2">✦</span><div style="font-size:14px;color:#e9ecf2;line-height:1.55">'+esc(lpPulseNarrative(p))+'</div></div>';
+      h+='<div style="background:linear-gradient(135deg,#1a160d,#15171c);border:1px solid #3a3320;border-radius:14px;padding:16px 18px;margin-bottom:16px;display:flex;gap:11px;align-items:flex-start"><span style="color:#f2a33c;font-size:18px;flex-shrink:0;line-height:1.2">✦</span><div id="ol2pulseHead" style="font-size:14px;color:#e9ecf2;line-height:1.55">'+esc(lpPulseNarrative(p))+'</div></div>';
       var tiles=[['Active',p.active,'open','#5a9be0'],['Completed',p.done,'all time','#46b98a'],['Overdue',p.overdue.length,'need attention',p.overdue.length?'#e07a63':'#727a88'],['Velocity',p.vel.toFixed(1),'tasks/wk (4wk)','#f2a33c']];
       h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">'+tiles.map(function(t){ return '<div style="background:#101115;border:1px solid #262a31;border-radius:12px;padding:14px 16px"><div class="syne" style="font-size:26px;font-weight:800;color:'+t[3]+';line-height:1">'+t[1]+'</div><div style="font-size:11.5px;font-weight:600;color:#e9ecf2;margin-top:4px">'+t[0]+'</div><div style="font-size:10px;color:#727a88">'+t[2]+'</div></div>'; }).join('')+'</div>';
       var maxC=Math.max.apply(null,p.weeks.map(function(w){ return w.c; }).concat([1]));
@@ -9690,6 +9713,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       else { h+='<div class="syne" style="font-size:30px;font-weight:800;color:'+(p.gAtRisk?'#e07a63':'#46b98a')+';line-height:1">'+gpct+'%</div><div style="font-size:11px;color:#727a88;margin:4px 0 10px">of linked goal work complete ('+p.glinkedDone+'/'+p.glinkedTotal+')</div><div style="font-size:12px;color:#aab2c0">'+(p.gAtRisk?('⚠ '+p.gAtRisk+' of '+p.goals+' goal'+(p.goals===1?'':'s')+' at risk'):('✓ all '+p.goals+' goal'+(p.goals===1?'':'s')+' on pace'))+'</div>'; }
       h+='</div></div>';
       view.innerHTML=h;
+      // Upgrade the computed headline to a Claude-written insight (falls back silently).
+      var psig='w'+p.thisWeek+'v'+p.vel.toFixed(1)+'p'+p.prevVel.toFixed(1)+'o'+p.overdue.length+'g'+p.gAtRisk+'/'+p.goals+'d'+p.glinkedDone+'/'+p.glinkedTotal;
+      lpAISummary('pulse', psig, { completedThisWeek:p.thisWeek, velocityPerWeek:Number(p.vel.toFixed(1)), priorVelocityPerWeek:Number(p.prevVel.toFixed(1)), overdue:p.overdue.length, overdueTopWorkspace:p.topOdCat, completedAllTime:p.done, activeOpen:p.active, byWorkspace:p.cats.map(function(c){ return { name:c, done:p.catD[c], total:p.catC[c] }; }), goals:{ total:p.goals, atRisk:p.gAtRisk, linkedDone:p.glinkedDone, linkedTotal:p.glinkedTotal } }, function(text){ if(text){ var e=document.getElementById('ol2pulseHead'); if(e) e.textContent=text; } });
     }
     function showHome(){
       hideAllPanels();
