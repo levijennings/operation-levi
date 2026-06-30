@@ -218,7 +218,7 @@
             width: 56px;
         }
         .sidebar.collapsed .sidebar-header .sidebar-title {
-            display: none;
+            display: none !important;
         }
         .sidebar.collapsed .nav-item span,
         .sidebar.collapsed .filter-item span,
@@ -235,6 +235,7 @@
         .sidebar.collapsed .filter-item {
             justify-content: center;
             padding: 8px;
+            margin: 3px 0;
         }
         .sidebar.collapsed .sidebar-header {
             justify-content: center;
@@ -1015,7 +1016,7 @@
         <!-- SIDEBAR -->
         <div class="sidebar" id="mainSidebar">
             <div class="sidebar-header">
-                <span class="sidebar-title" style="font-size:15px;font-weight:700;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px;"><svg width="18" height="18" viewBox="0 0 512 512" style="flex-shrink:0;"><path d="M150 120 H210 V332 H360 V392 H150 Z" fill="#fff"/><circle cx="300" cy="160" r="26" fill="#DC2626"/><circle cx="360" cy="160" r="26" fill="#059669"/><circle cx="330" cy="214" r="26" fill="#2563EB"/></svg>Levi's Projects</span>
+                <span class="sidebar-title" onclick="switchView('dashboard')" title="Go to Dashboard" style="font-size:15px;font-weight:700;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 512 512" style="flex-shrink:0;"><path d="M150 120 H210 V332 H360 V392 H150 Z" fill="#fff"/><circle cx="300" cy="160" r="26" fill="#DC2626"/><circle cx="360" cy="160" r="26" fill="#059669"/><circle cx="330" cy="214" r="26" fill="#2563EB"/></svg>Levi's Projects</span>
                 <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
                 </button>
@@ -2590,7 +2591,12 @@ saveData() → localStorage (immediate, always)
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const todayStr = today.toISOString().split('T')[0];
-            const allItems = items.filter(i => i.type !== 'habit');
+            const allItems = items.filter(i => i.type !== 'habit').filter(i => {
+                if (!currentAssignee) return true;
+                const _people = [...(i.assignees || []), ...((i.raci && i.raci.R) || []), (i.raci && i.raci.A)].filter(Boolean);
+                return _people.includes(currentAssignee);
+            });
+            const teamAllItems = items.filter(i => i.type !== 'habit');
             const overdue = allItems.filter(i => i.dueDate && new Date(i.dueDate) < today && i.status !== 'done');
             const dueToday = allItems.filter(i => { if (!i.dueDate) return false; const d = new Date(i.dueDate); d.setHours(0,0,0,0); return d.getTime() === today.getTime() && i.status !== 'done'; });
             const active = allItems.filter(i => i.status === 'active');
@@ -2629,7 +2635,7 @@ saveData() → localStorage (immediate, always)
 
             html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;gap:16px;flex-wrap:wrap;">' +
                 '<div>' +
-                  '<div style="font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px;">' + greeting + ', Levi</div>' +
+                  '<div style="font-size:22px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px;">' + greeting + ', ' + (currentAssignee || 'Levi') + '</div>' +
                   '<div style="font-size:13px;color:var(--text-2);">' + today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</div>' +
                 '</div>' +
                 '<div style="display:flex;align-items:center;gap:12px;">' +
@@ -2967,14 +2973,14 @@ saveData() → localStorage (immediate, always)
                     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;">';
                 ['ACST','DVLMNT','Personal'].forEach(teamName => {
                     (teams[teamName]||[]).forEach(person => {
-                        const rItems = allItems.filter(i => i.status!=='done' && ((i.raci?.R||[]).includes(person)||(i.assignees||[]).includes(person)));
+                        const rItems = teamAllItems.filter(i => i.status!=='done' && ((i.raci?.R||[]).includes(person)||(i.assignees||[]).includes(person)));
                         const hrs = rItems.reduce((s,i)=>s+(i.timeEstimate||0),0);
                         const profile = peopleProfiles[person] || {};
                         const trackCap = profile.trackCapacity !== false;
                         const capacity = profile.hoursPerWeek || 40;
                         const pct = Math.min(Math.round(hrs/capacity*100),100);
                         const col = hrs > capacity ? '#EF4444' : hrs/capacity > 0.7 ? '#F59E0B' : '#22C55E';
-                        html += '<div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;border-left:3px solid ' + (teamColors[teamName]||'var(--border)') + ';">' +
+                        html += '<div onclick="boardPersonFilter=\'' + person + '\';switchView(\'board\');" title="View ' + person + ' on the board" onmouseover="this.style.filter=\'brightness(1.06)\'" onmouseout="this.style.filter=\'\'" style="cursor:pointer;background:var(--surface-2);border-radius:var(--radius-sm);padding:10px;border-left:3px solid ' + (teamColors[teamName]||'var(--border)') + ';">' +
                             '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">' +
                                 '<div style="width:20px;height:20px;">' + getAvatarHTML(person,20) + '</div>' +
                                 '<div style="flex:1;">' +
@@ -5508,6 +5514,7 @@ saveData() → localStorage (immediate, always)
             selectedItemId = itemId;
             const item = items.find(i => i.id === itemId);
             if (!item) return;
+            { const _p = document.querySelector('.ol2-pill'); if (_p) _p.style.display = 'none'; }
             
             const panel = document.getElementById('detailPanel');
             const content = document.getElementById('detailContent');
@@ -5860,6 +5867,7 @@ saveData() → localStorage (immediate, always)
 
         function closeDetail() {
             document.getElementById('detailPanel').classList.remove('open');
+            { const _p = document.querySelector('.ol2-pill'); if (_p) _p.style.display = ''; }
             saveCurrentDetail();
         }
 
@@ -7796,6 +7804,14 @@ dots + 'Levi&#39;s Projects</td></tr>' +
                 if ((e.key === 'n' || e.key === 'N') && !e.metaKey && !e.ctrlKey) {
                     openNewItemModal();
                 }
+            });
+
+            // Click outside the open detail panel closes it
+            document.addEventListener('mousedown', (e) => {
+                const dp = document.getElementById('detailPanel');
+                if (!dp.classList.contains('open')) return;
+                if (dp.contains(e.target)) return;
+                closeDetail();
             });
         }
 
