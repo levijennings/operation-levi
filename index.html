@@ -8805,7 +8805,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .nav a:hover{background:#181a20;color:#E9EAEE}
 .ol2 .nav a.on{background:#1d2129;color:#E9EAEE;border-color:#30353d}
 .ol2 .nav a .tag{margin-left:auto;font-size:10.5px;color:#8A8D97;border:1px solid #30353d;border-radius:6px;padding:1px 7px;font-weight:600}
-.ol2 .spk{margin-top:auto;background:#C08428;color:#1c1304;border:none;border-radius:11px;padding:13px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Inter'}
+.ol2 .newt{margin-top:auto;background:#1d2129;color:#E9EAEE;border:1px solid #30353d;border-radius:11px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Inter'}
+.ol2 .newt:hover{background:#23262d}
+.ol2 .spk{margin-top:10px;background:#C08428;color:#1c1304;border:none;border-radius:11px;padding:13px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Inter'}
 .ol2 .spk:hover{filter:brightness(1.06)}
 .ol2 .exit{background:none;border:none;color:#8A8D97;font-size:12px;cursor:pointer;margin-top:10px;text-align:center;font-family:'Inter'}
 .ol2 .exit:hover{color:#aab2c0}
@@ -8832,6 +8834,16 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .av.cl{background:#3a2b12;color:#C08428}
 .ol2 .due{color:#8A8D97;font-size:11.5px}
 .ol2 .lp-cat{font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:1px solid;border-radius:5px;padding:1px 5px}
+.ol2 .cap-part{display:flex;align-items:center;gap:9px;background:#15161A;border:1px solid #26272D;border-radius:9px;padding:8px 10px;margin-bottom:6px;text-align:left}
+.ol2 .cap-part .t{flex:1;font-size:12px;color:#E9EAEE;line-height:1.35;min-width:0}
+.ol2 .cap-part .t em{font-style:normal;color:#8A8D97;font-size:10px;display:block;margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+.ol2 .cap-own{border-radius:99px;font-size:10px;font-weight:700;padding:6px 11px;cursor:pointer;border:1px solid #30353d;background:#191B20;color:#C7C9D1;white-space:nowrap;font-family:Inter;min-height:30px}
+.ol2 .cap-own.wg{background:rgba(192,132,40,.16);color:#E0B871;border-color:rgba(192,132,40,.4)}
+.ol2 .cap-own.team{background:rgba(79,138,209,.14);color:#8FB7E6;border-color:rgba(79,138,209,.4)}
+.ol2 .lp-brief{background:linear-gradient(135deg,rgba(192,132,40,.10),#15161A 60%);border:1px solid rgba(192,132,40,.35);border-radius:13px;padding:16px 18px;margin:0 0 16px}
+.ol2 .lp-brief .bk{font-size:10px;letter-spacing:.16em;color:#C08428;font-weight:700;margin-bottom:8px}
+.ol2 .lp-brief .bt{font-size:13.5px;line-height:1.65;color:#E9EAEE}
+.ol2 .lp-brief .bs{font-size:11px;color:#8A8D97;margin-top:8px}
 .ol2 .ol2-bviews{display:flex;gap:6px;margin:0 0 12px}
 .ol2 .ol2-bviews button{background:#191B20;border:1px solid #26272D;color:#9EA1AB;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:Inter}
 .ol2 .ol2-bviews button.on{background:#C08428;border-color:#C08428;color:#1c1304}
@@ -9065,7 +9077,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   .ol2 .nav{flex-direction:row;gap:6px}
   .ol2 .nav a{padding:0 12px;min-height:44px;align-items:center;white-space:nowrap;font-size:12.5px;border:1px solid #26272D;border-radius:11px}
   .ol2 .nav a .tag{margin-left:6px}
-  .ol2 .spk{margin:0 0 0 auto;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;padding:0;flex-shrink:0}
+  .ol2 .newt{margin:0 0 0 auto;min-height:44px;padding:0 13px;white-space:nowrap;font-size:12.5px;flex-shrink:0}
+  .ol2 .spk{margin:0;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;padding:0;flex-shrink:0}
   .ol2 .spk svg{width:18px;height:18px}
   .ol2 .spk .spk-label{display:none}
   .ol2 .exit{margin:0;white-space:nowrap;font-size:10.5px;min-height:44px;flex-shrink:0}
@@ -9304,7 +9317,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<a data-v="triage">▸ Wingman <span class="tag" id="ol2TriN">0</span></a>'+
           '<a data-v="people">◍ Crew</a>'+
           '<a data-v="libraries">◆ Libraries</a>'+
+          '<a data-v="docs">✧ Docs</a>'+
         '</nav>'+
+        '<button class="newt" id="ol2New">＋ New task</button>'+
         '<button class="spk" id="ol2Spk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="spk-label"> Speak a task</span></button>'+
         '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
       '</aside>'+
@@ -9354,6 +9369,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     })();
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
+      if(v==='docs'){ try{ if(typeof openOperatingManual==='function') openOperatingManual(); }catch(err){} return; }
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
       if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
@@ -9840,7 +9856,16 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(top3.length<3){ var fill=all.filter(function(i){ return i.status!=='done' && top3.indexOf(i)<0 && (i.dueDate===today || i.status==='today' || i.status==='active' || i.status==='thisweek'); }); top3=top3.concat(fill).slice(0,3); }
       var captured=all.filter(function(i){ return i.sourceType && i.status!=='done'; }).slice(0,4);
       var h='<div class="hrow"><div><h1 class="syne">'+greet+', '+esc(meName())+'</h1><p>'+esc(dstr)+' · '+esc(summary)+'</p></div>'+
-        '<button class="gbtn amber" id="ol2HomeSpeak"><span style="font-size:15px">✦</span> Speak a task</button></div>';
+        '<div style="display:flex;gap:8px"><button class="gbtn" id="ol2HomeNew">＋ New task</button><button class="gbtn amber" id="ol2HomeSpeak"><span style="font-size:15px">✦</span> Speak a task</button></div></div>';
+      h+='<div class="lp-brief" id="ol2BriefCard">'
+        +'<div class="bk">▸ MORNING BRIEF'+(window._lpBrief&&window._lpBrief.date?(' · '+esc(window._lpBrief.date)):'')+'</div>'
+        +(window._lpBrief
+          ? ('<div class="bt">'+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')+'</div>'
+             +((window._lpBrief.emailedNote)?('<div class="bs">'+esc(window._lpBrief.emailedNote)+'</div>'):'')
+             +'<button class="gbtn" id="ol2BriefRefresh" style="margin-top:10px">↻ Regenerate</button> <button class="gbtn" id="ol2BriefEmail" style="margin-top:10px">✉ Email it to me</button>')
+          : ('<div class="bt" style="color:#9EA1AB">Wingman writes your executive brief here — what moves the needle, what\'s waiting on you, how the crew is tracking. It also lands by email every morning at 6:30.</div>'
+             +'<button class="gbtn amber" id="ol2BriefGen" style="margin-top:10px">▸ Generate my brief</button>'))
+        +'</div>';
       h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-list="'+t.k+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
       h+='<div class="ulbl" style="margin:22px 0 9px">Focus today</div>';
       if(!top3.length){ h+='<div class="empty">Nothing scheduled — speak a task, or pin one in My Day.</div>'; }
@@ -9859,6 +9884,25 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       })();
       home.innerHTML=h;
       document.getElementById('ol2HomeSpeak').onclick=function(){ openCapture(); };
+      var hn=document.getElementById('ol2HomeNew'); if(hn) hn.onclick=function(){ if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); };
+      (function(){
+        function runBrief(send){
+          var card=document.getElementById('ol2BriefCard'); if(card) card.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+          var g=document.getElementById('ol2BriefGen'); if(g) g.textContent='▸ Wingman is writing…';
+          var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.textContent='↻ Writing…';
+          fetch('/api/brief'+(send?'?send=1':''),{method:'POST',headers:apiHeaders()})
+            .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+            .then(function(res){
+              if(res.ok&&res.j&&res.j.narrative){
+                window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:(send&&res.j.emailed&&res.j.emailed.length&&res.j.emailed[0].ok)?('Emailed to '+res.j.emailed[0].to):''};
+                showHome();
+              } else { toast('Brief failed: '+((res.j&&(res.j.detail||res.j.error))||'unknown')); showHome(); }
+            }).catch(function(e){ toast('Brief failed: '+e.message); showHome(); });
+        }
+        var g=document.getElementById('ol2BriefGen'); if(g) g.onclick=function(){ runBrief(false); };
+        var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.onclick=function(){ runBrief(false); };
+        var em=document.getElementById('ol2BriefEmail'); if(em) em.onclick=function(){ runBrief(true); };
+      })();
       [].forEach.call(home.querySelectorAll('.tile[data-list]'),function(el){ el.onclick=function(){ var k=el.getAttribute('data-list'); var map={ todo:{t:'To do',f:function(i){return ['backlog','thisweek'].indexOf(i.status)>=0;}}, inprogress:{t:'In progress',f:function(i){return ['active','today','waiting'].indexOf(i.status)>=0;}}, review:{t:'Needs review',f:function(i){return i.status==='review';}}, duetoday:{t:'Due today',f:function(i){return i.status!=='done'&&(i.dueDate===today||i.status==='today');}}, triage:{t:'To triage',f:function(i){return i.status==='backlog';}}, done:{t:'Done',f:function(i){return i.status==='done';}} }; var m=map[k]; if(m) lpHomeList(m.t, all.filter(m.f)); }; });
       [].forEach.call(home.querySelectorAll('.lp-tcard[data-person]'),function(el){ el.onclick=function(){ lpPersonProfile(el.getAttribute('data-person')); }; });
       [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
@@ -10159,7 +10203,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
           '<div class="prow"><span>Owner</span><b id="ol2pvOwner"></b></div>'+
           '<div class="prow"><span>Category</span><b id="ol2pvCat"></b></div>'+
           '<div class="prow"><span>Context</span><b id="ol2pvCtx"></b></div>'+
-          '<div class="modes"><div class="mode" id="ol2mDo">▸ Do-it · Wingman drafts</div><div class="mode" id="ol2mTrack">◷ Track-it · you do</div></div>'+
+          '<div id="ol2pvParts"></div>'+
+          '<div class="modes" id="ol2capModes"><div class="mode" id="ol2mDo">▸ Do-it · Wingman drafts</div><div class="mode" id="ol2mTrack">◷ Track-it · you do</div></div>'+
         '</div>'+
         '<div class="cact" id="ol2capAct1"><button class="gbtn" id="ol2capCancel">Cancel</button><button class="gbtn amber" id="ol2capCont">Continue →</button></div>'+
         '<div class="cact" id="ol2capAct2" style="display:none"><button class="gbtn" id="ol2capBack">← Edit</button><button class="gbtn amber" id="ol2capConfirm">Confirm — let Wingman draft it</button></div>'+
@@ -10184,29 +10229,115 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function startRec(){ if(!SR){ var er=$c('ol2capErr'); er.style.display='block'; er.textContent="Voice input isn’t supported here — type your task below."; return; } try{ rec=new SR(); }catch(e){ return; } rec.lang='en-US'; rec.interimResults=true; rec.continuous=false; rec.onresult=function(e){ var t=''; for(var i=0;i<e.results.length;i++){ t+=e.results[i][0].transcript; } $c('ol2capTa').value=t; }; rec.onerror=function(e){ setLive(false); if(e&&e.error==='not-allowed'){ var er2=$c('ol2capErr'); er2.style.display='block'; er2.textContent='Microphone blocked — allow mic access or type below.'; } }; rec.onend=function(){ setLive(false); }; try{ rec.start(); setLive(true); $c('ol2capErr').style.display='none'; }catch(e){} }
     function stopRec(){ try{ if(rec&&listening) rec.stop(); }catch(e){} setLive(false); }
     function setCapMode(m){ capMode=m; $c('ol2mDo').classList.toggle('sel',m==='do-it'); $c('ol2mTrack').classList.toggle('sel',m==='track-it'); }
-    function openCapture(){ if(!shell.classList.contains('on')){ shell.classList.add('on'); showBoard(); } cap.classList.add('on'); $c('ol2capTa').value=''; $c('ol2capErr').style.display='none'; $c('ol2capPv').classList.remove('on'); $c('ol2capAct1').style.display='flex'; $c('ol2capAct2').style.display='none'; $c('ol2capH').textContent='Speak a task'; $c('ol2capSub').textContent='Tap the mic and talk — or type below'; setTimeout(startRec,250); }
+    function openCapture(opts){ opts=opts||{}; if(!shell.classList.contains('on')){ shell.classList.add('on'); showBoard(); } cap.classList.add('on'); $c('ol2capTa').value=''; $c('ol2capErr').style.display='none'; $c('ol2capPv').classList.remove('on'); $c('ol2capAct1').style.display='flex'; $c('ol2capAct2').style.display='none';
+      if(opts.type){ $c('ol2capH').textContent='New task'; $c('ol2capSub').textContent='Type it — Wingman will structure it. Tap the mic to talk instead.'; setTimeout(function(){ try{ $c('ol2capTa').focus(); }catch(e){} },200); }
+      else { $c('ol2capH').textContent='Speak a task'; $c('ol2capSub').textContent='Tap the mic and talk — or type below'; setTimeout(startRec,250); } }
     function closeCapture(){ stopRec(); cap.classList.remove('on'); }
-    function capParse(){
-      var text=($c('ol2capTa').value||'').trim(); var er=$c('ol2capErr');
-      if(!text){ er.style.display='block'; er.textContent='Say or type a task first.'; return; }
-      er.style.display='none'; var low=text.toLowerCase();
+    function ctxMatch(low){ var ctx=null; try{ (L().context||[]).forEach(function(c){ if(!ctx && c.name && low.indexOf(String(c.name).toLowerCase())>=0) ctx=c; }); }catch(e){} return ctx; }
+    function ownerCycle(){ var me=meName(); return ['me','Wingman'].concat(people().filter(function(p){ return p!==me; })); }
+    function partChip(p){
+      if(p.suggestedOwner==='Wingman') return '<button type="button" class="cap-own wg">▸ Wingman'+(p.confidence?(' '+p.confidence+'%'):'')+'</button>';
+      if(p.suggestedOwner==='me') return '<button type="button" class="cap-own me">You</button>';
+      return '<button type="button" class="cap-own team">'+esc(p.suggestedOwner)+'</button>';
+    }
+    function renderParts(){
+      var box=$c('ol2pvParts'); if(!box) return;
+      var parts=(capDraft&&capDraft.parts)||[];
+      if(parts.length<2){ box.innerHTML=''; $c('ol2capModes').style.display='flex'; $c('ol2capConfirm').textContent='Confirm — let Wingman draft it'; return; }
+      $c('ol2capModes').style.display='none';
+      var nW=parts.filter(function(p){ return p.suggestedOwner==='Wingman'; }).length;
+      box.innerHTML='<div style="font-size:10px;letter-spacing:.14em;color:#8A8D97;margin:10px 0 6px">WINGMAN SPLIT THIS INTO '+parts.length+' PARTS — TAP AN OWNER TO CHANGE IT</div>'+
+        parts.map(function(p,i){ return '<div class="cap-part" data-i="'+i+'"><span class="t">'+esc(p.title)+(p.deliverable?('<em>'+esc(p.deliverable)+'</em>'):'')+'</span>'+partChip(p)+'</div>'; }).join('');
+      box.querySelectorAll('.cap-own').forEach(function(btn){
+        btn.onclick=function(ev){ ev.stopPropagation(); var row=btn.closest('.cap-part'); var i=parseInt(row.getAttribute('data-i'),10); var cyc=ownerCycle(); var cur=capDraft.parts[i].suggestedOwner; var next=cyc[(cyc.indexOf(cur)+1)%cyc.length]; capDraft.parts[i].suggestedOwner=next; renderParts(); };
+      });
+      $c('ol2capConfirm').textContent='Create '+parts.length+' parts'+(nW?(' · Wingman drafts '+nW):'');
+    }
+    function renderPreview(){
+      $c('ol2pvTitle').textContent=capDraft.title; $c('ol2pvDue').textContent=capDraft.due||'—';
+      $c('ol2pvOwner').textContent=capDraft.owner||meName();
+      $c('ol2pvCat').textContent=capDraft.cat+(capDraft.deliverable?(' · '+capDraft.deliverable):'');
+      $c('ol2pvCtx').textContent=capDraft.ctx?capDraft.ctx.name:'—';
+      var single=(capDraft.parts||[]).length<2 ? (capDraft.parts&&capDraft.parts[0]) : null;
+      setCapMode((single&&single.suggestedOwner==='Wingman')||capDraft.doit?'do-it':'track-it');
+      renderParts();
+      $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
+      $c('ol2capH').textContent='Got it — here’s the plan'; $c('ol2capSub').textContent=capDraft.ai?'Wingman structured it. Adjust owners, then confirm.':'Wingman structured your sentence. Confirm to save.';
+      var el=document.getElementById('ol2capAssess'); if(!el){ el=document.createElement('div'); el.id='ol2capAssess'; el.style.cssText='margin-top:10px;font-size:12.5px;color:#9EA1AB'; $c('ol2capPv').appendChild(el); }
+      if(capDraft.ai){ el.innerHTML=capDraft.clarify?('<span style="color:#C08428">Wingman asks: '+esc(capDraft.clarify)+'</span> <span style="color:#8A8D97">— add detail in notes later, or confirm as-is.</span>'):''; }
+      else el.textContent='';
+    }
+    function capParseLocal(text){
+      var low=text.toLowerCase();
       var due=parseDue(low); var pl=people(), own=meName();
       for(var i=0;i<pl.length;i++){ var nm=String(pl[i]).toLowerCase().replace(/[^a-z0-9]/g,''); if(nm && new RegExp('\\b'+nm+'\\b').test(low.replace(/[^a-z0-9 ]/g,''))){ own=pl[i]; break; } }
       var cl=cats(), cat=(cl.indexOf('Personal')>=0?'Personal':cl[0]);
       for(var j=0;j<cl.length;j++){ if(low.indexOf(String(cl[j]).toLowerCase())>=0){ cat=cl[j]; break; } }
       var doit=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/.test(low);
       var title=text.replace(/,?\s*(due|by|before)\s+[a-z0-9 ]+$/i,'').replace(/\s+(today|tomorrow|next week)\b/ig,'').trim(); if(!title) title=text; title=title.charAt(0).toUpperCase()+title.slice(1);
-      var ctx=null; try{ (L().context||[]).forEach(function(c){ if(!ctx && c.name && low.indexOf(String(c.name).toLowerCase())>=0) ctx=c; }); }catch(e){}
       var deliv=inferDeliverable(low);
-      capDraft={title:title, due:due, owner:own, cat:cat, ctx:ctx, deliverable:deliv};
-      $c('ol2pvTitle').textContent=title; $c('ol2pvDue').textContent=due||'—'; $c('ol2pvOwner').textContent=own; $c('ol2pvCat').textContent=cat+(deliv?(' · '+deliv):''); $c('ol2pvCtx').textContent=ctx?ctx.name:'—';
-      setCapMode(doit?'do-it':'track-it');
-      $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
-      $c('ol2capH').textContent='Got it — here’s the card'; $c('ol2capSub').textContent='Wingman structured your sentence. Confirm to save.';
-      (function(){ var box=$c('ol2capPv'); if(!box) return; var el=document.getElementById('ol2capAssess'); if(!el){ el=document.createElement('div'); el.id='ol2capAssess'; el.style.cssText='margin-top:10px;font-size:12.5px;color:#9EA1AB'; box.appendChild(el); } el.textContent='▸ Assessing readiness…'; lpAssess({title:capDraft.title,notes:'',category:capDraft.cat,deliverable:capDraft.deliverable||''},function(j){ if(!j||j.confidence==null){ el.textContent=''; if(capDraft) capDraft.assess=null; return; } if(capDraft) capDraft.assess={confidence:Number(j.confidence),reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; var cc=j.confidence>=75?'#3FA276':(j.confidence>=40?'#C08428':'#E08A8A'); el.innerHTML='<span style="color:'+cc+';font-weight:700">Wingman confidence: '+j.confidence+'%</span>'+(j.reason?(' — '+esc(j.reason)):'')+((j.questions&&j.questions.length)?('<div style="margin-top:5px;color:#C08428">Needs: '+esc(j.questions[0])+'</div>'):''); }); })();
+      capDraft={title:title, due:due, owner:own, cat:cat, ctx:ctxMatch(low), deliverable:deliv, doit:doit, ai:false, parts:[], notes:''};
+      renderPreview();
+      lpAssess({title:capDraft.title,notes:'',category:capDraft.cat,deliverable:capDraft.deliverable||''},function(j){ var el=document.getElementById('ol2capAssess'); if(!el||!j||j.confidence==null) return; if(capDraft) capDraft.assess={confidence:Number(j.confidence),reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; var cc=j.confidence>=75?'#3FA276':(j.confidence>=40?'#C08428':'#E08A8A'); el.innerHTML='<span style="color:'+cc+';font-weight:700">Wingman confidence: '+j.confidence+'%</span>'+(j.reason?(' — '+esc(j.reason)):''); });
+    }
+    function capParse(){
+      var text=($c('ol2capTa').value||'').trim(); var er=$c('ol2capErr');
+      if(!text){ er.style.display='block'; er.textContent='Say or type a task first.'; return; }
+      er.style.display='none';
+      // Phase 3: real Wingman structuring + decomposition (regex only as offline fallback)
+      $c('ol2capH').textContent='▸ Wingman is structuring…'; $c('ol2capSub').textContent='Reading it, picking the deliverable, splitting the work.';
+      var cont=$c('ol2capCont'); cont.disabled=true;
+      fetch('/api/structure',{method:'POST',headers:apiHeaders(),body:JSON.stringify({text:text,people:people(),categories:cats(),me:meName()})})
+        .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+        .then(function(res){
+          cont.disabled=false;
+          if(res.ok&&res.j&&res.j.title){
+            var low=text.toLowerCase();
+            capDraft={title:res.j.title, due:res.j.due||'', owner:res.j.owner||'', cat:res.j.category, ctx:ctxMatch(low), deliverable:res.j.deliverable||'', notes:res.j.notes||'', parts:res.j.parts||[], clarify:res.j.clarify||'', ai:true};
+            renderPreview();
+          } else { capParseLocal(text); }
+        })
+        .catch(function(){ cont.disabled=false; capParseLocal(text); });
+    }
+    function newItemBase(title, cat, due, deliverable, ownerName){
+      return { id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), type:'task', title:title||'Untitled', category:cat||'Personal', status:'thisweek',
+        startDate:'', dueDate:due||'', deliverable:deliverable||'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
+        raci:{R:[],A:'',C:[],I:[]}, assignees:ownerName?[ownerName]:[], responsible:ownerName||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
+        waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
+        columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
+        execMode:'track-it', aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:[], parentItemId:'' };
+    }
+    function capConfirmParts(){
+      var me=meName(); var d=capDraft;
+      var parent=newItemBase(d.title, d.cat, d.due, d.deliverable, me);
+      parent.type='project'; parent.notes=d.notes||''; if(d.ctx) parent.linkedContext=[d.ctx.name];
+      var kids=[]; var nW=0;
+      d.parts.forEach(function(p){
+        var ownerName = (p.suggestedOwner==='me'||p.suggestedOwner==='Wingman') ? me : p.suggestedOwner;
+        var kid=newItemBase(p.title, d.cat, d.due, p.deliverable||'', ownerName);
+        kid.parentItemId=parent.id; if(d.ctx) kid.linkedContext=[d.ctx.name];
+        if(p.suggestedOwner==='Wingman'){ kid.execMode='do-it'; kid.aiConfidence=p.confidence||null; kid.aiAssess=p.reason?{reason:p.reason,questions:[],suggest:{}}:null; nW++; }
+        kids.push(kid);
+      });
+      try{ items.push(parent); kids.forEach(function(k){ items.push(k); }); }catch(e){}
+      persist(); closeCapture(); showBoard();
+      toast('▸ Mission created — '+kids.length+' parts'+(nW?(' · Wingman drafting '+nW):''));
+      kids.forEach(function(k,i){
+        if(k.execMode==='do-it'){ setTimeout(function(){ draftFor(k); }, i*400); }
+        else if(k.responsible && k.responsible!==me){ lpNotifyAssign(k.responsible, k); }
+      });
+      capDraft=null;
     }
     function capConfirm(){
-      if(!capDraft) return; var own=capDraft.owner||meName();
+      if(!capDraft) return;
+      if(capDraft.ai && capDraft.parts && capDraft.parts.length>1){ capConfirmParts(); return; }
+      var p0=(capDraft.parts&&capDraft.parts[0])||null;
+      if(p0){
+        if(p0.suggestedOwner&&p0.suggestedOwner!=='me'&&p0.suggestedOwner!=='Wingman') capDraft.owner=p0.suggestedOwner;
+        if(p0.deliverable&&!capDraft.deliverable) capDraft.deliverable=p0.deliverable;
+        if(p0.confidence&&!capDraft.assess) capDraft.assess={confidence:p0.confidence,reason:p0.reason||'',questions:[],suggest:{}};
+      }
+      var own=capDraft.owner||meName();
       var it={ id:'v'+Date.now().toString(36), type:'task', title:capDraft.title||'Untitled', category:capDraft.cat||'Personal', status:'thisweek',
         startDate:'', dueDate:capDraft.due||'', deliverable:capDraft.deliverable||'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
         raci:{R:[],A:'',C:[],I:[]}, assignees:own?[own]:[], responsible:own||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
@@ -10214,6 +10345,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
         execMode:capMode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:capDraft.ctx?[capDraft.ctx.name]:[] };
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
+      if(capDraft.notes) it.notes=capDraft.notes;
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
       persist(); closeCapture(); showBoard();
       if(own && own!==meName()) lpNotifyAssign(own, it);
@@ -10228,6 +10360,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       } else { toast('✓ Card added'); }
       capDraft=null;
     }
+    window.ol2OpenCaptureTyped=function(){ openCapture({type:true}); };
+    (function(){ var nb=document.getElementById('ol2New'); if(nb) nb.onclick=function(){ openCapture({type:true}); }; })();
     $c('ol2capMic').onclick=function(){ if(listening) stopRec(); else startRec(); };
     $c('ol2capCancel').onclick=closeCapture;
     $c('ol2capCont').onclick=function(){ stopRec(); capParse(); };

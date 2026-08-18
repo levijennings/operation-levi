@@ -1,0 +1,165 @@
+// Levi's Projects — Wingman's executive brief.
+// Two callers:
+//   1. Vercel Cron (vercel.json, 6:30am PT daily) — authenticated by CRON_SECRET.
+//      Generates the brief and EMAILS it to every workspace admin (via Resend).
+//   2. A signed-in user (Brief view "Generate now") — authenticated by Supabase JWT.
+//      Returns the brief as JSON for in-app display; ?send=1 also emails it to the caller.
+// Env: ANTHROPIC_API_KEY (required), SUPABASE_SERVICE_ROLE_KEY (required — already set for
+//      the retired gmail flow), RESEND_API_KEY/RESEND_FROM (for email), CRON_SECRET
+//      (required for the scheduled path), ANTHROPIC_SUMMARY_MODEL (optional).
+var guard = require('./_guard.js');
+
+var SUPABASE_URL = process.env.SUPABASE_URL || 'https://jtrqhihdjbhzbavsknht.supabase.co';
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+async function sb(path, serviceKey) {
+  var r = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey }
+  });
+  if (!r.ok) throw new Error('supabase ' + path.split('?')[0] + ' HTTP ' + r.status);
+  return r.json();
+}
+
+function todayInPT() {
+  // en-CA gives YYYY-MM-DD directly
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(new Date());
+}
+
+function assemble(rows, blob) {
+  var today = todayInPT();
+  var items = rows.map(function (r) { return r.card || {}; }).filter(function (c) { return c && c.title; });
+  var open = items.filter(function (c) { return c.status !== 'done' && c.type !== 'habit'; });
+  var overdue = open.filter(function (c) { return c.dueDate && c.dueDate < today; });
+  var dueToday = open.filter(function (c) { return c.dueDate === today; });
+  var review = items.filter(function (c) { return c.status === 'review' || (c.aiArtifact && c.aiArtifact.content && c.aiStatus === 'drafted'); });
+  var byPerson = {};
+  open.forEach(function (c) {
+    (c.assignees && c.assignees.length ? c.assignees : [c.responsible || '—']).forEach(function (p) {
+      if (!p) return; byPerson[p] = (byPerson[p] || 0) + 1;
+    });
+  });
+  var goals = ((blob && blob.goals) || []).slice(0, 6).map(function (g) {
+    return { title: g.title, forecast: g.forecastDate || '', updates: (g.updates || []).length };
+  });
+  var top = overdue.concat(dueToday).slice(0, 12).map(function (c) {
+    return { title: c.title, due: c.dueDate, cat: c.category, deliverable: c.deliverable || '', owner: (c.assignees && c.assignees[0]) || c.responsible || '' };
+  });
+  return {
+    date: today,
+    counts: { open: open.length, overdue: overdue.length, dueToday: dueToday.length, needsReview: review.length },
+    urgent: top,
+    awaitingApproval: review.slice(0, 8).map(function (c) { return { title: c.title, deliverable: c.deliverable || '' }; }),
+    crew: byPerson,
+    goals: goals
+  };
+}
+
+async function writeNarrative(data, key) {
+  var mdl = process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-haiku-4-5-20251001';
+  var sys = "You are Wingman, the AI first officer inside Levi's Projects. Write the morning executive brief for Levi. "
+    + "Voice: clipped, confident, zero filler — a trusted first officer, not a chatbot. Second person. "
+    + "Structure: one headline sentence naming the single most needle-moving thing today; then 2-4 short sentences covering what you flag from overdue/due items, drafts awaiting approval, and crew load; close with one sentence on goal pace if goal data exists. "
+    + "Never invent tasks or numbers — use only the data given. Under 120 words. No markdown headers, no bullet lists, no emoji.";
+  var r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+    body: JSON.stringify({ model: mdl, max_tokens: 350, system: sys, messages: [{ role: 'user', content: 'BRIEF DATA\n' + JSON.stringify(data, null, 1) + '\n\nWrite the brief now.' }] })
+  });
+  var j = await r.json();
+  if (!r.ok) throw new Error('anthropic: ' + ((j && j.error && j.error.message) || r.status));
+  return (j.content && j.content[0] && j.content[0].text) ? j.content[0].text.trim() : '';
+}
+
+function briefEmailHtml(narrative, data) {
+  var rows = (data.urgent || []).map(function (t) {
+    return '<tr><td style="padding:7px 0;border-bottom:1px solid #ECECE8;font-size:13px">' + esc(t.title)
+      + (t.deliverable ? (' <span style="color:#9CA0A8;font-size:11px">· ' + esc(t.deliverable) + '</span>') : '')
+      + '</td><td align="right" style="padding:7px 0;border-bottom:1px solid #ECECE8;color:#5A5A5A;font-size:12px;white-space:nowrap">' + esc(t.owner || '') + (t.due ? (' · ' + esc(t.due)) : '') + '</td></tr>';
+  }).join('');
+  return '<!doctype html><html><body style="margin:0;background:#F5F5F2;font-family:Inter,-apple-system,sans-serif">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 12px">'
+    + '<table role="presentation" width="600" style="max-width:600px;width:100%" cellpadding="0" cellspacing="0">'
+    + '<tr><td style="background:#0E0F12;border-radius:14px 14px 0 0;padding:18px 26px;color:#E9EAEE;font-weight:700;font-size:16px">levi\'s projects <span style="color:#C08428">&#9656;</span>'
+    + '<span style="float:right;color:#9EA1AB;font-weight:400;font-size:11px;letter-spacing:.14em">MORNING BRIEF · ' + esc(data.date) + '</span></td></tr>'
+    + '<tr><td style="background:#ffffff;border:1px solid #E4E4E0;border-top:none;border-radius:0 0 14px 14px;padding:26px;color:#26272D;font-size:14px;line-height:1.65">'
+    + '<p style="margin:0 0 18px;font-size:15px">' + esc(narrative).replace(/\n+/g, '</p><p style="margin:0 0 12px;font-size:15px">') + '</p>'
+    + '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:6px 0 14px"><tr>'
+    + '<td style="font-size:12px;color:#5A5A5A">Overdue <b style="color:#26272D;font-size:16px">' + data.counts.overdue + '</b></td>'
+    + '<td style="font-size:12px;color:#5A5A5A">Due today <b style="color:#26272D;font-size:16px">' + data.counts.dueToday + '</b></td>'
+    + '<td style="font-size:12px;color:#5A5A5A">Awaiting approval <b style="color:#26272D;font-size:16px">' + data.counts.needsReview + '</b></td>'
+    + '<td style="font-size:12px;color:#5A5A5A">Open <b style="color:#26272D;font-size:16px">' + data.counts.open + '</b></td></tr></table>'
+    + (rows ? ('<div style="font-size:11px;letter-spacing:.12em;color:#9CA0A8;margin:14px 0 4px">NEEDS ATTENTION</div><table role="presentation" cellpadding="0" cellspacing="0" style="width:100%">' + rows + '</table>') : '')
+    + '<p style="margin:20px 0 0"><a href="https://www.levisprojects.com" style="display:inline-block;background:#C08428;color:#141005;font-weight:700;text-decoration:none;padding:10px 18px;border-radius:9px">Open the day</a></p>'
+    + '</td></tr>'
+    + '<tr><td style="padding:14px 8px;color:#9CA0A8;font-size:11px" align="center">Written by Wingman &middot; levisprojects.com</td></tr>'
+    + '</table></td></tr></table></body></html>';
+}
+
+async function sendEmail(to, subject, html) {
+  var key = process.env.RESEND_API_KEY;
+  if (!key) return { skipped: 'no_resend_key' };
+  var from = process.env.RESEND_FROM || 'onboarding@resend.dev';
+  var r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'content-type': 'application/json' },
+    body: JSON.stringify({ from: from, to: [to], subject: subject, html: html })
+  });
+  var j = await r.json();
+  return r.ok ? { id: j.id } : { error: (j && j.message) || ('HTTP ' + r.status) };
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  var serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  var anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!serviceKey || !anthropicKey) { res.status(503).json({ error: 'not_configured' }); return; }
+
+  // ── Auth: cron secret (scheduled) OR signed-in user (on demand) ──
+  var isCron = false, userEmail = null;
+  var auth = req.headers.authorization || '';
+  var cronSecret = process.env.CRON_SECRET;
+  if (cronSecret && auth === 'Bearer ' + cronSecret) {
+    isCron = true;
+  } else {
+    if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
+    var user = await guard(req, res);
+    if (!user) return;
+    userEmail = user.email || null;
+  }
+
+  try {
+    // One workspace today; take the first.
+    var workspaces = await sb('workspaces?select=id&limit=1', serviceKey);
+    if (!workspaces.length) { res.status(200).json({ error: 'no_workspace' }); return; }
+    var wsId = workspaces[0].id;
+
+    var rows = await sb('tasks?select=card&workspace_id=eq.' + wsId, serviceKey);
+    var blobRows = await sb('workspace_data?select=data&workspace_id=eq.' + wsId, serviceKey);
+    var blob = (blobRows[0] && blobRows[0].data) || {};
+
+    var data = assemble(rows, blob);
+    var narrative = await writeNarrative(data, anthropicKey);
+    var html = briefEmailHtml(narrative, data);
+    var subject = 'Morning brief — ' + data.counts.overdue + ' overdue, ' + data.counts.dueToday + ' due today, ' + data.counts.needsReview + ' to approve';
+
+    var sends = [];
+    if (isCron) {
+      // Email every admin of the workspace (their auth email).
+      var members = await sb('workspace_members?select=user_id,role&workspace_id=eq.' + wsId + '&role=eq.admin', serviceKey);
+      for (var i = 0; i < members.length; i++) {
+        var u = await fetch(SUPABASE_URL + '/auth/v1/admin/users/' + members[i].user_id, {
+          headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey }
+        }).then(function (r2) { return r2.ok ? r2.json() : null; }).catch(function () { return null; });
+        if (u && u.email) sends.push({ to: u.email, result: await sendEmail(u.email, subject, html) });
+      }
+    } else if (String(req.query && req.query.send) === '1' && userEmail) {
+      sends.push({ to: userEmail, result: await sendEmail(userEmail, subject, html) });
+    }
+
+    res.status(200).json({ date: data.date, narrative: narrative, counts: data.counts, urgent: data.urgent, awaitingApproval: data.awaitingApproval, crew: data.crew, emailed: sends.map(function (s) { return { to: s.to, ok: !s.result.error, detail: s.result.error || undefined }; }) });
+  } catch (e) {
+    res.status(502).json({ error: 'brief_failed', detail: String((e && e.message) || e) });
+  }
+};
