@@ -8173,20 +8173,10 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         renderAssigneeFilters();
         renderDashboard();
 
-        // First-run: prompt avatar setup if no avatars exist
-        const existingAvatars = JSON.parse(localStorage.getItem('op_levi_avatars') || '{}');
-        if (Object.keys(existingAvatars).length === 0) {
-            setTimeout(() => showTeamAvatarSetup(), 500);
-        }
+        // First-run avatar prompt retired (Overhaul 5a): the modal popped over the 2.0
+        // shell uninvited. Photos are still manageable from classic Settings until 5d.
 
-        // Prompt user to set their profile photo on first load
-        const hasSeenProfilePrompt = localStorage.getItem('op_levi_seen_profile_prompt');
-        if (!hasSeenProfilePrompt && !existingAvatars['Levi']) {
-            setTimeout(() => {
-                showToast('📷 Set your profile photo — click your avatar on the People page');
-                localStorage.setItem('op_levi_seen_profile_prompt', 'true');
-            }, 2000);
-        }
+        // First-load profile-photo toast retired with the avatar prompt (Overhaul 5a).
 
         // Init: start background notification checks
         setTimeout(() => {
@@ -9088,6 +9078,35 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .ol2-filter input::placeholder{color:#8A8D97}
 .ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
 .ol2 .ol2-filter button:hover{background:#23262d;color:#E9EAEE}
+/* ── The Overhaul 5a ── */
+.ol2 .nav a{font-size:13px;padding:7px 10px;gap:10px}
+.ol2 .nav a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.ol2 .nav .navsep{margin:9px 2px;border-top:1px solid #26272D}
+.ol2 .nav a .wmark{color:#C08428;font-size:14px;width:16px;text-align:center;flex-shrink:0}
+.ol2 .keys{margin:14px 4px 8px;color:#6E717B;font-size:10.5px;font-family:'Space Mono',monospace;line-height:1.9}
+.ol2k{position:fixed;inset:0;z-index:100000;background:rgba(6,7,9,.6);display:none;align-items:flex-start;justify-content:center;padding-top:14vh}
+.ol2k.on{display:flex}
+.ol2k .kbox{width:min(560px,92vw);background:#15161A;border:1px solid #30323A;border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden}
+.ol2k input{width:100%;background:none;border:none;outline:none;color:#E9EAEE;font-size:15px;padding:15px 18px;font-family:Inter;border-bottom:1px solid #26272D;box-sizing:border-box}
+.ol2k .klist{max-height:46vh;overflow:auto;padding:6px}
+.ol2k .krow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#9EA1AB;font-size:13.5px;cursor:pointer}
+.ol2k .krow.on,.ol2k .krow:hover{background:#1d2129;color:#E9EAEE}
+.ol2k .krow .kk{margin-left:auto;font-family:'Space Mono',monospace;font-size:10.5px;color:#6E717B;border:1px solid #30323A;border-radius:5px;padding:1px 6px}
+.ol2k .kg{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#6E717B;padding:8px 12px 2px;text-transform:uppercase}
+.ol2 .set-sec{background:#15161A;border:1px solid #26272D;border-radius:13px;padding:18px 20px;margin-bottom:14px;max-width:660px}
+.ol2 .set-sec h3{font-size:14px;margin:0 0 10px;color:#E9EAEE;font-family:Inter}
+.ol2 .set-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid #202127;font-size:13.5px;color:#9EA1AB}
+.ol2 .set-row:first-of-type{border-top:none}
+.ol2 .td-tiles{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.ol2 .td-tile{flex:1;min-width:140px;background:#15161A;border:1px solid #26272D;border-radius:11px;padding:11px 15px;cursor:pointer}
+.ol2 .td-tile:hover{border-color:#30323A}
+.ol2 .td-tile.amber{border-color:#5a4413}
+.ol2 .td-tile .k{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.13em;color:#6E717B}
+.ol2 .td-tile.amber .k{color:#E0B871}
+.ol2 .td-tile .v{font-size:21px;font-weight:650;margin-top:2px}
+.ol2 .td-brief{color:#9EA1AB;font-size:13.5px;line-height:1.7;max-width:840px;margin-top:4px}
+.ol2 .td-brief .wm{color:#C08428}
+@media (max-width:720px){ .ol2 .keys{display:none} .ol2 .nav .navsep{display:none} }
 /* responsive / mobile */
 @media (max-width:720px){
   /* Phone-first: sidebar becomes a fixed bottom tab bar (Command spec) */
@@ -9323,24 +9342,31 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     try{ lpMF=matchesFilter; lpOpenReview=openReview; lpShowPeople=showPeople; lpShowHome=showHome; }catch(e){}
     var pill=document.createElement('button'); pill.className='ol2-pill'; pill.innerHTML='<span>✦</span> 2.0'; pill.title='Open the AI-native 2.0 view'; document.body.appendChild(pill);
 
+    // The Overhaul 5a: one drawn 16px stroke icon set (no dingbats, no emoji)
+    var NI={
+      today:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.8V8l2.2 1.6"/></svg>',
+      missions:'<svg viewBox="0 0 16 16"><path d="M2.8 3v10M8 3v7M13.2 3v4.5"/></svg>',
+      goals:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><circle cx="8" cy="8" r="2.6"/></svg>',
+      crew:'<svg viewBox="0 0 16 16"><circle cx="5.5" cy="5.8" r="2.4"/><path d="M1.8 13c.5-2.3 1.9-3.5 3.7-3.5s3.2 1.2 3.7 3.5"/><circle cx="11.6" cy="6.2" r="1.9"/><path d="M11 9.7c1.7.1 2.8 1.2 3.3 3.1"/></svg>',
+      gear:'<svg viewBox="0 0 16 16"><path d="M3 5h10M3 11h10"/><circle cx="6" cy="5" r="1.6"/><circle cx="10.5" cy="11" r="1.6"/></svg>',
+      help:'<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.2"/><path d="M6.3 6.3c.2-1 1-1.7 1.9-1.7 1 0 1.8.7 1.8 1.6 0 1.2-1.7 1.3-1.7 2.5"/><path d="M8.2 11.2v.2"/></svg>'
+    };
     var shell=document.createElement('div'); shell.className='ol2'; shell.id='ol2Shell';
     shell.innerHTML=
       '<aside class="side">'+
         '<div class="brand" style="text-transform:lowercase;font-weight:700">levi\'s projects <span class="star" style="color:#C08428">▸</span></div>'+
         '<nav class="nav" id="ol2Nav">'+
-          '<a data-v="home" class="on">⌂ Brief</a>'+
-          '<a data-v="myday">◴ My Day</a>'+
-          '<a data-v="week">▤ My Week</a>'+
-          '<a data-v="board">▦ Missions</a>'+
-          '<a data-v="timeline">▬ Timeline</a>'+
-          '<a data-v="goals">◎ Goals</a>'+
-          '<a data-v="pulse">◔ Pulse</a>'+
+          '<a data-v="home" class="on">'+NI.today+'Today</a>'+
+          '<a data-v="board">'+NI.missions+'Missions</a>'+
+          '<a data-v="goals">'+NI.goals+'Goals</a>'+
+          '<a data-v="people">'+NI.crew+'Crew</a>'+
           '<span id="ol2RevN" style="display:none">0</span>'+
-          '<a data-v="triage">▸ Wingman <span class="tag" id="ol2TriN">0</span></a>'+
-          '<a data-v="people">◍ Crew</a>'+
-          '<a data-v="libraries">◆ Libraries</a>'+
-          '<a data-v="docs">✧ Docs</a>'+
+          '<a data-v="triage"><span class="wmark">▸</span>Wingman <span class="tag" id="ol2TriN">0</span></a>'+
+          '<div class="navsep"></div>'+
+          '<a data-v="settings">'+NI.gear+'Settings</a>'+
+          '<a data-v="docs">'+NI.help+'Docs &amp; help</a>'+
         '</nav>'+
+        '<div class="keys">⌘K commands<br>C new · A review · G+key go</div>'+
         '<button class="newt" id="ol2New">＋ New task</button>'+
         '<button class="spk" id="ol2Spk"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="spk-label"> Speak a task</span></button>'+
         '<button class="exit" id="ol2Exit">← Back to classic view</button>'+
@@ -9348,7 +9374,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       '<main class="main">'+
         '<div id="ol2BoardView">'+
           '<div class="hrow"><div><h1 id="ol2H">Missions</h1><p id="ol2Sub">Speak a task, and Wingman turns it into a card — and often does it.</p></div></div>'+
-          '<div class="ol2-bviews" id="ol2BViews"><button data-bv="cols">▦ Board</button><button data-bv="cal">🗓 Calendar</button><button data-bv="gantt">▬ Gantt</button><button data-bv="review">✎ Needs Review</button><button data-bv="done">✓ Done</button></div>'+
+          '<div class="ol2-bviews" id="ol2BViews"><button data-bv="cols">Board</button><button data-bv="cal">Calendar</button><button data-bv="gantt">Timeline</button><button data-bv="review">Review</button><button data-bv="done">Done</button></div>'+
           '<div class="ol2-filter" id="ol2Filter"><input id="ol2Search" placeholder="Search tasks…" autocomplete="off"/><select id="ol2FCat"><option value="all">All categories</option></select><select id="ol2FOwner"><option value="all">All owners</option></select><button id="ol2FClear" style="display:none">Clear</button></div>'+
           '<div class="cols" id="ol2Board"></div>'+
         '</div>'+
@@ -9363,6 +9389,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2Done" style="display:none"></div>'+
         '<div id="ol2Goals" style="display:none"></div>'+
         '<div id="ol2Pulse" style="display:none"></div>'+
+        '<div id="ol2Settings" style="display:none"></div>'+
       '</main>';
     document.body.appendChild(shell);
 
@@ -9377,7 +9404,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     // (the overlay only hides after _syncFromCloud completes).
     function _ol2ViewPref(){ try{ return localStorage.getItem('op_levi_view_pref'); }catch(e){ return null; } }
     (function _ol2AutoLaunch(){
-      if(_ol2ViewPref()==='classic') return; // user opted out — stay classic; pill still available
+      // The Overhaul: the 2.0 shell IS the app — always launch it. Classic stays reachable
+      // via the exit link until ship 5d deletes it; a stored 'classic' pref no longer sticks.
       var tries=0;
       (function waitReady(){
         var ov=document.getElementById('authOverlay');
@@ -9393,7 +9421,74 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='docs'){ showDocs(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='docs'){ showDocs(); } else if(v==='settings'){ showSettings(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+    });
+
+    // ── The Overhaul 5a: keyboard layer + ⌘K command palette ──
+    var _kEl=null,_kSel=0,_kItems=[],_kSeqG=false;
+    function lpCmdK(){
+      if(!_kEl){
+        _kEl=document.createElement('div'); _kEl.className='ol2k';
+        _kEl.innerHTML='<div class="kbox"><input id="ol2kIn" placeholder="Type a command or search tasks…" autocomplete="off"/><div class="klist" id="ol2kList"></div></div>';
+        document.body.appendChild(_kEl);
+        _kEl.addEventListener('mousedown',function(e){ if(e.target===_kEl) lpCmdKClose(); });
+        var inp=_kEl.querySelector('#ol2kIn');
+        inp.addEventListener('input',function(){ _kSel=0; lpCmdKRender(inp.value); });
+        inp.addEventListener('keydown',function(e){
+          if(e.key==='Escape'){ lpCmdKClose(); }
+          else if(e.key==='ArrowDown'){ e.preventDefault(); _kSel=Math.min(_kSel+1,_kItems.length-1); lpCmdKPaint(); }
+          else if(e.key==='ArrowUp'){ e.preventDefault(); _kSel=Math.max(_kSel-1,0); lpCmdKPaint(); }
+          else if(e.key==='Enter'){ e.preventDefault(); var it=_kItems[_kSel]; if(it){ lpCmdKClose(); it.f(); } }
+        });
+      }
+      _kEl.classList.add('on'); var i2=_kEl.querySelector('#ol2kIn'); i2.value=''; _kSel=0; lpCmdKRender(''); setTimeout(function(){ i2.focus(); },0);
+    }
+    function lpCmdKClose(){ if(_kEl) _kEl.classList.remove('on'); }
+    function lpCmdKActions(){
+      return [
+        {g:'Actions',t:'New task',k:'C',f:function(){ if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); else openCapture({type:true}); }},
+        {g:'Actions',t:'Speak a task',f:function(){ openCapture(); }},
+        {g:'Actions',t:'Review Wingman drafts',k:'A',f:function(){ go('review'); }},
+        {g:'Actions',t:'Seed Wingman&#39;s memory (interview)',f:function(){ lpSeedInterview(); }},
+        {g:'Go to',t:'Today',k:'G T',f:function(){ go('home'); }},
+        {g:'Go to',t:'Missions',k:'G M',f:function(){ go('board'); }},
+        {g:'Go to',t:'Goals',k:'G G',f:function(){ go('goals'); }},
+        {g:'Go to',t:'Crew',k:'G C',f:function(){ go('people'); }},
+        {g:'Go to',t:'Wingman',k:'G W',f:function(){ go('triage'); }},
+        {g:'Go to',t:'Memory (libraries)',f:function(){ showLibraries(); }},
+        {g:'Go to',t:'Docs &amp; help',k:'?',f:function(){ go('docs'); }},
+        {g:'Go to',t:'Settings',k:'G S',f:function(){ go('settings'); }}
+      ];
+    }
+    function lpCmdKRender(q){
+      q=(q||'').toLowerCase().trim();
+      var acts=lpCmdKActions().filter(function(a){ return !q || a.t.toLowerCase().indexOf(q)>=0; });
+      var tasks=[];
+      if(q){ tasks=ITEMS().filter(function(i){ return i.status!=='done' && (i.title||'').toLowerCase().indexOf(q)>=0; }).slice(0,6).map(function(i){ return {g:'Tasks',t:esc(i.title||'Untitled'),k:esc(i.category||''),f:(function(it){ return function(){ openReview(it); }; })(i)}; }); }
+      _kItems=acts.concat(tasks); if(_kSel>=_kItems.length) _kSel=Math.max(0,_kItems.length-1);
+      lpCmdKPaint();
+    }
+    function lpCmdKPaint(){
+      var list=_kEl.querySelector('#ol2kList'); var h=''; var lastG='';
+      _kItems.forEach(function(a,i){ if(a.g!==lastG){ lastG=a.g; h+='<div class="kg">'+a.g+'</div>'; } h+='<div class="krow'+(i===_kSel?' on':'')+'" data-i="'+i+'">'+a.t+(a.k?('<span class="kk">'+a.k+'</span>'):'')+'</div>'; });
+      list.innerHTML=h||'<div class="kg">No matches</div>';
+      [].forEach.call(list.querySelectorAll('.krow'),function(r){ r.onclick=function(){ var it=_kItems[+r.getAttribute('data-i')]; if(it){ lpCmdKClose(); it.f(); } }; });
+      var on=list.querySelector('.krow.on'); if(on&&on.scrollIntoView) on.scrollIntoView({block:'nearest'});
+    }
+    document.addEventListener('keydown',function(e){
+      if(!shell.classList.contains('on')) return;
+      if((e.metaKey||e.ctrlKey)&&String(e.key).toLowerCase()==='k'){ e.preventDefault(); lpCmdK(); return; }
+      var t=e.target, tag=((t&&t.tagName)||'').toLowerCase();
+      if(e.key==='Escape'){ var capEl=document.querySelector('.ol2cap.on'); if(capEl&&typeof closeCapture==='function'){ closeCapture(); if(t&&t.blur) t.blur(); } return; }
+      if(tag==='input'||tag==='textarea'||tag==='select'||(t&&t.isContentEditable)) return;
+      if(_kEl&&_kEl.classList.contains('on')) return;
+      if(e.metaKey||e.ctrlKey||e.altKey) return;
+      var k=e.key, kl=String(k).toLowerCase();
+      if(_kSeqG){ _kSeqG=false; var m={t:'home',m:'board',g:'goals',c:'people',w:'triage',s:'settings'}; if(m[kl]){ e.preventDefault(); go(m[kl]); } return; }
+      if(kl==='g'){ _kSeqG=true; setTimeout(function(){ _kSeqG=false; },900); }
+      else if(kl==='c'){ e.preventDefault(); if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); else openCapture({type:true}); }
+      else if(kl==='a'){ e.preventDefault(); go('review'); }
+      else if(k==='?'){ e.preventDefault(); go('docs'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -9474,7 +9569,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       try{ persist(); }catch(e){}
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
-    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs','ol2Settings'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
     function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#3FA276':s==='review'?'#C08428':(s==='active'||s==='today')?'#4F8AD1':s==='waiting'?'#C08428':'#8A8D97'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
@@ -9617,7 +9712,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var tr=document.getElementById('ol2Triage'); tr.style.display='';
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsWingman).length;
-      var html='<div class="hrow"><div><h1 class="syne">Morning triage</h1><p>Clear the inbox — route each item to Wingman or a person. Wingman drafts the do-it ones.</p></div>'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div><div id="ol2TriList"></div>';
+      var html='<div class="hrow"><div><h1 class="syne">Wingman</h1><p>Your first officer. Route each inbox item — Wingman drafts the do-it ones.</p></div><div style="display:flex;gap:8px"><button class="gbtn" id="ol2TriLib">Memory</button>'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div></div><div id="ol2TriList"></div>';
       if(!inbox.length){ html+='<div class="empty" style="padding:46px">Inbox cleared. Wingman’s drafts land in <b style="color:#C08428">Needs review</b>.</div>'; }
       tr.innerHTML=html;
       var list=document.getElementById('ol2TriList');
@@ -9633,6 +9728,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         list.appendChild(row);
       });
       var runBtn=document.getElementById('ol2TriRun'); if(runBtn) runBtn.onclick=runAllTri;
+      var libBtn=document.getElementById('ol2TriLib'); if(libBtn) libBtn.onclick=function(){ showLibraries(); };
     }
     function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){ if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); updateCounts(); } }); }
     function assignTri(it, who, row){
@@ -9891,48 +9987,39 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var triage=all.filter(function(i){ return i.status==='backlog'; });
       var today=todayStr();
       var dueToday=all.filter(function(i){ return i.status!=='done' && (i.dueDate===today || i.status==='today'); });
-      var inProg=all.filter(function(i){ return ['active','today','waiting'].indexOf(i.status)>=0; });
-      var done=all.filter(function(i){ return i.status==='done'; });
-      var toDo=all.filter(function(i){ return ['backlog','thisweek'].indexOf(i.status)>=0; });
+      var overdue=all.filter(function(i){ return i.status!=='done' && i.dueDate && i.dueDate<today; });
       var hour=new Date().getHours(); var greet=hour<12?'Good morning':(hour<18?'Good afternoon':'Good evening');
       var dstr=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
       var bits=[];
       if(review.length) bits.push(review.length+' draft'+(review.length===1?'':'s')+' to review');
       if(dueToday.length) bits.push(dueToday.length+' due today');
+      if(overdue.length) bits.push(overdue.length+' overdue');
       if(triage.length) bits.push(triage.length+' to triage');
-      var summary=bits.length?('You have '+bits.join(', ')+'.'):'You’re all caught up — nothing pressing right now.';
-      var tiles=[
-        {k:'todo',num:toDo.length,lbl:'To do',c:'#9aa3b2'},
-        {k:'inprogress',num:inProg.length,lbl:'In progress',c:'#4F8AD1'},
-        {k:'review',num:review.length,lbl:'Needs review',c:'#C08428'},
-        {k:'duetoday',num:dueToday.length,lbl:'Due today',c:'#4F8AD1'},
-        {k:'triage',num:triage.length,lbl:'To triage',c:'#9573C9'},
-        {k:'done',num:done.length,lbl:'Done',c:'#3FA276'}
-      ];
+      var summary=bits.length?bits.join(' · '):'All clear — nothing pressing right now.';
       var ids=top3Ids();
       var pinned=ids.map(function(id){ return all.filter(function(x){ return String(x.id)===id; })[0]; }).filter(Boolean);
       var top3=pinned.slice();
       if(top3.length<3){ var fill=all.filter(function(i){ return i.status!=='done' && top3.indexOf(i)<0 && (i.dueDate===today || i.status==='today' || i.status==='active' || i.status==='thisweek'); }); top3=top3.concat(fill).slice(0,3); }
-      var captured=all.filter(function(i){ return i.sourceType && i.status!=='done'; }).slice(0,4);
-      var h='<div class="hrow"><div><h1 class="syne">'+greet+', '+esc(meName())+'</h1><p>'+esc(dstr)+' · '+esc(summary)+'</p></div>'+
-        '<div style="display:flex;gap:8px"><button class="gbtn" id="ol2HomeNew">＋ New task</button><button class="gbtn amber" id="ol2HomeSpeak"><span style="font-size:15px">✦</span> Speak a task</button></div></div>';
-      h+='<div class="lp-brief" id="ol2BriefCard">'
-        +'<div class="bk">▸ MORNING BRIEF'+(window._lpBrief&&window._lpBrief.date?(' · '+esc(window._lpBrief.date)):'')+'</div>'
-        +(window._lpBrief
-          ? ('<div class="bt">'+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')+'</div>'
-             +((window._lpBrief.emailedNote)?('<div class="bs">'+esc(window._lpBrief.emailedNote)+'</div>'):'')
-             +'<button class="gbtn" id="ol2BriefRefresh" style="margin-top:10px">↻ Regenerate</button> <button class="gbtn" id="ol2BriefEmail" style="margin-top:10px">✉ Email it to me</button> <button class="gbtn" id="ol2BriefPush" style="margin-top:10px">🔔 Notify my phone</button>')
-          : ('<div class="bt" style="color:#9EA1AB">Wingman writes your executive brief here — what moves the needle, what\'s waiting on you, how the crew is tracking. It also lands by email every morning at 6:30.</div>'
-             +'<button class="gbtn amber" id="ol2BriefGen" style="margin-top:10px">▸ Generate my brief</button> <button class="gbtn" id="ol2BriefPush" style="margin-top:10px">🔔 Notify my phone</button>'))
+      var h='<div class="hrow"><div><h1 class="syne">'+esc(dstr)+'</h1><p>'+greet+', '+esc(meName())+' · '+esc(summary)+'</p></div>'+
+        '<div style="display:flex;gap:8px"><button class="gbtn amber" id="ol2HomeNew">＋ New task</button></div></div>';
+      // ── The brief leads the view ──
+      h+='<div class="td-brief" id="ol2BriefCard">'+(window._lpBrief
+        ? ('<span class="wm">▸</span> '+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')
+           +(window._lpBrief.emailedNote?(' <span style="color:#6E717B">· '+esc(window._lpBrief.emailedNote)+'</span>'):'')
+           +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="gbtn" id="ol2BriefRefresh">Regenerate</button><button class="gbtn" id="ol2BriefEmail">Email it to me</button><button class="gbtn" id="ol2BriefPush">Phone alerts</button></div>')
+        : ('<span class="wm">▸</span> <span id="ol2BriefWait">'+(window._lpBriefFailed?'Wingman couldn&#39;t write the brief. ':'Wingman is writing your brief…')+'</span>'
+           +(window._lpBriefFailed?'<button class="gbtn amber" id="ol2BriefGen" style="margin-left:8px">Try again</button>':'')))
         +'</div>';
-      h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-list="'+t.k+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
-      h+='<div class="ulbl" style="margin:22px 0 9px">Focus today</div>';
-      if(!top3.length){ h+='<div class="empty">Nothing scheduled — speak a task, or pin one in My Day.</div>'; }
+      // ── Three numbers, each clickable ──
+      h+='<div class="td-tiles">'
+        +'<div class="td-tile amber" data-list="review"><div class="k">▸ AWAITING YOU</div><div class="v">'+review.length+'</div></div>'
+        +'<div class="td-tile" data-list="duetoday"><div class="k">DUE TODAY</div><div class="v">'+dueToday.length+'</div></div>'
+        +'<div class="td-tile" data-list="overdue"><div class="k">OVERDUE</div><div class="v" style="color:'+(overdue.length?'#E08A8A':'#3FA276')+'">'+overdue.length+'</div></div>'
+        +(triage.length?('<div class="td-tile" data-list="triage"><div class="k">TO TRIAGE</div><div class="v">'+triage.length+'</div></div>'):'')
+        +'</div>';
+      h+='<div class="ulbl" style="margin:24px 0 9px">Focus today</div>';
+      if(!top3.length){ h+='<div class="empty">Nothing scheduled — press C to capture a task, or pin one from Missions.</div>'; }
       else { h+='<div class="md-top3">'+top3.map(function(it,idx){ return '<div class="md-card" data-open="'+esc(it.id)+'"><div class="n">'+(idx+1)+'</div><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+' · '+esc(it.status||'')+'</div></div></div>'; }).join('')+'</div>'; }
-      if(captured.length){
-        h+='<div class="ulbl" style="margin:24px 0 9px">Just captured from Outlook</div>';
-        h+=captured.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.sourceType==='calendar'?'📅 calendar':'✉ email')+(it.aiStatus==='drafted'?' · ✦ draft ready':'')+'</div></div>'+badges(it)+'</div>'; }).join('');
-      }
       (function(){
         var people=(typeof getAllAssignees==='function'?getAllAssignees():[]).slice();
         function pItems(p){ return all.filter(function(it){ var ppl=[].concat(it.assignees||[], (it.raci&&it.raci.R)||[], (it.raci&&it.raci.A)?[it.raci.A]:[], it.responsible?[it.responsible]:[]); return ppl.indexOf(p)>=0; }); }
@@ -9942,52 +10029,68 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var wingRev=all.filter(function(i){ return i.status==='review' && i.aiArtifact && i.aiArtifact.content; }).length;
         h+='<div class="lp-team">'
           +'<div class="lp-tcard" id="lpHomeWing"><div class="pav wing" style="width:32px;height:32px;font-size:14px">▸</div><div class="i"><div class="nm" style="color:#E0B871">Wingman</div><div class="st"><b>'+wingWk+'</b> drafted · <b>'+wingRev+'</b> for review</div></div></div>'
-          +people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var dnc=its.filter(function(i){ return i.status==='done'; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week · <b>'+dnc+'</b> done</div></div></div>'; }).join('')+'</div>';
-        if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it)+'</div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
+          +people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var od=its.filter(function(i){ return i.status!=='done' && i.dueDate && i.dueDate<today; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week'+(od?(' · <b style="color:#E08A8A">'+od+'</b> overdue'):'')+'</div></div></div>'; }).join('')+'</div>';
+        if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div></div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
       })();
       home.innerHTML=h;
-      document.getElementById('ol2HomeSpeak').onclick=function(){ openCapture(); };
-      var hn=document.getElementById('ol2HomeNew'); if(hn) hn.onclick=function(){ if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); };
-      (function(){
-        function runBrief(send){
-          var card=document.getElementById('ol2BriefCard'); if(card) card.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
-          var g=document.getElementById('ol2BriefGen'); if(g) g.textContent='▸ Wingman is writing…';
-          var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.textContent='↻ Writing…';
-          fetch('/api/brief'+(send?'?send=1':''),{method:'POST',headers:apiHeaders()})
-            .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
-            .then(function(res){
-              if(res.ok&&res.j&&res.j.narrative){
-                window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:(send&&res.j.emailed&&res.j.emailed.length&&res.j.emailed[0].ok)?('Emailed to '+res.j.emailed[0].to):''};
-                showHome();
-              } else { toast('Brief failed: '+((res.j&&(res.j.detail||res.j.error))||'unknown')); showHome(); }
-            }).catch(function(e){ toast('Brief failed: '+e.message); showHome(); });
-        }
-        var g=document.getElementById('ol2BriefGen'); if(g) g.onclick=function(){ runBrief(false); };
-        var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.onclick=function(){ runBrief(false); };
-        var em=document.getElementById('ol2BriefEmail'); if(em) em.onclick=function(){ runBrief(true); };
-        var pb=document.getElementById('ol2BriefPush');
-        if(pb){
-          if(!('PushManager' in window)||!('serviceWorker' in navigator)) pb.style.display='none';
-          else pb.onclick=function(){
-            pb.disabled=true; pb.textContent='🔔 Enabling…';
-            var PUB='BFloQyryCH9eFadPwjsGze6bOuFWSdlJrGnpz1TFcgoWeajF-MfWsUngbNEIdBCXNQmH3TjieVU2Xp8hgaHDKPE';
-            function b64ToU8(b){ var pad='='.repeat((4-b.length%4)%4); var raw=atob((b+pad).replace(/-/g,'+').replace(/_/g,'/')); var u=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) u[i]=raw.charCodeAt(i); return u; }
-            Notification.requestPermission().then(function(perm){
-              if(perm!=='granted') throw new Error('Permission not granted');
-              return navigator.serviceWorker.ready;
-            }).then(function(reg){ return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(PUB)}); })
-            .then(function(sub){
-              var k=sub.toJSON();
-              return _sb.from('push_subscriptions').upsert({ user_id:_currentUser.id, endpoint:sub.endpoint, keys:{p256dh:k.keys&&k.keys.p256dh, auth:k.keys&&k.keys.auth} }, { onConflict:'endpoint' });
-            }).then(function(r){ if(r&&r.error) throw new Error(r.error.message); pb.textContent='🔔 Phone notifications on'; toast('▸ This phone will get the morning brief ping'); })
-            .catch(function(e){ pb.disabled=false; pb.textContent='🔔 Notify my phone'; toast('Push setup failed: '+e.message+(/(iPhone|iPad)/.test(navigator.userAgent)?' — on iPhone, add the app to your Home Screen first':'')); });
-          };
-        }
-      })();
-      [].forEach.call(home.querySelectorAll('.tile[data-list]'),function(el){ el.onclick=function(){ var k=el.getAttribute('data-list'); var map={ todo:{t:'To do',f:function(i){return ['backlog','thisweek'].indexOf(i.status)>=0;}}, inprogress:{t:'In progress',f:function(i){return ['active','today','waiting'].indexOf(i.status)>=0;}}, review:{t:'Needs review',f:function(i){return i.status==='review';}}, duetoday:{t:'Due today',f:function(i){return i.status!=='done'&&(i.dueDate===today||i.status==='today');}}, triage:{t:'To triage',f:function(i){return i.status==='backlog';}}, done:{t:'Done',f:function(i){return i.status==='done';}} }; var m=map[k]; if(m) lpHomeList(m.t, all.filter(m.f)); }; });
+      var hn=document.getElementById('ol2HomeNew'); if(hn) hn.onclick=function(){ if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); else openCapture({type:true}); };
+      function runBrief(send){
+        var card=document.getElementById('ol2BriefCard'); if(card) card.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
+        var w=document.getElementById('ol2BriefWait'); if(w) w.textContent='Wingman is writing your brief…';
+        var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.textContent='Writing…';
+        fetch('/api/brief'+(send?'?send=1':''),{method:'POST',headers:apiHeaders()})
+          .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+          .then(function(res){
+            if(res.ok&&res.j&&res.j.narrative){
+              window._lpBriefFailed=false;
+              window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:(send&&res.j.emailed&&res.j.emailed.length&&res.j.emailed[0].ok)?('Emailed to '+res.j.emailed[0].to):''};
+            } else { window._lpBriefFailed=true; }
+            showHome();
+          }).catch(function(e){ window._lpBriefFailed=true; showHome(); });
+      }
+      // Brief-led: write it automatically the first time Today opens this session.
+      if(!window._lpBrief && !window._lpBriefFailed && !window._lpBriefAuto){ window._lpBriefAuto=true; runBrief(false); }
+      var g=document.getElementById('ol2BriefGen'); if(g) g.onclick=function(){ runBrief(false); };
+      var rf2=document.getElementById('ol2BriefRefresh'); if(rf2) rf2.onclick=function(){ runBrief(false); };
+      var em=document.getElementById('ol2BriefEmail'); if(em) em.onclick=function(){ runBrief(true); };
+      var pb=document.getElementById('ol2BriefPush'); if(pb) lpEnablePush(pb);
+      [].forEach.call(home.querySelectorAll('.td-tile[data-list]'),function(el){ el.onclick=function(){ var k=el.getAttribute('data-list'); var map={ review:{t:'Awaiting you',f:function(i){return i.status==='review';}}, duetoday:{t:'Due today',f:function(i){return i.status!=='done'&&(i.dueDate===today||i.status==='today');}}, overdue:{t:'Overdue',f:function(i){return i.status!=='done'&&i.dueDate&&i.dueDate<today;}}, triage:{t:'To triage',f:function(i){return i.status==='backlog';}} }; var m=map[k]; if(m) lpHomeList(m.t, all.filter(m.f)); }; });
       var hw=document.getElementById('lpHomeWing'); if(hw) hw.onclick=function(){ go('triage'); };
       [].forEach.call(home.querySelectorAll('.lp-tcard[data-person]'),function(el){ el.onclick=function(){ lpPersonProfile(el.getAttribute('data-person')); }; });
       [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
+    }
+    // ── Web push enable (shared: Today brief + Settings) ──
+    function lpEnablePush(pb){
+      if(!('PushManager' in window)||!('serviceWorker' in navigator)){ pb.style.display='none'; return; }
+      pb.onclick=function(){
+        pb.disabled=true; pb.textContent='Enabling…';
+        var PUB='BFloQyryCH9eFadPwjsGze6bOuFWSdlJrGnpz1TFcgoWeajF-MfWsUngbNEIdBCXNQmH3TjieVU2Xp8hgaHDKPE';
+        function b64ToU8(b){ var pad='='.repeat((4-b.length%4)%4); var raw=atob((b+pad).replace(/-/g,'+').replace(/_/g,'/')); var u=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) u[i]=raw.charCodeAt(i); return u; }
+        Notification.requestPermission().then(function(perm){
+          if(perm!=='granted') throw new Error('Permission not granted');
+          return navigator.serviceWorker.ready;
+        }).then(function(reg){ return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(PUB)}); })
+        .then(function(sub){
+          var k=sub.toJSON();
+          return _sb.from('push_subscriptions').upsert({ user_id:_currentUser.id, endpoint:sub.endpoint, keys:{p256dh:k.keys&&k.keys.p256dh, auth:k.keys&&k.keys.auth} }, { onConflict:'endpoint' });
+        }).then(function(r){ if(r&&r.error) throw new Error(r.error.message); pb.textContent='Phone alerts on'; toast('▸ This phone will get the morning brief ping'); })
+        .catch(function(e){ pb.disabled=false; pb.textContent='Phone alerts'; toast('Push setup failed: '+e.message+(/(iPhone|iPad)/.test(navigator.userAgent)?' — on iPhone, add the app to your Home Screen first':'')); });
+      };
+    }
+    // ── Settings (2.0) — account, crew membership, notifications ──
+    function showSettings(){
+      hideAllPanels();
+      var sp=document.getElementById('ol2Settings'); sp.style.display='';
+      var email=''; try{ email=(_currentUser&&_currentUser.email)||''; }catch(e){}
+      var people=(typeof getAllAssignees==='function'?getAllAssignees():[]);
+      var h='<div class="hrow"><div><h1 class="syne">Settings</h1><p>Account, crew membership, and notifications.</p></div></div>';
+      h+='<div class="set-sec"><h3>Crew members</h3>'+people.map(function(p){ var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,26):''; return '<div class="set-row">'+av+'<span style="color:#E9EAEE">'+esc(p)+'</span></div>'; }).join('')+'<div style="margin-top:12px"><button class="gbtn amber" id="ol2SetAdd">＋ Add member</button></div><div style="font-size:11.5px;color:#6E717B;margin-top:8px">Adding a member creates their sign-in and can send a welcome email.</div></div>';
+      h+='<div class="set-sec"><h3>Notifications</h3><div class="set-row" style="border-top:none">The morning brief lands by email at 6:30 and can ping this phone.<button class="gbtn" id="ol2SetPush" style="margin-left:auto;flex-shrink:0">Phone alerts</button></div></div>';
+      h+='<div class="set-sec"><h3>Account</h3><div class="set-row" style="border-top:none">Signed in as&nbsp;<b style="color:#E9EAEE">'+esc(email||'—')+'</b><button class="gbtn" id="ol2SetOut" style="margin-left:auto;flex-shrink:0">Sign out</button></div></div>';
+      sp.innerHTML=h;
+      var ad=document.getElementById('ol2SetAdd'); if(ad) ad.onclick=function(){ if(typeof openAddMemberModal==='function') openAddMemberModal(); };
+      var pb=document.getElementById('ol2SetPush'); if(pb) lpEnablePush(pb);
+      var so=document.getElementById('ol2SetOut'); if(so) so.onclick=function(){ if(typeof signOut==='function') signOut(); };
     }
 
     // ── My Week / weekly horizon ──
