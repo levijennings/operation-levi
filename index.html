@@ -1534,6 +1534,11 @@
                     { assignees: [], subtasks: [], raci: { R: [], A: '', C: [], I: [] }, status: 'backlog' },
                     r.card || {}
                 ));
+                // Seed change-tracking so member pushes also upsert only what changed.
+                window._lpKnownTaskIds = new Set(items.map(it => String(it.id)));
+                window._lpTaskSnapshots = {};
+                items.forEach(it => { window._lpTaskSnapshots[String(it.id)] = JSON.stringify(it); });
+                window._lpRowsLoaded = true;
                 // Members get a focused, task-only view; workspace-wide collections stay empty.
                 goals = []; teams = { ACST: [], DVLMNT: [], Personal: [] };
                 dailyHistory = []; weekHistory = []; top3Manual = [];
@@ -1630,9 +1635,39 @@
                 templateId: item.templateId || '', completedAt: item.completedAt || '',
             }));
 
-            // Admin sees everything (loaded above). Mirror the full item set into the per-row
-            // `tasks` table so members reading it get the admin's latest (dual-write / Option B).
-            _syncTasksTable(items);
+            // ── Foundation: the per-row `tasks` table is the source of truth for tasks. ──
+            // Rows win over the blob copy (every write path dual-writes rows, so rows are
+            // always at least as fresh — this ends whole-blob last-write-wins for tasks and
+            // the old prune-from-stale-state data-loss hazard).
+            try {
+                const { data: rowData, error: rowErr } = await _sb
+                    .from('tasks').select('id, card, updated_at').eq('workspace_id', _workspaceId);
+                window._lpKnownTaskIds = new Set();
+                window._lpTaskSnapshots = {};
+                if (!rowErr && rowData) {
+                    const rowMap = new Map(rowData.map(r => [String(r.id), r]));
+                    // Replace blob copies with their authoritative row versions.
+                    items = items.map(it => {
+                        const r = rowMap.get(String(it.id));
+                        return r && r.card ? Object.assign({}, it, r.card) : it;
+                    });
+                    // Tasks that exist only as rows (created by a member / another device).
+                    const haveIds = new Set(items.map(it => String(it.id)));
+                    rowData.forEach(r => {
+                        if (!haveIds.has(String(r.id)) && r.card) items.push(r.card);
+                    });
+                    rowData.forEach(r => { window._lpKnownTaskIds.add(String(r.id)); });
+                    items.forEach(it => { window._lpTaskSnapshots[String(it.id)] = JSON.stringify(it); });
+                    window._lpRowsLoaded = true;
+                } else {
+                    window._lpRowsLoaded = false; // rows unavailable — never prune on this session
+                    console.warn('[tasks sync] row load failed:', rowErr && rowErr.message);
+                }
+            } catch (e) { window._lpRowsLoaded = false; console.warn('[tasks sync] row load threw:', e.message); }
+
+            // Mirror only blob-only tasks that had no row yet (bootstrap), instead of
+            // re-stamping every row's updated_at on every load.
+            _syncTasksTable(items.filter(it => !window._lpKnownTaskIds || !window._lpKnownTaskIds.has(String(it.id))));
 
             // Mirror to localStorage so the app works offline after first load
             localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries }));
@@ -1646,7 +1681,17 @@
         async function _syncTasksTable(itemList, opts = {}) {
             if (!_workspaceId || !_sb) return;
             try {
-                const rows = (itemList || []).filter(it => it && it.id != null).map(it => ({
+                if (!window._lpTaskSnapshots) window._lpTaskSnapshots = {};
+                if (!window._lpKnownTaskIds) window._lpKnownTaskIds = new Set();
+                // Foundation: upsert ONLY tasks that actually changed since load / last push.
+                // Unchanged tasks keep their row's updated_at, so a stale device can no longer
+                // overwrite a fresher row with an identical-looking old copy en masse.
+                const changed = (itemList || []).filter(it => {
+                    if (!it || it.id == null) return false;
+                    const key = String(it.id);
+                    return window._lpTaskSnapshots[key] !== JSON.stringify(it);
+                });
+                const rows = changed.map(it => ({
                     id: String(it.id),
                     workspace_id: _workspaceId,
                     category: it.category || null,
@@ -1659,13 +1704,22 @@
                 if (rows.length) {
                     const { error } = await _sb.from('tasks').upsert(rows, { onConflict: 'id' });
                     if (error) { console.warn('[tasks sync] upsert failed:', error.message); return; }
+                    changed.forEach(it => {
+                        const key = String(it.id);
+                        window._lpTaskSnapshots[key] = JSON.stringify(it);
+                        window._lpKnownTaskIds.add(key);
+                    });
                 }
-                // Admin is the source of truth: remove rows for tasks that no longer exist.
-                if (_userRole === 'admin' && !opts.membersOnly) {
-                    const keep = new Set(rows.map(r => r.id));
-                    const { data: existing } = await _sb.from('tasks').select('id').eq('workspace_id', _workspaceId);
-                    const remove = (existing || []).map(e => e.id).filter(id => !keep.has(id));
-                    if (remove.length) await _sb.from('tasks').delete().in('id', remove);
+                // Safe prune: only remove rows this session actually LOADED and the user then
+                // deleted locally — never rows it has not seen (another device's new tasks),
+                // and never when the initial row load failed.
+                if (_userRole === 'admin' && !opts.membersOnly && window._lpRowsLoaded) {
+                    const current = new Set((items || []).filter(it => it && it.id != null).map(it => String(it.id)));
+                    const remove = [...window._lpKnownTaskIds].filter(id => !current.has(id));
+                    if (remove.length) {
+                        const { error: delErr } = await _sb.from('tasks').delete().in('id', remove);
+                        if (!delErr) remove.forEach(id => { window._lpKnownTaskIds.delete(id); delete window._lpTaskSnapshots[id]; });
+                    }
                 }
             } catch (e) {
                 console.warn('[tasks sync]', e.message);
@@ -1683,16 +1737,14 @@
                 return;
             }
 
-            // Admin: persist the full workspace blob …
+            // Admin: rows first (tasks source of truth), then the blob for everything else.
+            await _syncTasksTable(items);
             const { error } = await _sb.from('workspace_data').upsert({
                 workspace_id: _workspaceId,
                 data: { items, goals, teams, dailyHistory, weekHistory, peopleProfiles, top3Manual, widgetLayouts, events, libraries },
                 updated_at: new Date().toISOString()
             }, { onConflict: 'workspace_id' });
             if (error) console.warn('[Supabase] save failed:', error.message);
-
-            // … and mirror items into the per-row tasks table (dual-write) so members stay current.
-            _syncTasksTable(items);
         }
 
         /** Debounce cloud saves — waits 2 s after last saveData() call */
@@ -1897,6 +1949,9 @@ saveData() → localStorage (immediate, always)
                         <label style="font-size:11px;color:var(--text-3);display:block;margin-bottom:4px;">Temporary Password</label>
                         <input id="newMemberPwd" type="text" value="${tempPwd}"
                             style="width:100%;background:#252525;border:1px solid #333;border-radius:8px;padding:10px 12px;color:#F0F0F0;font-size:13px;outline:none;box-sizing:border-box;font-family:monospace;">
+                        <label style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-2);margin-top:8px;cursor:pointer;">
+                            <input id="newMemberSendInvite" type="checkbox" checked style="accent-color:#C08428;"> Email them a welcome invite with sign-in details
+                        </label>
                     </div>
                     <div style="margin-bottom:12px;">
                         <label style="font-size:11px;color:var(--text-3);display:block;margin-bottom:4px;">Role</label>
@@ -1968,7 +2023,26 @@ saveData() → localStorage (immediate, always)
             }
 
             document.getElementById('addMemberModal').remove();
-            showToast('✓ ' + name + ' added — share their password: ' + pwd);
+
+            // Record their email on the People profile so assignment notifications can reach them.
+            try {
+                if (!peopleProfiles[name]) peopleProfiles[name] = {};
+                if (!peopleProfiles[name].email) { peopleProfiles[name].email = email; saveData(); }
+            } catch (e) {}
+
+            // Foundation: email the new member a welcome invite (server-built template, Resend).
+            const wantInvite = !!(document.getElementById('newMemberSendInvite')?.checked);
+            if (wantInvite) {
+                try {
+                    const r = await fetch('/api/notify', { method: 'POST', headers: window.lpApiHeaders ? window.lpApiHeaders() : { 'content-type': 'application/json' },
+                        body: JSON.stringify({ kind: 'welcome', to: email, person: name, invite: { email, tempPassword: pwd, invitedBy: _userName || 'Levi' } }) });
+                    if (r.ok) showToast('✓ ' + name + ' added — invite emailed to ' + email);
+                    else { const j = await r.json().catch(() => ({}));
+                        showToast(j.error === 'no_from' ? ('✓ ' + name + ' added — email needs a verified sender; share their password: ' + pwd) : ('✓ ' + name + ' added — invite email failed; share their password: ' + pwd)); }
+                } catch (e) { showToast('✓ ' + name + ' added — invite email failed; share their password: ' + pwd); }
+            } else {
+                showToast('✓ ' + name + ' added — share their password: ' + pwd);
+            }
             _renderTeamList();
         }
 
@@ -6232,37 +6306,38 @@ saveData() → localStorage (immediate, always)
             }
         }
 
-        function uploadDocuments() {
+        async function uploadDocuments() {
             const it = items.find(i => i.id === selectedItemId);
             if (!it) return;
             if (!it.documents) it.documents = [];
             const input = document.getElementById('docUploadInput');
-            const files = input.files;
-            let processed = 0;
-            const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB per file (localStorage safe)
-            Array.from(files).forEach(file => {
-                if (file.size > MAX_FILE_SIZE) {
-                    showToast('⚠️ "' + file.name + '" is too large (max 2 MB)');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    it.documents.push({
-                        name: file.name,
-                        size: file.size,
-                        type: file.type,
-                        data: e.target.result,
-                        uploadedAt: new Date().toISOString()
-                    });
+            const files = Array.from(input.files || []);
+            const cloud = !!(_sb && _workspaceId); // Foundation: real files go to Supabase Storage
+            const MAX_FILE_SIZE = (cloud ? 20 : 2) * 1024 * 1024;
+            for (const file of files) {
+                if (file.size > MAX_FILE_SIZE) { showToast('⚠️ "' + file.name + '" is too large (max ' + (cloud ? 20 : 2) + ' MB)'); continue; }
+                if (cloud) {
+                    const safe = file.name.replace(/[^\w.\-]+/g, '_');
+                    const path = 'ws/' + _workspaceId + '/' + it.id + '/' + Date.now().toString(36) + '-' + safe;
+                    const { error } = await _sb.storage.from('documents').upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+                    if (error) { showToast('⚠️ Upload failed for "' + file.name + '": ' + error.message); continue; }
+                    it.documents.push({ name: file.name, size: file.size, type: file.type, storagePath: path, uploadedAt: new Date().toISOString() });
                     addTimelineEntry(it.id, 'Uploaded document: ' + file.name);
-                    processed++;
-                    if (processed === files.length) {
-                        saveData();
-                        openDetail(selectedItemId);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
+                } else {
+                    // Offline/local-only fallback: keep legacy base64-in-blob behavior.
+                    await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            it.documents.push({ name: file.name, size: file.size, type: file.type, data: e.target.result, uploadedAt: new Date().toISOString() });
+                            addTimelineEntry(it.id, 'Uploaded document: ' + file.name);
+                            resolve();
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+            }
+            saveData();
+            openDetail(selectedItemId);
             input.value = '';
         }
 
@@ -6270,16 +6345,24 @@ saveData() → localStorage (immediate, always)
             const it = items.find(i => i.id === selectedItemId);
             if (!it || !it.documents) return;
             const docName = it.documents[idx].name;
+            const sp = it.documents[idx].storagePath;
+            if (sp && _sb) { _sb.storage.from('documents').remove([sp]).catch(() => {}); }
             it.documents.splice(idx, 1);
             addTimelineEntry(it.id, 'Removed document: ' + docName);
             saveData();
             openDetail(selectedItemId);
         }
 
-        function downloadDocument(idx) {
+        async function downloadDocument(idx) {
             const it = items.find(i => i.id === selectedItemId);
             if (!it || !it.documents || !it.documents[idx]) return;
             const doc = it.documents[idx];
+            if (doc.storagePath && _sb) {
+                const { data, error } = await _sb.storage.from('documents').createSignedUrl(doc.storagePath, 300, { download: doc.name });
+                if (error || !data?.signedUrl) { showToast('⚠️ Could not fetch file: ' + (error?.message || 'unknown')); return; }
+                window.open(data.signedUrl, '_blank');
+                return;
+            }
             const a = document.createElement('a');
             a.href = doc.data;
             a.download = doc.name;
@@ -9082,6 +9165,17 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     if(/\b(draft|write|summari[sz]e|recap|memo|doc|brief|outline|update)\b/.test(low)) return 'Document';
     return '';
   }
+  function lpNotifyAssign(person, card){
+    try{
+      if(!person || person==='Wingman') return;
+      var me=''; try{ me=(typeof _userName!=='undefined'&&_userName)||''; }catch(e){}
+      if(person===me) return;
+      var em=''; try{ em=(typeof peopleProfiles!=='undefined'&&peopleProfiles&&peopleProfiles[person]&&peopleProfiles[person].email)||''; }catch(e){}
+      if(!em) return;
+      fetch('/api/notify',{method:'POST',headers:apiHeaders(),body:JSON.stringify({kind:'assign',to:em,person:person,task:{title:card.title,due:card.dueDate,notes:card.notes,deliverable:card.deliverable}})})
+        .then(function(r){ if(r.ok) toast('✉ '+person+' notified'); }).catch(function(){});
+    }catch(e){}
+  }
   function callRun(card, parts, instruction, prev, cb){
     var payload={card:card,skill:parts.skill,template:parts.tmpl,context:parts.ctx,preferences:parts.prefs};
     if(instruction){ payload.instruction=instruction; payload.previousDraft=prev||''; }
@@ -9469,7 +9563,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function assignTri(it, who, row){
       if(row) row.classList.add('gone');
       if(who==='Wingman'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('▸ Assigned to Wingman — drafting…'); draftFor(it); }
-      else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Assigned to '+(who===meName()?'you':who)); }
+      else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Assigned to '+(who===meName()?'you':who)); if(who) lpNotifyAssign(who, it); }
       setTimeout(showTriage, 280);
     }
     function runAllTri(){
@@ -9949,7 +10043,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         et.oninput=function(){ card.title=et.value; var h=document.getElementById('ol2RevTitle'); if(h) h.textContent=et.value||'Untitled'; };
         et.onchange=function(){ persist(); };
         document.getElementById('edStatus').onchange=function(){ var nv=this.value; if(nv==='done' && card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)){ this.value=card.status; return; } } card.status=nv; card.columnEnteredAt=Date.now(); lpAudit(card,'Status → '+nv); persist(); updateCounts(); if(nv==='done') openReview(card); };
-        document.getElementById('edOwner').onchange=function(){ card.assignees=[this.value]; card.responsible=this.value; lpAudit(card,'Owner → '+this.value); persist(); };
+        document.getElementById('edOwner').onchange=function(){ card.assignees=[this.value]; card.responsible=this.value; lpAudit(card,'Owner → '+this.value); persist(); lpNotifyAssign(this.value, card); };
         document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; lpAudit(card,'Due → '+(this.value||'cleared')); persist(); };
         document.getElementById('edCat').onchange=function(){ card.category=this.value; lpAudit(card,'Category → '+this.value); persist(); };
         document.getElementById('edDeliv').onchange=function(){ card.deliverable=this.value; lpAudit(card,'Deliverable → '+(this.value||'cleared')); persist(); };
@@ -10122,6 +10216,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
       persist(); closeCapture(); showBoard();
+      if(own && own!==meName()) lpNotifyAssign(own, it);
       if(capMode==='do-it'){
         toast('▸ Card created — Wingman is drafting…');
         var parts=assemble(it);
