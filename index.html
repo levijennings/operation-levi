@@ -1010,6 +1010,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+    <!-- Vercel Web Analytics — inert until Analytics is enabled on the project in the Vercel dashboard -->
+    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
     <div class="container">
@@ -1096,7 +1098,7 @@
                         <svg fill="currentColor" width="16" height="16" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         <span class="settings-label">Export Backup</span>
                     </button>
-                    <button class="nav-item" onclick="const key=prompt('Enter Anthropic API Key:',localStorage.getItem('operation_levi_apikey')||'');if(key!==null){localStorage.setItem('operation_levi_apikey',key);showToast('API key saved');}" style="width:100%;" title="Settings">
+                    <button class="nav-item" onclick="openSettingsModal()" style="width:100%;" title="Settings">
                         <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
                         <span class="settings-label">Settings</span>
                     </button>
@@ -1458,6 +1460,7 @@
 
             // Check for existing session
             const { data: { session } } = await _sb.auth.getSession();
+            window._lpToken = session?.access_token || '';
             if (session?.user) {
                 _currentUser = session.user;
                 await _loadWorkspaceMembership();
@@ -1465,8 +1468,9 @@
                 _showAuthOverlay();
             }
 
-            // React to future sign-in / sign-out events
+            // React to future sign-in / sign-out events (TOKEN_REFRESHED keeps _lpToken fresh for /api/* calls)
             _sb.auth.onAuthStateChange(async (event, session) => {
+                window._lpToken = session?.access_token || '';
                 if (event === 'SIGNED_IN' && session?.user) {
                     _currentUser = session.user;
                     _hideAuthOverlay();
@@ -1479,6 +1483,8 @@
                     _updateUserDisplay();
                 }
             });
+            // Shared headers for all /api/* calls — the server now requires this token.
+            window.lpApiHeaders = function(){ return { 'content-type':'application/json', 'authorization':'Bearer ' + (window._lpToken || '') }; };
         }
 
         /** Load the user's workspace membership and then pull cloud data */
@@ -2558,6 +2564,10 @@ saveData() → localStorage (immediate, always)
             if (typeof _workspaceId !== 'undefined' && _workspaceId && typeof _sb !== 'undefined' && _sb) _pushToCloud();
             renderCurrentView();
         }
+
+        // Fix (Aug 2026): renderAll was called by cloud-sync paths but never defined,
+        // throwing a ReferenceError that silently aborted post-sync UI updates.
+        function renderAll(){ try { renderCurrentView(); } catch(e) { console.warn('renderAll:', e); } }
 
         function switchView(view) {
             currentView = view;
@@ -6193,9 +6203,18 @@ saveData() → localStorage (immediate, always)
         // ═══════════════════════════════════════════════════════════════════════════
         // AI SUMMARY
         // ═══════════════════════════════════════════════════════════════════════════
+        // Server-side AI helper (replaces browser-direct Anthropic calls; requires signed-in session)
+        async function lpAssist(prompt, maxTokens) {
+            const res = await fetch('/api/assist', { method:'POST',
+                headers:{ 'content-type':'application/json', 'authorization':'Bearer ' + (window._lpToken||'') },
+                body: JSON.stringify({ prompt: prompt, max_tokens: maxTokens || 500 }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || data.error || ('HTTP ' + res.status));
+            return data.text || '';
+        }
+        function lpEscapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
         async function generateAISummary() {
-            const apiKey = localStorage.getItem('operation_levi_apikey');
-            if (!apiKey) { showToast('Set API key in settings first'); return; }
             const box = document.getElementById('aiSummaryBox');
             if (!box) return;
             box.style.display = 'block';
@@ -6206,20 +6225,10 @@ saveData() → localStorage (immediate, always)
             const active = items.filter(i => i.status === 'active');
             const prompt = `You are an executive assistant for Levi, a startup founder. Give a sharp, motivating 3-4 sentence morning briefing for today (${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}). Be direct and actionable.\n- Overdue (${overdue.length}): ${overdue.map(i=>i.title).join(', ')||'none'}\n- This week (${thisWeek.length}): ${thisWeek.map(i=>i.title).join(', ')||'none'}\n- Active (${active.length}): ${active.map(i=>i.title).join(', ')||'none'}\n- Waiting (${waiting.length}): ${waiting.map(i=>i.title+(i.waitingFrom?' (from '+i.waitingFrom+')':'')).join(', ')||'none'}\nRespond with only the briefing.`;
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,messages:[{role:'user',content:prompt}]})
-                });
-                const data = await res.json();
-                if (data.error) {
-                    box.textContent = 'API error: ' + (data.error.message || JSON.stringify(data.error));
-                    return;
-                }
-                box.textContent = data.content?.[0]?.text || 'Could not generate summary.';
+                box.textContent = (await lpAssist(prompt, 300)) || 'Could not generate summary.';
             } catch(e) {
                 console.error('AI summary error:', e);
-                box.textContent = 'Summary error: ' + e.message + '. Check console for details.';
+                box.textContent = 'Summary error: ' + e.message;
             }
         }
 
@@ -6858,8 +6867,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         // ═══════════════════════════════════════════════════════════════════════════
         function openSettingsModal() {
             const modal = document.getElementById('modal');
-            const apiKey = localStorage.getItem('operation_levi_apikey') || '';
             const theme = localStorage.getItem('op_levi_theme') || 'dark';
+            try { localStorage.removeItem('operation_levi_apikey'); } catch(e) {} // legacy key cleanup — AI now runs server-side
             modal.innerHTML = `
                 <h2 style="margin-bottom:4px;">⚙️ Settings</h2>
                 <p style="color:var(--text-2);font-size:12px;margin-bottom:24px;">Configure your taskboard preferences.</p>
@@ -6873,12 +6882,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
                 </div>
 
                 <div class="detail-section" style="margin-bottom:20px;">
-                    <div class="detail-label">Anthropic API Key</div>
-                    <div style="display:flex;gap:8px;margin-top:6px;">
-                        <input id="settingsApiKey" type="password" class="detail-input" placeholder="sk-ant-..." value="${apiKey}" style="flex:1;">
-                        <button class="btn btn-primary" onclick="const k=document.getElementById('settingsApiKey').value;localStorage.setItem('operation_levi_apikey',k);showToast('✓ API key saved');" style="font-size:12px;">Save</button>
-                    </div>
-                    <div style="font-size:10px;color:var(--text-3);margin-top:4px;">Used for AI Day Brief and AI task generation.</div>
+                    <div class="detail-label">AI</div>
+                    <div style="font-size:11px;color:var(--text-2);margin-top:6px;">Wingman runs server-side with your signed-in account — no API key needed.</div>
                 </div>
 
                 <div class="detail-section" style="margin-bottom:20px;">
@@ -7919,24 +7924,12 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             historyEl.innerHTML += `<div id="aiResponse" style="padding:6px;margin-bottom:4px;border-radius:var(--radius-sm);background:var(--accent-subtle);font-size:11px;color:var(--text-2);">Thinking...</div>`;
             historyEl.scrollTop = historyEl.scrollHeight;
 
-            const apiKey = localStorage.getItem('operation_levi_apikey');
-            if (!apiKey) {
-                document.getElementById('aiResponse').innerHTML = '<strong>Claude:</strong> Set your API key first (Settings icon in sidebar).';
-                return;
-            }
-
             const context = `Item: "${item.title}" (${item.type}, ${item.category})\nStatus: ${item.status}\nDeliverable: ${item.deliverable}\nNotes: ${item.notes}\nSubtasks: ${(item.subtasks||[]).map(s=>s.title+(s.done?' ✓':'')).join(', ')||'none'}\nDue: ${item.dueDate||'none'}\nProgress: ${getItemProgress(item).pct}%`;
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,messages:[{role:'user',content:`Context:\n${context}\n\nQuestion: ${msg}\n\nRespond concisely.`}]})
-                });
-                const data = await res.json();
-                const reply = data.content?.[0]?.text || 'No response';
-                document.getElementById('aiResponse').innerHTML = '<strong>Claude:</strong> ' + reply.replace(/\n/g,'<br>');
-                addTimelineEntry(item.id, 'Asked Claude AI: ' + msg.substring(0,50));
+                const reply = (await lpAssist(`Context:\n${context}\n\nQuestion: ${msg}\n\nRespond concisely.`, 500)) || 'No response';
+                document.getElementById('aiResponse').innerHTML = '<strong>Wingman:</strong> ' + lpEscapeHtml(reply).replace(/\n/g,'<br>');
+                addTimelineEntry(item.id, 'Asked Wingman: ' + msg.substring(0,50));
             } catch(e) {
                 document.getElementById('aiResponse').innerHTML = '<strong>Error:</strong> ' + e.message;
             }
@@ -7945,8 +7938,6 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         async function askClaudeToWork(action) {
             const item = items.find(i => i.id === selectedItemId);
             if (!item) return;
-            const apiKey = localStorage.getItem('operation_levi_apikey');
-            if (!apiKey) { showToast('Set API key first'); return; }
 
             const context = `Item: "${item.title}" (${item.type}, ${item.category})\nDeliverable: ${item.deliverable}\nNotes: ${item.notes}\nSubtasks: ${(item.subtasks||[]).map(s=>s.title).join(', ')||'none'}`;
 
@@ -7961,14 +7952,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             historyEl.innerHTML += `<div id="aiResponse" style="padding:6px;margin-bottom:4px;border-radius:var(--radius-sm);background:var(--accent-subtle);font-size:11px;color:var(--text-2);">Working on it...</div>`;
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:800,messages:[{role:'user',content:prompt}]})
-                });
-                const data = await res.json();
-                const reply = data.content?.[0]?.text || 'No response';
-                document.getElementById('aiResponse').innerHTML = '<strong>Claude:</strong> ' + reply.replace(/\n/g,'<br>');
+                const reply = (await lpAssist(prompt, 800)) || 'No response';
+                document.getElementById('aiResponse').innerHTML = '<strong>Wingman:</strong> ' + lpEscapeHtml(reply).replace(/\n/g,'<br>');
 
                 // If breakdown, offer to auto-add subtasks
                 if (action === 'breakdown') {
@@ -8017,9 +8002,6 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             const el = document.getElementById('dayBriefContent');
             if (!el) return;
             el.textContent = 'Generating...';
-            const apiKey = localStorage.getItem('operation_levi_apikey');
-            if (!apiKey) { el.textContent = 'Set your Anthropic API key in Settings to enable AI briefs.'; return; }
-
             const todayDB = new Date(); todayDB.setHours(0,0,0,0);
             const todayStr = todayDB.toISOString().split('T')[0];
             const yesterday = new Date(todayDB.getTime() - 86400000);
@@ -8050,20 +8032,10 @@ TODAY'S AGENDA:
 Format: Start with "Yesterday:" (1-2 sentences on yesterday's wins). Then "Today:" (prioritized focus for today, 2-3 sentences). Then "Watch:" (1 sentence on blockers or risks). Be motivating and direct. No bullet points.`;
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})
-                });
-                const data = await res.json();
-                if (data.error) {
-                    el.textContent = 'API error: ' + (data.error.message || JSON.stringify(data.error));
-                    return;
-                }
-                el.innerHTML = (data.content?.[0]?.text || 'Could not generate brief').replace(/\n/g,'<br>');
+                el.innerHTML = lpEscapeHtml((await lpAssist(prompt, 400)) || 'Could not generate brief').replace(/\n/g,'<br>');
             } catch(e) {
                 console.error('AI brief error:', e);
-                el.textContent = 'Brief error: ' + e.message + '. Check console for details.';
+                el.textContent = 'Brief error: ' + e.message;
             }
         }
 
@@ -8071,9 +8043,6 @@ Format: Start with "Yesterday:" (1-2 sentences on yesterday's wins). Then "Today
             const el = document.getElementById('weekBriefContent');
             if (!el) return;
             el.textContent = 'Generating...';
-            const apiKey = localStorage.getItem('operation_levi_apikey');
-            if (!apiKey) { el.textContent = 'Set your Anthropic API key in Settings to enable AI briefs.'; return; }
-
             const todayWB = new Date(); todayWB.setHours(0,0,0,0);
             const weekStart = new Date(todayWB);
             const dayOfWeek = weekStart.getDay();
@@ -8103,13 +8072,7 @@ COMPLETED THIS WEEK: ${completedThisWeek.length} items
 Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on momentum). "Risks:" (1 blockers to watch). Motivating but realistic.`;
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-                    body: JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:prompt}]})
-                });
-                const data = await res.json();
-                el.innerHTML = (data.content?.[0]?.text || 'Could not generate brief').replace(/\n/g,'<br>');
+                el.innerHTML = lpEscapeHtml((await lpAssist(prompt, 400)) || 'Could not generate brief').replace(/\n/g,'<br>');
             } catch(e) {
                 el.textContent = 'Error: ' + e.message;
             }
@@ -8589,12 +8552,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 <script>
 (function(){
   if(window.__vrun) return; window.__vrun=true;
-  var RUN_KEY='operation-levi'; // must match Vercel RUN_SHARED_SECRET if you set that env var (optional)
+  function apiHeaders(){ return {'content-type':'application/json','authorization':'Bearer '+(window._lpToken||'')}; } // signed-in Supabase token — required by /api/*
   function L(){ try{ return (typeof libraries!=='undefined'&&libraries)?libraries:{skills:[],templates:[],preferences:[],context:[]}; }catch(e){ return {skills:[],templates:[],preferences:[],context:[]}; } }
   function ITEMS(){ try{ return (typeof items!=='undefined'&&items)?items:[]; }catch(e){ return []; } }
   function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
   function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
-  function esc(s){ return String(s==null?'':s); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
   function matchSkill(card){
     var sk=(L().skills||[]); if(!sk.length) return null;
@@ -8674,7 +8637,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     go.onclick=function(){
       var skill=findByName(sk,sel.value); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx);
       go.textContent='Drafting…'; go.disabled=true; out.innerHTML='';
-      fetch('/api/run',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({card:card,skill:skill,template:tmpl,context:ctx,preferences:prefs})})
+      fetch('/api/run',{method:'POST',headers:apiHeaders(),body:JSON.stringify({card:card,skill:skill,template:tmpl,context:ctx,preferences:prefs})})
         .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
         .then(function(res){
           go.textContent='Run with Claude'; go.disabled=false;
@@ -9084,13 +9047,13 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 <script>
 (function(){
   if(window.__ol2) return; window.__ol2=true;
-  var RUN_KEY='operation-levi';
+  function apiHeaders(){ return {'content-type':'application/json','authorization':'Bearer '+(window._lpToken||'')}; } // signed-in Supabase token — required by /api/*
   function ITEMS(){ try{ return (typeof items!=='undefined'&&items)?items:[]; }catch(e){ return []; } }
   function L(){ try{ return (typeof libraries!=='undefined'&&libraries)?libraries:{skills:[],templates:[],preferences:[],context:[]}; }catch(e){ return {skills:[],templates:[],preferences:[],context:[]}; } }
   function persist(){ try{ if(typeof saveData==='function') saveData(); }catch(e){} }
   function toast(m){ try{ if(typeof showToast==='function') showToast(m); }catch(e){} }
   function clickFab(id){ var f=document.getElementById(id); if(f) f.click(); }
-  function esc(s){ return String(s==null?'':s); }
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function initials(name){ name=String(name||'').trim(); if(!name) return '–'; var p=name.split(/\s+/); return ((p[0]||'')[0]||'')+((p[1]||'')[0]||''); }
   function owner(it){ if(it.assignees&&it.assignees.length) return it.assignees[0]; if(it.raci&&it.raci.A) return it.raci.A; if(it.responsible) return it.responsible; try{ return (typeof _userName!=='undefined'&&_userName)||'Levi'; }catch(e){ return 'Levi'; } }
   function dueLabel(d){ if(!d) return ''; try{ var dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; var now=new Date(); var t=new Date(now.getFullYear(),now.getMonth(),now.getDate()); var diff=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-t)/86400000); if(diff===0) return 'today'; if(diff===1) return 'tmrw'; if(diff===-1) return 'yest'; if(diff>1&&diff<7) return dt.toLocaleDateString(undefined,{weekday:'short'}); return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){ return d; } }
@@ -9100,10 +9063,23 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   function deriveContext(card,skill){ var ctx=(L().context||[]); if(skill&&skill.defaultContext){ var c=findByName(ctx,skill.defaultContext); if(c) return c; } var t=(card.title||'').toLowerCase(); for(var i=0;i<ctx.length;i++){ if(ctx[i].name&&t.indexOf(String(ctx[i].name).toLowerCase())>=0) return ctx[i]; } return null; }
   function derivePrefs(ctx){ return (L().preferences||[]).filter(function(p){ return (!p.scope||p.scope==='global'||p.scope==='category') || (ctx&&p.appliesTo&&p.appliesTo===ctx.name); }); }
   function assemble(card){ var skill=matchSkill(card); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx); return {skill:skill,tmpl:tmpl,ctx:ctx,prefs:prefs}; }
+  var DELIV_TYPES=['','Email','Document','Deck','Spreadsheet','Research brief','Plan','Design / asset','Code','Message','Decision'];
+  function inferDeliverable(low){
+    if(/\b(email|reply|respond|follow[- ]?up)\b/.test(low)) return 'Email';
+    if(/\b(deck|presentation|slides?)\b/.test(low)) return 'Deck';
+    if(/\b(spreadsheet|sheet|budget|forecast|model)\b/.test(low)) return 'Spreadsheet';
+    if(/\b(research|find|compare|look ?up|options?|listings?)\b/.test(low)) return 'Research brief';
+    if(/\b(plan|roadmap|schedule|itinerary)\b/.test(low)) return 'Plan';
+    if(/\b(design|logo|graphic|mockup|banner)\b/.test(low)) return 'Design / asset';
+    if(/\b(code|script|fix|bug|deploy)\b/.test(low)) return 'Code';
+    if(/\b(text|message|post|tweet|slack)\b/.test(low)) return 'Message';
+    if(/\b(draft|write|summari[sz]e|recap|memo|doc|brief|outline|update)\b/.test(low)) return 'Document';
+    return '';
+  }
   function callRun(card, parts, instruction, prev, cb){
     var payload={card:card,skill:parts.skill,template:parts.tmpl,context:parts.ctx,preferences:parts.prefs};
     if(instruction){ payload.instruction=instruction; payload.previousDraft=prev||''; }
-    fetch('/api/run',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify(payload)})
+    fetch('/api/run',{method:'POST',headers:apiHeaders(),body:JSON.stringify(payload)})
       .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
       .then(cb).catch(function(e){ cb({ok:false,status:0,j:{error:'fetch',detail:String(e&&e.message||e)}}); });
   }
@@ -9126,7 +9102,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   function lpLinks(it){ var out=[]; [['Notion',it.notionUrl],['Figma',it.figmaUrl],['Google Doc',it.googleDocsUrl],['Word',it.msDocsUrl],['Excel',it.msExcelUrl]].forEach(function(p){ if(p[1]) out.push({label:p[0],url:p[1]}); }); (it.urls||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.label||u.name||lpLinkLabel(u.url),url:u.url}); }); (it.documents||[]).forEach(function(u){ if(typeof u==='string'&&u) out.push({label:lpLinkLabel(u),url:u}); else if(u&&u.url) out.push({label:u.name||u.label||'Document',url:u.url}); }); return out; }
   function lpMins(m){ m=Math.round(m||0); var h=Math.floor(m/60), mm=m%60; return (h?(h+'h '):'')+mm+'m'; }
   function lpWhen(ts){ if(!ts) return ''; try{ var d=new Date(ts); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
-  function lpAssess(card, cb){ var L0={}; try{ L0=(typeof L==='function')?(L()||{}):{}; }catch(e){} var libs={ skills:(L0.skills||[]).map(function(s){return s.name;}).filter(Boolean), templates:(L0.templates||[]).map(function(t){return t.name;}).filter(Boolean), context:(L0.context||[]).map(function(c){return c.name;}).filter(Boolean) }; var rk=(typeof RUN_KEY!=='undefined')?RUN_KEY:'operation-levi'; fetch('/api/assess',{method:'POST',headers:{'content-type':'application/json','x-ol-key':rk},body:JSON.stringify({task:{title:card.title,notes:card.notes,category:card.category},libraries:libs})}).then(function(r){return r.json();}).then(function(j){ if(cb) cb(j); }).catch(function(){ if(cb) cb(null); }); }
+  function lpAssess(card, cb){ var L0={}; try{ L0=(typeof L==='function')?(L()||{}):{}; }catch(e){} var libs={ skills:(L0.skills||[]).map(function(s){return s.name;}).filter(Boolean), templates:(L0.templates||[]).map(function(t){return t.name;}).filter(Boolean), context:(L0.context||[]).map(function(c){return c.name;}).filter(Boolean) }; fetch('/api/assess',{method:'POST',headers:apiHeaders(),body:JSON.stringify({task:{title:card.title,notes:card.notes,category:card.category,deliverable:card.deliverable||''},libraries:libs})}).then(function(r){return r.json();}).then(function(j){ if(cb) cb(j); }).catch(function(){ if(cb) cb(null); }); }
   function lpProof(card){ var url=window.prompt('This task requires proof. Paste a Zoom (or other) link:', (card.proof&&card.proof.url)||''); if(url===null||!url.trim()) return false; var note=window.prompt('Add an explanation of what was completed:', (card.proof&&card.proof.note)||''); if(note===null) return false; var u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; card.proof={url:u,note:(note||'').trim(),by:meName(),ts:Date.now()}; return true; }
   var homeExpandedPerson=null;
   function lpAudit(card, action){ if(!card.timeline) card.timeline=[]; card.timeline.push({by:meName(),ts:Date.now(),action:action}); }
@@ -9600,8 +9576,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     function lpAISummary(kind, sig, data, cb){
       var ck = kind + ':' + sig;
       if (_lpAICache[ck]) { cb(_lpAICache[ck]); return; }
-      var rk = (typeof RUN_KEY !== 'undefined') ? RUN_KEY : 'operation-levi';
-      fetch('/api/summarize', { method:'POST', headers:{ 'content-type':'application/json', 'x-ol-key':rk }, body:JSON.stringify({ kind:kind, data:data }) })
+      fetch('/api/summarize', { method:'POST', headers:apiHeaders(), body:JSON.stringify({ kind:kind, data:data }) })
         .then(function(r){ return r.json(); })
         .then(function(j){ if (j && j.text) { _lpAICache[ck] = j.text; cb(j.text); } else cb(null); })
         .catch(function(){ cb(null); });
@@ -9940,6 +9915,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
             '<label class="erl">Top 3 today</label><div class="emode"><button type="button" class="emodeb" id="edTop3">☆ Add to Top 3</button></div>'+
             '<label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/>'+
             '<label class="erl">Category</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select>'+
+            '<label class="erl">Deliverable</label><select class="esel" id="edDeliv">'+DELIV_TYPES.map(function(d){ return '<option value="'+esc(d)+'"'+((card.deliverable||'')===d?' selected':'')+'>'+(d||'— pick the end result —')+'</option>'; }).join('')+'</select>'+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:58px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
             lpExtrasHtml(card)+
             '<div class="ulbl">Claude uses</div>'+
@@ -9970,6 +9946,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         document.getElementById('edOwner').onchange=function(){ card.assignees=[this.value]; card.responsible=this.value; lpAudit(card,'Owner → '+this.value); persist(); };
         document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; lpAudit(card,'Due → '+(this.value||'cleared')); persist(); };
         document.getElementById('edCat').onchange=function(){ card.category=this.value; lpAudit(card,'Category → '+this.value); persist(); };
+        document.getElementById('edDeliv').onchange=function(){ card.deliverable=this.value; lpAudit(card,'Deliverable → '+(this.value||'cleared')); persist(); };
         document.getElementById('edNotes').onchange=function(){ card.notes=this.value; persist(); };
         document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
         document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
@@ -10051,7 +10028,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         go.textContent='Sending…'; go.disabled=true; cancel.disabled=true; msg.style.display='none';
         var rawBody=String(bodyI.value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
         var html=(typeof window.lpEmailWrap==='function')?window.lpEmailWrap(rawBody,{preheader:(subI.value||'')}):rawBody;
-        fetch('/api/send',{method:'POST',headers:{'content-type':'application/json','x-ol-key':RUN_KEY},body:JSON.stringify({to:toI.value.trim(),cc:ccI.value.trim(),subject:subI.value,html:html,text:bodyI.value})})
+        fetch('/api/send',{method:'POST',headers:apiHeaders(),body:JSON.stringify({to:toI.value.trim(),cc:ccI.value.trim(),subject:subI.value,html:html,text:bodyI.value})})
           .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
           .then(function(res){
             go.textContent='Confirm & send'; go.disabled=false; cancel.disabled=false;
@@ -10120,17 +10097,18 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var doit=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/.test(low);
       var title=text.replace(/,?\s*(due|by|before)\s+[a-z0-9 ]+$/i,'').replace(/\s+(today|tomorrow|next week)\b/ig,'').trim(); if(!title) title=text; title=title.charAt(0).toUpperCase()+title.slice(1);
       var ctx=null; try{ (L().context||[]).forEach(function(c){ if(!ctx && c.name && low.indexOf(String(c.name).toLowerCase())>=0) ctx=c; }); }catch(e){}
-      capDraft={title:title, due:due, owner:own, cat:cat, ctx:ctx};
-      $c('ol2pvTitle').textContent=title; $c('ol2pvDue').textContent=due||'—'; $c('ol2pvOwner').textContent=own; $c('ol2pvCat').textContent=cat; $c('ol2pvCtx').textContent=ctx?ctx.name:'—';
+      var deliv=inferDeliverable(low);
+      capDraft={title:title, due:due, owner:own, cat:cat, ctx:ctx, deliverable:deliv};
+      $c('ol2pvTitle').textContent=title; $c('ol2pvDue').textContent=due||'—'; $c('ol2pvOwner').textContent=own; $c('ol2pvCat').textContent=cat+(deliv?(' · '+deliv):''); $c('ol2pvCtx').textContent=ctx?ctx.name:'—';
       setCapMode(doit?'do-it':'track-it');
       $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
       $c('ol2capH').textContent='Got it — here’s the card'; $c('ol2capSub').textContent='Claude structured your sentence. Confirm to save.';
-      (function(){ var box=$c('ol2capPv'); if(!box) return; var el=document.getElementById('ol2capAssess'); if(!el){ el=document.createElement('div'); el.id='ol2capAssess'; el.style.cssText='margin-top:10px;font-size:12.5px;color:#8a91a0'; box.appendChild(el); } el.textContent='✦ Assessing readiness…'; lpAssess({title:capDraft.title,notes:'',category:capDraft.cat},function(j){ if(!j||j.confidence==null){ el.textContent=''; if(capDraft) capDraft.assess=null; return; } if(capDraft) capDraft.assess={confidence:Number(j.confidence),reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; var cc=j.confidence>=75?'#46b98a':(j.confidence>=40?'#e0a02c':'#e07a63'); el.innerHTML='<span style="color:'+cc+';font-weight:700">Claude confidence: '+j.confidence+'%</span>'+(j.reason?(' — '+esc(j.reason)):'')+((j.questions&&j.questions.length)?('<div style="margin-top:5px;color:#e0a02c">Needs: '+esc(j.questions[0])+'</div>'):''); }); })();
+      (function(){ var box=$c('ol2capPv'); if(!box) return; var el=document.getElementById('ol2capAssess'); if(!el){ el=document.createElement('div'); el.id='ol2capAssess'; el.style.cssText='margin-top:10px;font-size:12.5px;color:#8a91a0'; box.appendChild(el); } el.textContent='✦ Assessing readiness…'; lpAssess({title:capDraft.title,notes:'',category:capDraft.cat,deliverable:capDraft.deliverable||''},function(j){ if(!j||j.confidence==null){ el.textContent=''; if(capDraft) capDraft.assess=null; return; } if(capDraft) capDraft.assess={confidence:Number(j.confidence),reason:j.reason||'',questions:j.questions||[],suggest:j.suggest||{}}; var cc=j.confidence>=75?'#46b98a':(j.confidence>=40?'#e0a02c':'#e07a63'); el.innerHTML='<span style="color:'+cc+';font-weight:700">Claude confidence: '+j.confidence+'%</span>'+(j.reason?(' — '+esc(j.reason)):'')+((j.questions&&j.questions.length)?('<div style="margin-top:5px;color:#e0a02c">Needs: '+esc(j.questions[0])+'</div>'):''); }); })();
     }
     function capConfirm(){
       if(!capDraft) return; var own=capDraft.owner||meName();
       var it={ id:'v'+Date.now().toString(36), type:'task', title:capDraft.title||'Untitled', category:capDraft.cat||'Personal', status:'thisweek',
-        startDate:'', dueDate:capDraft.due||'', deliverable:'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
+        startDate:'', dueDate:capDraft.due||'', deliverable:capDraft.deliverable||'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
         raci:{R:[],A:'',C:[],I:[]}, assignees:own?[own]:[], responsible:own||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
         waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
         columnEnteredAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
