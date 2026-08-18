@@ -1,0 +1,83 @@
+{
+  "updated": "2026-08-17",
+  "sections": [
+    {
+      "id": "start-here",
+      "group": "Start here",
+      "title": "What Levi's Projects is",
+      "body": "Levi's Projects is a goal-achievement system with an AI team member named **Wingman**. You capture work by speaking or typing, Wingman structures it — picking the deliverable type and splitting real multi-step work into parts — and every part gets an owner: you, a teammate, or Wingman itself. Wingman's parts get drafted for you; nothing sends or ships without your approval.\n\nThe five surfaces, left nav top to bottom:\n- **Brief** — your morning executive brief, today's focus, and team workload.\n- **My Day / My Week** — your personal plan.\n- **Missions** — the project board (columns, calendar, Gantt, Needs review, Done).\n- **Wingman** — the triage queue: route each unsorted item to Wingman or a person.\n- **Crew** — who owns what, capacity, profiles — including Wingman's own card.\n- **Libraries** — Wingman's knowledge: skills, templates, tone, and context.\n\nAmber means Wingman. Anywhere you see the amber ▸, Wingman did it, is doing it, or is asking you something."
+    },
+    {
+      "id": "first-day",
+      "group": "Start here",
+      "title": "Your first day",
+      "body": "1. Tap **＋ New task** (or the mic) and describe something real: *\"Get the investor update out this week — pull the numbers, draft the email, I review before it sends.\"*\n2. Wingman structures it. Check the parts, tap an owner chip to change who does what, confirm.\n3. Watch **Needs review** on the Missions board — Wingman's drafts land there. Open one, refine it with an instruction, approve it.\n4. On the Brief screen, tap **▸ Generate my brief** to see your day the way Wingman sees it. It also arrives by email every morning around 6:30.\n5. Open **Libraries** and run the seeding interview so Wingman learns your companies, people, and voice — the more context it has, the better every draft gets."
+    },
+    {
+      "id": "capture",
+      "group": "How-tos",
+      "title": "Capture a task (speak or type)",
+      "body": "**Speak:** tap the amber mic button (sidebar, Brief header, or the round mic in the phone bar), talk naturally, then Continue.\n**Type:** tap **＋ New task** — the text box is focused and the mic stays off.\n\nEither way Wingman reads the whole sentence: title, workspace, due date (\"Friday\", \"next week\"), owner if you name one, and the **deliverable type** — what the finished thing should be (Email, Document, Deck, Spreadsheet, Research brief, Plan, and so on). The deliverable drives everything downstream: which skill Wingman uses, what shape the draft takes, and what \"approve\" means.\n\nIf the task has real steps, Wingman splits it into 2–5 **parts**, each with its own deliverable and a suggested owner. Tap any owner chip to cycle You → ▸ Wingman → each teammate. Confirming a multi-part task creates a mission with child tasks; Wingman's parts start drafting immediately and teammates get an email for theirs."
+    },
+    {
+      "id": "review",
+      "group": "How-tos",
+      "title": "Review, refine, and approve drafts",
+      "body": "Everything Wingman drafts goes to **Needs review** — it never sends or completes anything on its own.\n\nOpen a card in review to see the draft. Type a revision instruction (\"shorter, and lead with the number\") and run it again — Wingman revises the existing draft rather than starting over. When it's right:\n- **Emails**: Approve opens the send modal; the message goes out through your real sending domain only after you confirm.\n- **Everything else**: Approve marks it done; Copy puts the result on your clipboard.\n\nTasks can require **proof** before completion, and every card keeps an audit trail of who did what."
+    },
+    {
+      "id": "brief-howto",
+      "group": "How-tos",
+      "title": "The morning brief",
+      "body": "Every morning around **6:30** (it can drift up to an hour on the current hosting tier), Wingman assembles your day — overdue, due today, drafts awaiting your approval, crew load, goal pace — writes a short executive brief, and emails it to every admin. If phone notifications are enabled, you get a push too.\n\nOn demand: Brief screen → **▸ Generate my brief** (or ↻ Regenerate). **✉ Email it to me** sends the same email immediately.\n\nTo get it on your phone's lock screen, tap **🔔 Notify my phone** on the Brief card once and accept the permission prompt. Do this on the device where you want the ping."
+    },
+    {
+      "id": "invite",
+      "group": "How-tos",
+      "title": "Invite a teammate",
+      "body": "Classic view → Settings → **Add Member** (admin only). Fill in their name, email, role, workspace, and visibility. Leave *Email them a welcome invite* checked and they receive sign-in details automatically.\n\n**Role**: admins see and manage everything; members see only their permitted tasks — the database enforces it, not the browser.\n**Workspace**: limit a member to ACST, DVLMNT, or Personal, or all.\n**Can see**: everything in their workspace, or only tasks assigned to them.\n\nOnce a teammate has an email on their profile, they're notified automatically when you assign them work — from the review editor, the Wingman triage queue, or a captured task."
+    },
+    {
+      "id": "libraries-howto",
+      "group": "How-tos",
+      "title": "Teach Wingman (Libraries)",
+      "body": "Libraries are Wingman's working knowledge — the difference between a generic draft and one that sounds like you.\n\n- **Skills**: how to do a kind of task, step by step (\"Draft an Orbital demo follow-up\"). Wingman matches a skill to a task when it runs.\n- **Templates**: structures to fill in (SOW, weekly update).\n- **Tone & Voice**: how you write. One good entry here improves every draft.\n- **Context**: the nouns of your world — clients, projects, people, standing decisions. Wingman pulls a context entry in when a task mentions it by name.\n\nFastest path: **▸ Seed with Wingman** at the top of Libraries. Wingman interviews you — one question at a time about your companies, people, and voice — and files the entries as you talk. Ten minutes gets you a working library; you can rerun it any time."
+    },
+    {
+      "id": "files",
+      "group": "How-tos",
+      "title": "Attach files",
+      "body": "Open a task's detail panel (classic editor) and use **Documents** to attach files up to **20 MB** each. Files are stored privately in cloud storage, scoped to your workspace; downloads use short-lived signed links. Older attachments from before August 2026 still open normally."
+    },
+    {
+      "id": "wingman-concept",
+      "group": "Concepts",
+      "title": "How Wingman decides",
+      "body": "Wingman can research online, write, summarize, draft emails and documents, and prepare plans and tables. It cannot make phone calls, sign in to accounts, spend money, or act in the physical world.\n\nWhen you capture a task, Wingman scores its own **confidence** (0–100) per part: high for research and writing, low for judgment calls, conversations, and real-world actions — those it routes to you or a teammate. The percentage on a card is that self-assessment; treat a low number as Wingman saying \"this one's yours.\"\n\nWhen it runs a task, Wingman assembles: the task card (including the deliverable type), a matching skill, a template, relevant context entries, and your tone preferences — then produces a plan and a result, using live web search when the task needs current facts. Sources get cited.\n\nWingman is powered by Claude (Anthropic). Your API key lives on the server; the browser never sees it."
+    },
+    {
+      "id": "deliverables-concept",
+      "group": "Concepts",
+      "title": "Deliverable types",
+      "body": "Every task and part carries a deliverable — the shape of the finished thing: **Email · Document · Deck · Spreadsheet · Research brief · Plan · Design / asset · Code · Message · Decision**.\n\nWingman infers it at capture (you can change it in the review editor). It matters because the type decides what a good result looks like: an Email comes back with a subject line and a ready-to-send body; a Spreadsheet comes back as a paste-ready table; a Research brief comes back as findings with sources. Knowing the end asset up front is also how you decide what to delegate — to Wingman or to a person."
+    },
+    {
+      "id": "data-concept",
+      "group": "Concepts",
+      "title": "Where your data lives",
+      "body": "Tasks sync per-task to the cloud database: each task is its own record, only changes are written, and the freshest edit of each individual task wins — two people (or two of your devices) can work at once without stepping on each other. Goals, profiles, libraries, and layouts sync as workspace state alongside.\n\nMembers' access is enforced by database row-level security — a member's browser only ever receives the tasks they're allowed to see. Files live in a private storage bucket scoped to the workspace. All AI calls run server-side and require your signed-in session.\n\nThe app also mirrors your data to the device for offline reading, and you can export a full JSON backup any time from the classic sidebar."
+    },
+    {
+      "id": "ops-admin",
+      "group": "Operations",
+      "title": "Admin reference",
+      "body": "**Stack**: GitHub (source) → Vercel (hosting, serverless APIs, cron) → Supabase (database, auth, storage) → Resend (email) → Anthropic (Wingman).\n\n**Server env vars (Vercel)**: ANTHROPIC_API_KEY, RESEND_API_KEY, RESEND_FROM, SUPABASE_SERVICE_ROLE_KEY, CRON_SECRET (authenticates the 6:30 brief), VAPID_PRIVATE_KEY (phone push). Optional model overrides: ANTHROPIC_MODEL, ANTHROPIC_SUMMARY_MODEL, ANTHROPIC_STRUCTURE_MODEL.\n\n**The 6:30 brief** is a Vercel cron hitting /api/brief with the CRON_SECRET; it emails all admins and pushes to subscribed phones.\n\n**Endpoints** (all require a signed-in session except the cron path): /api/structure (capture), /api/run (execute/refine), /api/assess (readiness), /api/brief, /api/assist (quick AI helpers), /api/ask (answers from these docs), /api/interview (library seeding), /api/notify (welcome + assignment emails), /api/send (real email send), /api/summarize (goal/pulse lines)."
+    },
+    {
+      "id": "ops-troubleshoot",
+      "group": "Operations",
+      "title": "Troubleshooting",
+      "body": "**Can't sign in** — credentials are exact; there's no self-serve reset yet, so an admin resets your password. \"No workspace found\" means your account exists but has no membership: an admin adds you via Add Member.\n\n**A draft failed or AI feels down** — open the card and run it again; if it persists, the server key or provider may be down. Briefs and drafts fail independently, so try another AI action to isolate it.\n\n**Changes not showing on another device** — reload the page; sync pulls on load and pushes within ~2 seconds of a change. Individual tasks merge safely; if something looks stale, a reload gets the authoritative copy.\n\n**No morning email** — check spam, confirm your address on your People profile, and remember the cron can drift up to an hour on the current tier.\n\n**No phone push** — notifications must be enabled per device from the Brief card, the browser permission must be granted, and on iPhone the app should be added to the Home Screen first."
+    }
+  ]
+}

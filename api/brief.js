@@ -109,6 +109,54 @@ async function sendEmail(to, subject, html) {
   return r.ok ? { id: j.id } : { error: (j && j.message) || ('HTTP ' + r.status) };
 }
 
+// ── Web Push (payload-less): VAPID-authenticated POST to each subscription endpoint.
+//    No payload means no message encryption is needed; the service worker shows its
+//    default "Wingman has something for you" notification and opens the app on tap. ──
+var crypto = require('crypto');
+function b64u(buf) { return Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function vapidJwt(audience) {
+  var pemB64 = process.env.VAPID_PRIVATE_KEY;
+  if (!pemB64) return null;
+  var pem = Buffer.from(pemB64, 'base64').toString('utf8');
+  var header = b64u(JSON.stringify({ typ: 'JWT', alg: 'ES256' }));
+  var claims = b64u(JSON.stringify({ aud: audience, exp: Math.floor(Date.now() / 1000) + 12 * 3600, sub: 'mailto:levi@dvlmnt.com' }));
+  var input = header + '.' + claims;
+  var sig = crypto.sign('sha256', Buffer.from(input), { key: pem, dsaEncoding: 'ieee-p1363' });
+  return input + '.' + b64u(sig);
+}
+var VAPID_PUBLIC = 'BFloQyryCH9eFadPwjsGze6bOuFWSdlJrGnpz1TFcgoWeajF-MfWsUngbNEIdBCXNQmH3TjieVU2Xp8hgaHDKPE';
+async function sendPush(sub) {
+  try {
+    var endpoint = sub.endpoint;
+    var aud = new URL(endpoint).origin;
+    var jwt = vapidJwt(aud);
+    if (!jwt) return { skipped: 'no_vapid_key' };
+    var r = await fetch(endpoint, {
+      method: 'POST',
+      headers: { TTL: '3600', Authorization: 'vapid t=' + jwt + ', k=' + VAPID_PUBLIC, 'Content-Length': '0' }
+    });
+    if (r.status === 404 || r.status === 410) return { gone: true };
+    return { ok: r.status >= 200 && r.status < 300, status: r.status };
+  } catch (e) { return { error: String((e && e.message) || e) }; }
+}
+async function pushTo(serviceKey, userId) {
+  // userId null => everyone subscribed
+  var q = 'push_subscriptions?select=id,endpoint' + (userId ? ('&user_id=eq.' + userId) : '');
+  var subs = [];
+  try { subs = await sb(q, serviceKey); } catch (e) { return { error: e.message }; }
+  var sent = 0, gone = [];
+  for (var i = 0; i < subs.length; i++) {
+    var out = await sendPush(subs[i]);
+    if (out.ok) sent++;
+    if (out.gone) gone.push(subs[i].id);
+  }
+  // prune dead subscriptions
+  for (var g = 0; g < gone.length; g++) {
+    try { await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?id=eq.' + gone[g], { method: 'DELETE', headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey } }); } catch (e) {}
+  }
+  return { sent: sent, of: subs.length };
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -117,7 +165,7 @@ module.exports = async (req, res) => {
   if (!serviceKey || !anthropicKey) { res.status(503).json({ error: 'not_configured' }); return; }
 
   // ── Auth: cron secret (scheduled) OR signed-in user (on demand) ──
-  var isCron = false, userEmail = null;
+  var isCron = false, userEmail = null, userId = null;
   var auth = req.headers.authorization || '';
   var cronSecret = process.env.CRON_SECRET;
   if (cronSecret && auth === 'Bearer ' + cronSecret) {
@@ -127,6 +175,7 @@ module.exports = async (req, res) => {
     var user = await guard(req, res);
     if (!user) return;
     userEmail = user.email || null;
+    userId = user.id || null;
   }
 
   try {
@@ -158,7 +207,11 @@ module.exports = async (req, res) => {
       sends.push({ to: userEmail, result: await sendEmail(userEmail, subject, html) });
     }
 
-    res.status(200).json({ date: data.date, narrative: narrative, counts: data.counts, urgent: data.urgent, awaitingApproval: data.awaitingApproval, crew: data.crew, emailed: sends.map(function (s) { return { to: s.to, ok: !s.result.error, detail: s.result.error || undefined }; }) });
+    var pushed = null;
+    if (isCron) pushed = await pushTo(serviceKey, null);
+    else if (String(req.query && req.query.send) === '1' && userId) pushed = await pushTo(serviceKey, userId);
+
+    res.status(200).json({ date: data.date, narrative: narrative, counts: data.counts, urgent: data.urgent, awaitingApproval: data.awaitingApproval, crew: data.crew, emailed: sends.map(function (s) { return { to: s.to, ok: !s.result.error, detail: s.result.error || undefined }; }), pushed: pushed || undefined });
   } catch (e) {
     res.status(502).json({ error: 'brief_failed', detail: String((e && e.message) || e) });
   }

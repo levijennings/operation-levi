@@ -8844,6 +8844,28 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .lp-brief .bk{font-size:10px;letter-spacing:.16em;color:#C08428;font-weight:700;margin-bottom:8px}
 .ol2 .lp-brief .bt{font-size:13.5px;line-height:1.65;color:#E9EAEE}
 .ol2 .lp-brief .bs{font-size:11px;color:#8A8D97;margin-top:8px}
+.ol2 .doc-ask{display:flex;gap:8px;margin:0 0 10px}
+.ol2 .doc-ask input{flex:1;background:#15161A;border:1px solid #30323A;border-radius:10px;padding:11px 13px;color:#E9EAEE;font-size:13.5px;font-family:Inter;outline:none;min-height:44px}
+.ol2 .doc-ask input:focus{border-color:rgba(192,132,40,.5)}
+.ol2 .doc-askout{background:rgba(192,132,40,.08);border:1px solid rgba(192,132,40,.3);border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px}
+.ol2 .doc-wrap{display:grid;grid-template-columns:225px 1fr;gap:22px;align-items:start}
+.ol2 .doc-side{position:sticky;top:0}
+.ol2 .doc-g{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8A8D97;margin:14px 0 5px;font-weight:700}
+.ol2 .doc-g:first-child{margin-top:0}
+.ol2 .doc-l{display:block;padding:8px 11px;border-radius:8px;color:#aab2c0;font-size:12.5px;cursor:pointer;border:1px solid transparent;min-height:36px}
+.ol2 .doc-l:hover{background:#181a20;color:#E9EAEE}
+.ol2 .doc-l.on{background:#1d2129;color:#E9EAEE;border-color:#30353d}
+.ol2 .doc-body{background:#15161A;border:1px solid #26272D;border-radius:14px;padding:22px 26px;max-width:760px}
+.ol2 .doc-body h2{font-size:20px;margin:0 0 12px}
+.ol2 .doc-body p{font-size:13.5px;line-height:1.7;color:#C7C9D1;margin:0 0 12px}
+.ol2 .doc-body b{color:#E9EAEE}
+.ol2 .doc-ul,.ol2 .doc-ol{margin:0 0 12px 20px;font-size:13.5px;line-height:1.7;color:#C7C9D1}
+.ol2 .doc-ul li,.ol2 .doc-ol li{margin-bottom:6px}
+@media (max-width:720px){ .ol2 .doc-wrap{grid-template-columns:1fr} .ol2 .doc-side{position:static;display:flex;flex-wrap:wrap;gap:6px} .ol2 .doc-g{width:100%;margin:8px 0 2px} .ol2 .doc-l{border:1px solid #26272D} }
+.ol2 .pcard.wing{border-color:rgba(192,132,40,.4);background:linear-gradient(150deg,rgba(192,132,40,.08),#15161A 60%)}
+.ol2 .pav.wing{background:#3a2b12;color:#C08428;font-size:17px}
+.ol2 .wtag{font-size:9px;font-weight:700;color:#C08428;border:1px solid rgba(192,132,40,.5);border-radius:4px;padding:0 4px;vertical-align:middle}
+.ol2 .wdot{display:inline-block;width:7px;height:7px;border-radius:99px;background:#C08428;box-shadow:0 0 7px rgba(192,132,40,.8);margin-right:6px;vertical-align:middle}
 .ol2 .ol2-bviews{display:flex;gap:6px;margin:0 0 12px}
 .ol2 .ol2-bviews button{background:#191B20;border:1px solid #26272D;color:#9EA1AB;border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:Inter}
 .ol2 .ol2-bviews button.on{background:#C08428;border-color:#C08428;color:#1c1304}
@@ -9337,6 +9359,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         '<div id="ol2Home" style="display:none"></div>'+
         '<div id="ol2Week" style="display:none"></div>'+
         '<div id="ol2People" style="display:none"></div>'+
+        '<div id="ol2Docs" style="display:none"></div>'+
         '<div id="ol2Done" style="display:none"></div>'+
         '<div id="ol2Goals" style="display:none"></div>'+
         '<div id="ol2Pulse" style="display:none"></div>'+
@@ -9369,9 +9392,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     })();
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
-      if(v==='docs'){ try{ if(typeof openOperatingManual==='function') openOperatingManual(); }catch(err){} return; }
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='docs'){ showDocs(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
     var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
@@ -9452,7 +9474,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       try{ persist(); }catch(e){}
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
-    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
     function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#3FA276':s==='review'?'#C08428':(s==='active'||s==='today')?'#4F8AD1':s==='waiting'?'#C08428':'#8A8D97'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
@@ -9497,6 +9519,42 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       });
     }
     function lpLibCats(){ var cats=['All']; try{ var t=(typeof teams!=='undefined'&&teams)?Object.keys(teams):['ACST','DVLMNT','Personal']; t.forEach(function(c){ if(cats.indexOf(c)<0) cats.push(c); }); }catch(e){} return cats; }
+    function lpSeedInterview(){
+      var transcript=[]; var filed=0;
+      var ov=document.createElement('div'); ov.id='lpSeedOv'; ov.style.cssText='position:fixed;inset:0;z-index:100004;background:rgba(4,5,8,.86);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Inter';
+      ov.innerHTML='<div style="width:620px;max-width:96vw;max-height:88vh;background:#15161A;border:1px solid rgba(192,132,40,.4);border-radius:16px;display:flex;flex-direction:column;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.6)">'
+        +'<div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #26272D"><span style="color:#C08428;font-size:17px">▸</span><div style="flex:1"><div class="syne" style="font-weight:700">Wingman is learning your world</div><div style="font-size:11.5px;color:#8A8D97">Answer naturally — entries get filed to your library as you talk.</div></div><span id="lpSeedCount" style="font-size:11px;color:#C08428;border:1px solid rgba(192,132,40,.4);border-radius:99px;padding:3px 9px">0 filed</span></div>'
+        +'<div id="lpSeedMsgs" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:220px"></div>'
+        +'<div style="padding:12px 18px;border-top:1px solid #26272D;display:flex;gap:8px"><input id="lpSeedIn" class="ein" placeholder="Type your answer…" style="flex:1"/><button class="gbtn amber" id="lpSeedSend">Send</button><button class="gbtn" id="lpSeedDone">Finish</button></div></div>';
+      document.body.appendChild(ov);
+      var msgs=document.getElementById('lpSeedMsgs'), inp=document.getElementById('lpSeedIn');
+      function bubble(role,text){ var d=document.createElement('div'); d.style.cssText=role==='assistant'?'background:rgba(192,132,40,.1);border:1px solid rgba(192,132,40,.28);border-radius:11px;padding:10px 13px;font-size:13px;line-height:1.55;max-width:92%':'background:#1d2129;border:1px solid #30323A;border-radius:11px;padding:10px 13px;font-size:13px;line-height:1.5;align-self:flex-end;max-width:88%'; d.innerHTML=(role==='assistant'?'<b style="color:#C08428">▸ </b>':'')+esc(text); msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d; }
+      function chip(name,coll){ var d=document.createElement('div'); d.style.cssText='align-self:flex-start;font-size:10.5px;color:#7FC7A5;border:1px solid rgba(63,162,118,.4);background:rgba(63,162,118,.1);border-radius:99px;padding:3px 10px'; d.textContent='✓ Filed to '+coll+': '+name; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
+      function existingNames(){ var lo=L(); return { context:(lo.context||[]).map(function(x){return x.name;}), preferences:(lo.preferences||[]).map(function(x){return x.key||x.name;}), skills:(lo.skills||[]).map(function(x){return x.name;}) }; }
+      var busy=false;
+      function turn(wrap){
+        if(busy) return; busy=true;
+        var think=bubble('assistant','…');
+        fetch('/api/interview',{method:'POST',headers:apiHeaders(),body:JSON.stringify({messages:transcript,wrap:!!wrap,existing:existingNames()})})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            busy=false; think.remove();
+            if(!j||!j.reply){ bubble('assistant','Hit a snag — try again.'); return; }
+            (j.entries||[]).forEach(function(en){ try{ var lo=L(); if(!lo[en.collection]) lo[en.collection]=[]; var rec=en.record; rec.id='lib'+Date.now().toString(36)+Math.random().toString(36).slice(2,4); rec.createdAt=Date.now(); rec.updatedAt=Date.now(); lo[en.collection].push(rec); filed++; chip(rec.name||rec.key,en.collection); }catch(e){} });
+            if(filed){ document.getElementById('lpSeedCount').textContent=filed+' filed'; try{ persist(); }catch(e){} }
+            bubble('assistant',j.reply); transcript.push({role:'assistant',content:j.reply});
+            if(wrap){ document.getElementById('lpSeedSend').disabled=true; inp.disabled=true; document.getElementById('lpSeedDone').textContent='Close'; }
+          })
+          .catch(function(e){ busy=false; think.remove(); bubble('assistant','Network hiccup — try again.'); });
+      }
+      function send(){ var t=(inp.value||'').trim(); if(!t||busy) return; inp.value=''; bubble('user',t); transcript.push({role:'user',content:t}); turn(false); }
+      document.getElementById('lpSeedSend').onclick=send;
+      inp.onkeydown=function(e){ if(e.key==='Enter') send(); };
+      var finished=false;
+      document.getElementById('lpSeedDone').onclick=function(){ if(finished||inp.disabled){ ov.remove(); showLibraries(); if(filed) toast('▸ '+filed+' entr'+(filed===1?'y':'ies')+' added to your library'); return; } finished=true; turn(true); };
+      ov.onclick=function(e){ if(e.target===ov && (inp.disabled||transcript.length===0)){ ov.remove(); showLibraries(); } };
+      turn(false); setTimeout(function(){ try{ inp.focus(); }catch(e){} },300);
+    }
     function lpLibEdit(type, item){
       var libo=L(); if(!libo[type]) libo[type]=[];
       var isNew=!item; item=item||{}; var cats=lpLibCats();
@@ -9531,7 +9589,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var lib=document.getElementById('ol2Lib'); lib.style.display='';
       var help={skills:'Skills tell Wingman HOW to do a task. Wingman matches one to a task by its workspace and tags when you Run with Wingman.',templates:'Templates give Wingman a structure to fill in. A skill pulls in its linked template by name.',preferences:'Tone & Voice guides how Wingman writes. Applied account-wide or to a single workspace.',context:'Context is reference knowledge — clients, projects, decisions, links and sources. Wingman pulls it in when a task mentions it by name.'};
       var dot=LIBTABS.reduce(function(o,t){ o[t.k]=t.dot; return o; },{});
-      var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>Your Wingman knowledge layer. Add Skills, Templates, Tone & Voice and Context; Wingman pulls them in automatically when it works a task. Wingman is powered by Claude.</p></div><button class="gbtn amber" id="ol2LibAdd">+ Add</button></div>';
+      var html='<div class="hrow"><div><h1 class="syne">Libraries</h1><p>Your Wingman knowledge layer. Add Skills, Templates, Tone & Voice and Context; Wingman pulls them in automatically when it works a task. Wingman is powered by Claude.</p></div><div style="display:flex;gap:8px"><button class="gbtn" id="ol2LibSeed">▸ Seed with Wingman</button><button class="gbtn amber" id="ol2LibAdd">+ Add</button></div></div>';
       html+='<div class="ltabs" id="ol2LibTabs">'+LIBTABS.map(function(t){ return '<div class="ltab'+(t.k===curLib?' on':'')+'" data-l="'+t.k+'"><span class="ldot" style="background:'+t.dot+'"></span>'+t.label+' <span style="color:#8A8D97;font-size:11px">'+((L()[t.k]||[]).length)+'</span></div>'; }).join('')+'</div>';
       html+='<div class="lhelp" id="ol2LibHelp"></div><div class="lgrid" id="ol2LibGrid"></div>';
       lib.innerHTML=html;
@@ -9550,6 +9608,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       }
       renderGrid();
       document.getElementById('ol2LibTabs').addEventListener('click',function(e){ var t=e.target.closest('.ltab'); if(!t) return; curLib=t.getAttribute('data-l'); [].forEach.call(lib.querySelectorAll('.ltab'),function(x){ x.classList.toggle('on', x===t); }); renderGrid(); });
+      var sb2=document.getElementById('ol2LibSeed'); if(sb2) sb2.onclick=function(){ lpSeedInterview(); };
       document.getElementById('ol2LibAdd').onclick=function(){ lpLibEdit(curLib, null); };
     }
 
@@ -9862,9 +9921,9 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         +(window._lpBrief
           ? ('<div class="bt">'+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')+'</div>'
              +((window._lpBrief.emailedNote)?('<div class="bs">'+esc(window._lpBrief.emailedNote)+'</div>'):'')
-             +'<button class="gbtn" id="ol2BriefRefresh" style="margin-top:10px">↻ Regenerate</button> <button class="gbtn" id="ol2BriefEmail" style="margin-top:10px">✉ Email it to me</button>')
+             +'<button class="gbtn" id="ol2BriefRefresh" style="margin-top:10px">↻ Regenerate</button> <button class="gbtn" id="ol2BriefEmail" style="margin-top:10px">✉ Email it to me</button> <button class="gbtn" id="ol2BriefPush" style="margin-top:10px">🔔 Notify my phone</button>')
           : ('<div class="bt" style="color:#9EA1AB">Wingman writes your executive brief here — what moves the needle, what\'s waiting on you, how the crew is tracking. It also lands by email every morning at 6:30.</div>'
-             +'<button class="gbtn amber" id="ol2BriefGen" style="margin-top:10px">▸ Generate my brief</button>'))
+             +'<button class="gbtn amber" id="ol2BriefGen" style="margin-top:10px">▸ Generate my brief</button> <button class="gbtn" id="ol2BriefPush" style="margin-top:10px">🔔 Notify my phone</button>'))
         +'</div>';
       h+='<div class="tiles">'+tiles.map(function(t){ return '<div class="tile" data-list="'+t.k+'"><div class="num" style="color:'+t.c+'">'+t.num+'</div><div class="lbl"><span class="dot" style="background:'+t.c+'"></span>'+t.lbl+'</div></div>'; }).join('')+'</div>';
       h+='<div class="ulbl" style="margin:22px 0 9px">Focus today</div>';
@@ -9879,7 +9938,11 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         function pItems(p){ return all.filter(function(it){ var ppl=[].concat(it.assignees||[], (it.raci&&it.raci.R)||[], (it.raci&&it.raci.A)?[it.raci.A]:[], it.responsible?[it.responsible]:[]); return ppl.indexOf(p)>=0; }); }
         var wkSt=['thisweek','priority','active','today','waiting'];
         h+='<div class="ulbl" style="margin:26px 0 9px">Team workload</div>';
-        h+='<div class="lp-team">'+people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var dnc=its.filter(function(i){ return i.status==='done'; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week · <b>'+dnc+'</b> done</div></div></div>'; }).join('')+'</div>';
+        var wingWk=all.filter(function(i){ return i.aiArtifact && i.aiArtifact.createdAt && i.aiArtifact.createdAt>Date.now()-7*86400000; }).length;
+        var wingRev=all.filter(function(i){ return i.status==='review' && i.aiArtifact && i.aiArtifact.content; }).length;
+        h+='<div class="lp-team">'
+          +'<div class="lp-tcard" id="lpHomeWing"><div class="pav wing" style="width:32px;height:32px;font-size:14px">▸</div><div class="i"><div class="nm" style="color:#E0B871">Wingman</div><div class="st"><b>'+wingWk+'</b> drafted · <b>'+wingRev+'</b> for review</div></div></div>'
+          +people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var dnc=its.filter(function(i){ return i.status==='done'; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week · <b>'+dnc+'</b> done</div></div></div>'; }).join('')+'</div>';
         if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div>'+badges(it)+'</div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
       })();
       home.innerHTML=h;
@@ -9902,8 +9965,27 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var g=document.getElementById('ol2BriefGen'); if(g) g.onclick=function(){ runBrief(false); };
         var rf=document.getElementById('ol2BriefRefresh'); if(rf) rf.onclick=function(){ runBrief(false); };
         var em=document.getElementById('ol2BriefEmail'); if(em) em.onclick=function(){ runBrief(true); };
+        var pb=document.getElementById('ol2BriefPush');
+        if(pb){
+          if(!('PushManager' in window)||!('serviceWorker' in navigator)) pb.style.display='none';
+          else pb.onclick=function(){
+            pb.disabled=true; pb.textContent='🔔 Enabling…';
+            var PUB='BFloQyryCH9eFadPwjsGze6bOuFWSdlJrGnpz1TFcgoWeajF-MfWsUngbNEIdBCXNQmH3TjieVU2Xp8hgaHDKPE';
+            function b64ToU8(b){ var pad='='.repeat((4-b.length%4)%4); var raw=atob((b+pad).replace(/-/g,'+').replace(/_/g,'/')); var u=new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) u[i]=raw.charCodeAt(i); return u; }
+            Notification.requestPermission().then(function(perm){
+              if(perm!=='granted') throw new Error('Permission not granted');
+              return navigator.serviceWorker.ready;
+            }).then(function(reg){ return reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:b64ToU8(PUB)}); })
+            .then(function(sub){
+              var k=sub.toJSON();
+              return _sb.from('push_subscriptions').upsert({ user_id:_currentUser.id, endpoint:sub.endpoint, keys:{p256dh:k.keys&&k.keys.p256dh, auth:k.keys&&k.keys.auth} }, { onConflict:'endpoint' });
+            }).then(function(r){ if(r&&r.error) throw new Error(r.error.message); pb.textContent='🔔 Phone notifications on'; toast('▸ This phone will get the morning brief ping'); })
+            .catch(function(e){ pb.disabled=false; pb.textContent='🔔 Notify my phone'; toast('Push setup failed: '+e.message+(/(iPhone|iPad)/.test(navigator.userAgent)?' — on iPhone, add the app to your Home Screen first':'')); });
+          };
+        }
       })();
       [].forEach.call(home.querySelectorAll('.tile[data-list]'),function(el){ el.onclick=function(){ var k=el.getAttribute('data-list'); var map={ todo:{t:'To do',f:function(i){return ['backlog','thisweek'].indexOf(i.status)>=0;}}, inprogress:{t:'In progress',f:function(i){return ['active','today','waiting'].indexOf(i.status)>=0;}}, review:{t:'Needs review',f:function(i){return i.status==='review';}}, duetoday:{t:'Due today',f:function(i){return i.status!=='done'&&(i.dueDate===today||i.status==='today');}}, triage:{t:'To triage',f:function(i){return i.status==='backlog';}}, done:{t:'Done',f:function(i){return i.status==='done';}} }; var m=map[k]; if(m) lpHomeList(m.t, all.filter(m.f)); }; });
+      var hw=document.getElementById('lpHomeWing'); if(hw) hw.onclick=function(){ go('triage'); };
       [].forEach.call(home.querySelectorAll('.lp-tcard[data-person]'),function(el){ el.onclick=function(){ lpPersonProfile(el.getAttribute('data-person')); }; });
       [].forEach.call(home.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
@@ -9953,6 +10035,45 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
     }
 
     // ── People / delegation ──
+    function mdLite(md){
+      var t=esc(String(md||''));
+      t=t.replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<i>$1</i>');
+      return t.split(/\n\n+/).map(function(block){
+        var lines=block.split('\n');
+        if(lines.every(function(l){ return /^\s*-\s+/.test(l); })){
+          return '<ul class="doc-ul">'+lines.map(function(l){ return '<li>'+l.replace(/^\s*-\s+/,'')+'</li>'; }).join('')+'</ul>';
+        }
+        if(lines.every(function(l){ return /^\s*\d+\.\s+/.test(l); })){
+          return '<ol class="doc-ol">'+lines.map(function(l){ return '<li>'+l.replace(/^\s*\d+\.\s+/,'')+'</li>'; }).join('')+'</ol>';
+        }
+        return '<p>'+block.replace(/\n/g,'<br>')+'</p>';
+      }).join('');
+    }
+    var _docsData=null, _docsActive=null;
+    function showDocs(){
+      hideAllPanels();
+      var dp=document.getElementById('ol2Docs'); dp.style.display='';
+      function render(){
+        var groups=[]; var byGroup={};
+        _docsData.sections.forEach(function(sec){ if(!byGroup[sec.group]){ byGroup[sec.group]=[]; groups.push(sec.group); } byGroup[sec.group].push(sec); });
+        if(!_docsActive) _docsActive=_docsData.sections[0].id;
+        var active=_docsData.sections.filter(function(x){ return x.id===_docsActive; })[0]||_docsData.sections[0];
+        var h='<div class="hrow"><div><h1 class="syne">Docs</h1><p>How Levi\'s Projects works — and Wingman answers questions from these same pages. Updated '+esc(_docsData.updated)+'.</p></div></div>';
+        h+='<div class="doc-ask"><input id="ol2AskIn" placeholder="Ask Wingman anything about the app…"/><button class="gbtn amber" id="ol2AskBtn">▸ Ask</button></div><div id="ol2AskOut" class="doc-askout" style="display:none"></div>';
+        h+='<div class="doc-wrap"><div class="doc-side">';
+        groups.forEach(function(g){ h+='<div class="doc-g">'+esc(g)+'</div>'+byGroup[g].map(function(sec){ return '<a class="doc-l'+(sec.id===_docsActive?' on':'')+'" data-doc="'+esc(sec.id)+'">'+esc(sec.title)+'</a>'; }).join(''); });
+        h+='</div><div class="doc-body"><h2 class="syne">'+esc(active.title)+'</h2>'+mdLite(active.body)+'</div></div>';
+        dp.innerHTML=h;
+        [].forEach.call(dp.querySelectorAll('[data-doc]'),function(el){ el.onclick=function(){ _docsActive=el.getAttribute('data-doc'); render(); }; });
+        var ab=document.getElementById('ol2AskBtn'), ai=document.getElementById('ol2AskIn'), ao=document.getElementById('ol2AskOut');
+        function ask(){ var q=(ai.value||'').trim(); if(!q) return; ab.disabled=true; ab.textContent='▸ Thinking…'; ao.style.display='block'; ao.textContent='';
+          fetch('/api/ask',{method:'POST',headers:apiHeaders(),body:JSON.stringify({question:q})}).then(function(r){ return r.json(); }).then(function(j){ ab.disabled=false; ab.textContent='▸ Ask'; ao.innerHTML='<b style="color:#C08428">▸ Wingman:</b> '+esc(j.answer||j.detail||j.error||'No answer.'); }).catch(function(e){ ab.disabled=false; ab.textContent='▸ Ask'; ao.textContent='Failed: '+e.message; }); }
+        if(ab) ab.onclick=ask; if(ai) ai.onkeydown=function(e){ if(e.key==='Enter') ask(); };
+      }
+      if(_docsData){ render(); return; }
+      dp.innerHTML='<div class="hrow"><div><h1 class="syne">Docs</h1><p>Loading…</p></div></div>';
+      fetch('/docs.json').then(function(r){ return r.json(); }).then(function(j){ _docsData=j; render(); }).catch(function(){ dp.innerHTML='<div class="empty">Couldn\'t load the docs. Check your connection and reopen.</div>'; });
+    }
     function showPeople(){
       hideAllPanels();
       var pp=document.getElementById('ol2People'); pp.style.display='';
@@ -9964,7 +10085,23 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(names.indexOf(me)<0) names.unshift(me);
       names.sort(function(a,b){ return a===me?-1:(b===me?1:0); });
       var profiles={}; try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles){ if(Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles.forEach(function(p){ if(p&&p.name) profiles[p.name]=p; }); } else { profiles=peopleProfiles; } } }catch(e){}
-      var h='<div class="hrow"><div><h1 class="syne">People</h1><p>Who owns what, and what’s waiting on whom. Open any card to delegate.</p></div></div><div class="pgrid">';
+      var h='<div class="hrow"><div><h1 class="syne">Crew</h1><p>Who owns what, and what’s waiting on whom. Open any card to delegate.</p></div></div><div class="pgrid">';
+      // ── Wingman's own crew card ──
+      (function(){
+        var all=ITEMS();
+        var wk=Date.now()-7*86400000;
+        var awaiting=all.filter(function(i){ return i.status==='review' && i.aiArtifact && i.aiArtifact.content; }).length;
+        var draftedWeek=all.filter(function(i){ return i.aiArtifact && i.aiArtifact.createdAt && i.aiArtifact.createdAt>wk; }).length;
+        var totalDrafts=all.filter(function(i){ return i.aiArtifact && i.aiArtifact.content; }).length;
+        var sent=all.filter(function(i){ return i.sentVia==='resend'; }).length;
+        var queued=all.filter(function(i){ return i.status!=='done' && i.execMode==='do-it' && !(i.aiArtifact&&i.aiArtifact.content); }).length;
+        h+='<div class="pcard wing">'
+          +'<div class="phead"><div class="pav wing">▸</div><div style="flex:1"><div class="pname">Wingman <span class="wtag">AI</span></div><div class="prole"><span class="wdot"></span>'+(queued?('Working '+queued+' task'+(queued===1?'':'s')):'Standing by')+'</div></div><button class="lp-mini" id="lpWingQueue">Queue →</button></div>'
+          +'<div class="pstats"><div class="pstat"><b>'+awaiting+'</b>awaiting you</div><div class="pstat"><b>'+draftedWeek+'</b>drafted this wk</div><div class="pstat"><b>'+totalDrafts+'</b>drafts total</div><div class="pstat"><b>'+sent+'</b>emails sent</div></div>'
+          +'<div style="font-size:11.5px;color:#8A8D97;line-height:1.5">Drafts, researches, and briefs alongside the crew. Everything routes through your approval — nothing sends itself.</div>'
+          +(awaiting?('<div style="font-size:11.5px;color:#C08428;margin-top:8px">▸ '+awaiting+' draft'+(awaiting===1?'':'s')+' waiting on your review</div>'):'')
+          +'</div>';
+      })();
       names.forEach(function(nm){
         var mine=open.filter(function(i){ return owner(i)===nm; });
         var st=lpPersonStats(nm);
@@ -9985,6 +10122,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       });
       h+='</div>';
       pp.innerHTML=h;
+      var wq=document.getElementById('lpWingQueue'); if(wq) wq.onclick=function(){ go('triage'); };
       [].forEach.call(pp.querySelectorAll('.lp-profbtn[data-person]'),function(el){ el.onclick=function(e){ e.stopPropagation(); lpPersonProfile(el.getAttribute('data-person')); }; });
       [].forEach.call(pp.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
