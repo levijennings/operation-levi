@@ -9078,6 +9078,36 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .ol2-filter input::placeholder{color:#8A8D97}
 .ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
 .ol2 .ol2-filter button:hover{background:#23262d;color:#E9EAEE}
+/* ── The Overhaul 5d ── */
+.ol2 .wtabs{display:flex;gap:6px;margin:0 0 16px}
+.ol2 .wtabs a{padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:600;color:#9EA1AB;border:1px solid #26272D;cursor:pointer}
+.ol2 .wtabs a.on{background:#1d2129;color:#E9EAEE;border-color:#30353d}
+.ol2 .teach{display:flex;gap:8px;margin:2px 0 4px}
+.ol2 .teach input{flex:1;background:#15161b;border:1px solid #26272D;border-radius:10px;padding:11px 14px;color:#E9EAEE;font-size:13px;font-family:Inter}
+.ol2 .teach input::placeholder{color:#6E717B}
+.ol2 .memgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.ol2 .memh{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.16em;color:#6E717B;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.ol2 .madd{background:none;border:1px solid #26272D;color:#9EA1AB;border-radius:6px;width:20px;height:20px;line-height:1;cursor:pointer;font-size:12px;padding:0}
+.ol2 .memcard{background:#15161A;border:1px solid #26272D;border-radius:11px;padding:11px 14px;margin-bottom:8px;cursor:pointer}
+.ol2 .memcard:hover{border-color:#30323A}
+.ol2 .memcard .mt{font-size:13.5px;font-weight:600;color:#E9EAEE}
+.ol2 .memcard .md2{font-size:12px;color:#8A8D97;margin-top:3px;line-height:1.5}
+.ol2 .memcard .mch{display:inline-block;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#6E717B;border:1px solid #26272D;border-radius:5px;padding:1px 7px;margin-top:7px}
+.ol2 .memempty{font-size:12.5px;color:#6E717B;border:1px dashed #26272D;border-radius:11px;padding:16px;line-height:1.6}
+.ol2 .playgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ol2 .playcard{display:flex;align-items:center;gap:14px;background:#15161A;border:1px solid #26272D;border-radius:12px;padding:15px 17px}
+.ol2 .playcard:hover{border-color:#30323A}
+.ol2 .playcard .pt{font-size:14px;font-weight:650;color:#E9EAEE}
+.ol2 .playcard .pd{font-size:12px;color:#8A8D97;margin-top:2px}
+.ol2 .playcard .ps{font-family:'Space Mono',monospace;font-size:10px;color:#6E717B;margin-top:7px}
+.ol2 .pprow{display:flex;gap:7px;align-items:center;margin-bottom:6px}
+.ol2 .ppn{font-family:'Space Mono',monospace;font-size:11px;color:#6E717B;width:18px;text-align:right;flex-shrink:0}
+.ol2 .ppt{flex:1}
+.ol2 .ppo{background:#191B20;border:1px solid #30353d;color:#E9EAEE;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter;white-space:nowrap}
+.ol2 .ppo.wing{border-color:rgba(192,132,40,.55);color:#E0B871}
+.ol2 .ppd{max-width:130px}
+.ol2 .ppx{background:none;border:none;color:#5a6270;cursor:pointer;font-size:13px;padding:4px}
+@media (max-width:720px){ .ol2 .memgrid,.ol2 .playgrid{grid-template-columns:1fr} .ol2 .pprow{flex-wrap:wrap} }
 /* ── The Overhaul 5a ── */
 .ol2 .nav a{font-size:13px;padding:7px 10px;gap:10px}
 .ol2 .nav a svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -9450,12 +9480,14 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         {g:'Actions',t:'Speak a task',f:function(){ openCapture(); }},
         {g:'Actions',t:'Review Wingman drafts',k:'A',f:function(){ go('review'); }},
         {g:'Actions',t:'Seed Wingman&#39;s memory (interview)',f:function(){ lpSeedInterview(); }},
+        {g:'Actions',t:'Run a play…',f:function(){ showPlays(); }},
         {g:'Go to',t:'Today',k:'G T',f:function(){ go('home'); }},
         {g:'Go to',t:'Missions',k:'G M',f:function(){ go('board'); }},
         {g:'Go to',t:'Goals',k:'G G',f:function(){ go('goals'); }},
         {g:'Go to',t:'Crew',k:'G C',f:function(){ go('people'); }},
         {g:'Go to',t:'Wingman',k:'G W',f:function(){ go('triage'); }},
-        {g:'Go to',t:'Memory (libraries)',f:function(){ showLibraries(); }},
+        {g:'Go to',t:'Wingman&#39;s Memory',f:function(){ showMemory(); }},
+        {g:'Go to',t:'Plays',f:function(){ showPlays(); }},
         {g:'Go to',t:'Docs &amp; help',k:'?',f:function(){ go('docs'); }},
         {g:'Go to',t:'Settings',k:'G S',f:function(){ go('settings'); }}
       ];
@@ -9707,12 +9739,178 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       document.getElementById('ol2LibAdd').onclick=function(){ lpLibEdit(curLib, null); };
     }
 
+    // ══ The Overhaul 5d: Wingman hub (Queue · Memory · Plays) ══
+    function wingTabs(active){
+      return '<div class="wtabs">'+[['queue','Queue'],['memory','Memory'],['plays','Plays']].map(function(t){ return '<a data-wt="'+t[0]+'"'+(active===t[0]?' class="on"':'')+'>'+t[1]+'</a>'; }).join('')+'</div>';
+    }
+    function lpWingNavOn(){ var a=document.querySelector('#ol2Nav a[data-v="triage"]'); if(a){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); }); } }
+    function lpWireWingTabs(root){
+      [].forEach.call(root.querySelectorAll('.wtabs a[data-wt]'),function(a){ a.onclick=function(){ var t=a.getAttribute('data-wt'); if(t==='queue') showTriage(); else if(t==='memory') showMemory(); else showPlays(); }; });
+    }
+    var DELIVS=['','Email','Document','Deck','Spreadsheet','Research brief','Plan','Design / asset','Code','Message','Decision'];
+    // ── Wingman's Memory: what it knows, in plain language ──
+    function showMemory(){
+      hideAllPanels(); lpWingNavOn();
+      var lib=document.getElementById('ol2Lib'); lib.style.display='';
+      var Lo=L(); var ctx=Lo.context||[], prefs=Lo.preferences||[], tmps=Lo.templates||[], sks=Lo.skills||[];
+      var total=ctx.length+prefs.length+tmps.length+sks.length;
+      var h='<div class="hrow"><div><h1 class="syne">What Wingman knows</h1><p>Facts, preferences, formats, and methods — what makes Wingman&#39;s work come out the way you want. Teach it below, or let it interview you.</p></div><div style="display:flex;gap:8px"><button class="gbtn amber" id="ol2MemInt">▸ Interview me</button></div></div>';
+      h+=wingTabs('memory');
+      h+='<div class="teach"><input id="ol2TeachIn" placeholder="Teach Wingman something — e.g. &quot;I always fly Delta, aisle seat — SkyMiles #… · car service is Blacklane&quot;"/><button class="gbtn" id="ol2TeachBtn">Teach</button></div><div id="ol2TeachOut" style="display:none;font-size:12.5px;color:#9EA1AB;margin:8px 2px 0"></div>';
+      function card(title,desc,chip,cb){ return '<div class="memcard" data-mc="'+cb+'"><div class="mt">'+esc(title||'Untitled')+'</div>'+(desc?('<div class="md2">'+esc(String(desc).slice(0,160))+'</div>'):'')+(chip?('<div class="mch">'+esc(chip)+'</div>'):'')+'</div>'; }
+      h+='<div class="memgrid">';
+      h+='<div><div class="memh">YOUR WORLD <button class="madd" data-add="context">＋</button></div>';
+      h+=ctx.length?ctx.map(function(it,i){ return card(it.name, it.summary||it.details, it.type||'', 'context:'+i); }).join(''):'<div class="memempty">Who your clients, projects, and people are. Empty so far — the interview fills this fast.</div>';
+      h+='</div><div><div class="memh">HOW YOU WORK <button class="madd" data-add="preferences">＋</button></div>';
+      var how=prefs.map(function(it,i){ return card(it.key||it.name, it.value, 'preference', 'preferences:'+i); })
+        .concat(tmps.map(function(it,i){ return card(it.name, it.description, (it.format?it.format+' ':'')+'format', 'templates:'+i); }))
+        .concat(sks.map(function(it,i){ return card(it.name, it.whenToUse||it.description, 'method', 'skills:'+i); }));
+      h+=how.length?how.join(''):'<div class="memempty">Your voice, formats, and standing choices — airline &amp; seat preferences, loyalty numbers, how emails should sound.</div>';
+      h+='</div></div>';
+      h+='<div style="margin-top:18px;font-size:11.5px;color:#6E717B">'+total+' memor'+(total===1?'y':'ies')+' · Plays live in the <a style="color:#9EA1AB;cursor:pointer;text-decoration:underline" id="ol2MemPl">Plays tab</a> · <a style="color:#6E717B;cursor:pointer;text-decoration:underline" id="ol2MemAdv">advanced view</a></div>';
+      lib.innerHTML=h;
+      lpWireWingTabs(lib);
+      document.getElementById('ol2MemInt').onclick=function(){ lpSeedInterview(); };
+      var mp=document.getElementById('ol2MemPl'); if(mp) mp.onclick=function(){ showPlays(); };
+      var mv=document.getElementById('ol2MemAdv'); if(mv) mv.onclick=function(){ showLibraries(); };
+      [].forEach.call(lib.querySelectorAll('.madd[data-add]'),function(b){ b.onclick=function(){ lpLibEdit(b.getAttribute('data-add'), null); }; });
+      [].forEach.call(lib.querySelectorAll('.memcard[data-mc]'),function(el){ el.onclick=function(){ var p=el.getAttribute('data-mc').split(':'); var arr=L()[p[0]]||[]; var it=arr[+p[1]]; if(it) lpLibEdit(p[0], it); }; });
+      // Teach inline → /api/interview extracts and files entries in one shot
+      var ti=document.getElementById('ol2TeachIn'), tb=document.getElementById('ol2TeachBtn'), to=document.getElementById('ol2TeachOut');
+      function teach(){
+        var txt=(ti.value||'').trim(); if(!txt) return;
+        tb.disabled=true; tb.textContent='Filing…';
+        var Lo2=L();
+        var existing={ context:(Lo2.context||[]).map(function(x){return x.name;}), preferences:(Lo2.preferences||[]).map(function(x){return x.key||x.name;}), skills:(Lo2.skills||[]).map(function(x){return x.name;}) };
+        fetch('/api/interview',{method:'POST',headers:apiHeaders(),body:JSON.stringify({messages:[{role:'user',content:'File this into your memory (no questions needed): '+txt}],wrap:true,existing:existing})})
+          .then(function(r){ return r.json(); })
+          .then(function(j){
+            tb.disabled=false; tb.textContent='Teach';
+            var ents=(j&&j.entries)||[];
+            if(!ents.length){ to.style.display='block'; to.textContent=j&&j.reply?j.reply:'Nothing filed — try phrasing it as a fact or preference.'; return; }
+            var Lo3=L(); ents.forEach(function(en){ if(!Lo3[en.collection]) Lo3[en.collection]=[]; en.record.id='lib'+Date.now().toString(36)+Math.floor(Math.random()*99); en.record.createdAt=Date.now(); en.record.updatedAt=Date.now(); Lo3[en.collection].push(en.record); });
+            try{ persist(); }catch(e){}
+            toast('▸ Filed '+ents.length+' memor'+(ents.length===1?'y':'ies'));
+            showMemory();
+          }).catch(function(e){ tb.disabled=false; tb.textContent='Teach'; to.style.display='block'; to.textContent='Failed: '+e.message; });
+      }
+      tb.onclick=teach; ti.onkeydown=function(e){ if(e.key==='Enter') teach(); };
+    }
+    // ── Plays: your repeatable procedures, runnable by Wingman, you, or the crew ──
+    function lpDefaultPlays(){
+      function st(t,o,d,n){ return {title:t,owner:o,deliverable:d||'',notes:n||''}; }
+      return [
+        {name:'Demo follow-up',description:'Recap → fixes → pricing → LOI ask, over three emails.',steps:[
+          st('Recap email — thanks + what they flagged','Wingman','Email'),
+          st('Confirm the fix list with the team','me','',''),
+          st('Pricing sheet tailored to their seat count','Wingman','Spreadsheet'),
+          st('LOI ask email','Wingman','Email')]},
+        {name:'Weekly LOI outreach',description:'Ten researched prospects → personalized first-touch drafts.',steps:[
+          st('Research 10 prospects that fit the ICP','Wingman','Research brief'),
+          st('Personalized first-touch drafts','Wingman','Email'),
+          st('Review, tweak, send','me')]},
+        {name:'Investor / CEO update',description:'Wins, numbers, asks — under one page, in your format.',steps:[
+          st('Pull this week\'s wins and numbers','Wingman','Research brief'),
+          st('Draft the update in your format','Wingman','Email','Uses Memory: your investor-update format'),
+          st('Add the asks, send','me')]},
+        {name:'Weekly review',description:'Close the week: what moved, what slipped, next week\'s Top 3.',steps:[
+          st('Summarize the week — done, slipped, stuck','Wingman','Research brief'),
+          st('Clear triage and make the overdue calls','me'),
+          st('Pick next week\'s Top 3','me')]},
+        {name:'Book travel',description:'Flights, rental car, ground — booked exactly the way you like.',steps:[
+          st('Confirm trip dates, destination, purpose','me'),
+          st('Flight options per your preferences','Wingman','Research brief','Uses Memory: airline + seat preferences, loyalty numbers'),
+          st('Book flights + rental car','me','','You or your EA — bookings and payment always stay human'),
+          st('Arrange preferred car service','me','','Uses Memory: preferred car service + account'),
+          st('Itinerary email + calendar holds','Wingman','Document')]}
+      ].map(function(p){ p.id='play'+Date.now().toString(36)+Math.floor(Math.random()*999); p.category='All'; return p; });
+    }
+    function showPlays(){
+      hideAllPanels(); lpWingNavOn();
+      var lib=document.getElementById('ol2Lib'); lib.style.display='';
+      var Lo=L();
+      if((!Lo.plays||!Lo.plays.length) && !Lo.playsSeeded){ Lo.plays=lpDefaultPlays(); Lo.playsSeeded=true; try{ persist(); }catch(e){} }
+      var plays=Lo.plays||[];
+      var h='<div class="hrow"><div><h1 class="syne">Plays</h1><p>Repeatable procedures, run your way every time. Running a play creates a mission with each step pre-assigned — Wingman drafts its steps, people get theirs.</p></div><div style="display:flex;gap:8px"><button class="gbtn amber" id="ol2PlayNew">＋ New play</button></div></div>';
+      h+=wingTabs('plays');
+      if(!plays.length){ h+='<div class="empty" style="padding:40px">No plays yet — create one, or teach Wingman a procedure in Memory.</div>'; }
+      h+='<div class="playgrid">'+plays.map(function(p,i){
+        var owners={}; (p.steps||[]).forEach(function(sp){ owners[sp.owner==='me'?'You':sp.owner]=1; });
+        return '<div class="playcard"><div style="flex:1;min-width:0;cursor:pointer" data-pedit="'+i+'"><div class="pt">'+esc(p.name)+'</div><div class="pd">'+esc(p.description||'')+'</div><div class="ps">'+(p.steps||[]).length+' steps · '+esc(Object.keys(owners).join(' + '))+'</div></div><button class="gbtn amber" data-prun="'+i+'">▸ Run</button></div>';
+      }).join('')+'</div>';
+      lib.innerHTML=h;
+      lpWireWingTabs(lib);
+      document.getElementById('ol2PlayNew').onclick=function(){ lpPlayEdit(null); };
+      [].forEach.call(lib.querySelectorAll('[data-prun]'),function(b){ b.onclick=function(){ var p=(L().plays||[])[+b.getAttribute('data-prun')]; if(p) lpRunPlay(p); }; });
+      [].forEach.call(lib.querySelectorAll('[data-pedit]'),function(el){ el.onclick=function(){ var p=(L().plays||[])[+el.getAttribute('data-pedit')]; if(p) lpPlayEdit(p); }; });
+    }
+    function lpRunPlay(play){
+      var me=meName();
+      var parent=newItemBase(play.name, play.category&&play.category!=='All'?play.category:(ITEMS()[0]&&ITEMS()[0].category)||'', '', '', me);
+      parent.type='project'; parent.notes=play.description||'';
+      var kids=[]; var nW=0;
+      (play.steps||[]).forEach(function(sp){
+        var ownerName=(sp.owner==='me'||sp.owner==='Wingman')?me:sp.owner;
+        var kid=newItemBase(sp.title, parent.category, '', sp.deliverable||'', ownerName);
+        kid.parentItemId=parent.id; kid.notes=sp.notes||'';
+        if(sp.owner==='Wingman'){ kid.execMode='do-it'; nW++; }
+        kids.push(kid);
+      });
+      try{ items.push(parent); kids.forEach(function(k){ items.push(k); }); }catch(e){}
+      try{ persist(); }catch(e){}
+      toast('▸ '+esc(play.name)+' running — '+kids.length+' steps'+(nW?(' · Wingman drafting '+nW):''));
+      kids.forEach(function(k,i){
+        if(k.execMode==='do-it'){ setTimeout(function(){ draftFor(k); }, i*400); }
+        else if(k.responsible && k.responsible!==me){ lpNotifyAssign(k.responsible, k); }
+      });
+      go('board');
+    }
+    function lpPlayEdit(play){
+      var Lo=L(); if(!Lo.plays) Lo.plays=[];
+      var isNew=!play; play=play||{id:'play'+Date.now().toString(36),name:'',description:'',category:'All',steps:[]};
+      var people=(typeof getAllAssignees==='function'?getAllAssignees():[]);
+      var ownerOpts=['me','Wingman'].concat(people.filter(function(p){ return p!==meName(); }));
+      var steps=(play.steps||[]).map(function(sp){ return {title:sp.title||'',owner:sp.owner||'me',deliverable:sp.deliverable||'',notes:sp.notes||''}; });
+      if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''});
+      var ov=document.createElement('div'); ov.id='lpPlayOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter';
+      function render(){
+        var h='<div style="width:680px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
+        h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New play':'Edit play')+'</h2><button id="lpPlayClose" class="lp-mini">Close</button></div>';
+        h+='<div style="margin-bottom:10px"><label class="lp-lbl">Name</label><input class="ein" id="ppName" value="'+esc(play.name)+'" placeholder="e.g. Book travel"/></div>';
+        h+='<div style="margin-bottom:14px"><label class="lp-lbl">What this play does</label><input class="ein" id="ppDesc" value="'+esc(play.description||'')+'" placeholder="One line"/></div>';
+        h+='<label class="lp-lbl">Steps — tap the owner to reassign</label><div id="ppSteps">';
+        steps.forEach(function(sp,i){
+          h+='<div class="pprow"><span class="ppn">'+(i+1)+'</span><input class="ein ppt" data-i="'+i+'" value="'+esc(sp.title)+'" placeholder="Step"/><button class="ppo'+(sp.owner==='Wingman'?' wing':'')+'" data-i="'+i+'">'+(sp.owner==='me'?'You':esc(sp.owner))+'</button><select class="esel ppd" data-i="'+i+'">'+DELIVS.map(function(d){ return '<option value="'+esc(d)+'"'+(d===sp.deliverable?' selected':'')+'>'+(d||'— output —')+'</option>'; }).join('')+'</select><button class="ppx" data-i="'+i+'">✕</button></div>';
+          h+='<input class="ein ppnotes" data-i="'+i+'" value="'+esc(sp.notes||'')+'" placeholder="How you want it (preferences, accounts, details)" style="margin:0 0 8px 26px;width:calc(100% - 26px);font-size:12px"/>';
+        });
+        h+='</div><button class="gbtn" id="ppAdd" style="margin-top:4px">＋ Add step</button>';
+        h+='<div style="display:flex;gap:10px;margin-top:16px;align-items:center">'+(isNew?'':'<button id="ppDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete play</button>')+'<button id="ppSave" class="gbtn amber" style="margin-left:auto">Save play</button></div></div>';
+        ov.innerHTML=h;
+        ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+        document.getElementById('lpPlayClose').onclick=function(){ ov.remove(); };
+        function pull(){ [].forEach.call(ov.querySelectorAll('.ppt'),function(inp){ steps[+inp.getAttribute('data-i')].title=inp.value; }); [].forEach.call(ov.querySelectorAll('.ppnotes'),function(inp){ steps[+inp.getAttribute('data-i')].notes=inp.value; }); [].forEach.call(ov.querySelectorAll('.ppd'),function(sel){ steps[+sel.getAttribute('data-i')].deliverable=sel.value; }); }
+        [].forEach.call(ov.querySelectorAll('.ppo'),function(b){ b.onclick=function(){ pull(); var i=+b.getAttribute('data-i'); var cur=ownerOpts.indexOf(steps[i].owner); steps[i].owner=ownerOpts[(cur+1)%ownerOpts.length]; render(); }; });
+        [].forEach.call(ov.querySelectorAll('.ppx'),function(b){ b.onclick=function(){ pull(); steps.splice(+b.getAttribute('data-i'),1); if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''}); render(); }; });
+        document.getElementById('ppAdd').onclick=function(){ pull(); steps.push({title:'',owner:'me',deliverable:'',notes:''}); render(); };
+        var del=document.getElementById('ppDel'); if(del) del.onclick=function(){ var arr=Lo.plays; for(var i=arr.length-1;i>=0;i--){ if(arr[i].id===play.id) arr.splice(i,1); } try{ persist(); }catch(e){} ov.remove(); showPlays(); toast('Play deleted'); };
+        document.getElementById('ppSave').onclick=function(){ pull();
+          play.name=(document.getElementById('ppName').value||'').trim();
+          play.description=(document.getElementById('ppDesc').value||'').trim();
+          if(!play.name){ toast('Name the play first'); return; }
+          play.steps=steps.filter(function(sp){ return (sp.title||'').trim(); });
+          play.updatedAt=Date.now(); if(!play.createdAt) play.createdAt=Date.now();
+          if(isNew) Lo.plays.push(play);
+          try{ persist(); }catch(e){} ov.remove(); showPlays(); toast('Play saved');
+        };
+      }
+      document.body.appendChild(ov); render();
+    }
     function showTriage(){
       hideAllPanels();
       var tr=document.getElementById('ol2Triage'); tr.style.display='';
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsWingman).length;
-      var html='<div class="hrow"><div><h1 class="syne">Wingman</h1><p>Your first officer. Route each inbox item — Wingman drafts the do-it ones.</p></div><div style="display:flex;gap:8px"><button class="gbtn" id="ol2TriLib">Memory</button>'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div></div><div id="ol2TriList"></div>';
+      var html='<div class="hrow"><div><h1 class="syne">Wingman</h1><p>Your first officer. Route the inbox, teach the memory, run the plays.</p></div><div style="display:flex;gap:8px">'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div></div>'+wingTabs('queue')+'<div id="ol2TriList"></div>';
       if(!inbox.length){ html+='<div class="empty" style="padding:46px">Inbox cleared. Wingman’s drafts land in <b style="color:#C08428">Needs review</b>.</div>'; }
       tr.innerHTML=html;
       var list=document.getElementById('ol2TriList');
@@ -9728,7 +9926,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         list.appendChild(row);
       });
       var runBtn=document.getElementById('ol2TriRun'); if(runBtn) runBtn.onclick=runAllTri;
-      var libBtn=document.getElementById('ol2TriLib'); if(libBtn) libBtn.onclick=function(){ showLibraries(); };
+      lpWireWingTabs(tr);
     }
     function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){ if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); updateCounts(); } }); }
     function assignTri(it, who, row){
