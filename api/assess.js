@@ -1,13 +1,11 @@
 // Levi's Projects — task assessment endpoint.
 // Returns JSON: how confident Claude is it can do the task, clarifying questions, and library suggestions.
-// Env: ANTHROPIC_API_KEY (required), ANTHROPIC_MODEL (optional), RUN_SHARED_SECRET (optional guard via x-ol-key).
+// Env: ANTHROPIC_API_KEY (required), ANTHROPIC_MODEL (optional), auth: signed-in Supabase JWT via api/_guard.js.
+var guard = require('./_guard.js');
+
 module.exports = async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
-  var origin = req.headers.origin || req.headers.referer || '';
-  if (origin && !/^https?:\/\/(www\.)?levisprojects\.com|\.vercel\.app/i.test(origin)) { res.status(403).json({ error: 'origin' }); return; }
-  var secret = process.env.RUN_SHARED_SECRET;
-  if (secret && req.headers['x-ol-key'] !== secret) { res.status(403).json({ error: 'auth' }); return; }
+  var user = await guard(req, res);
+  if (!user) return;
   var key = process.env.ANTHROPIC_API_KEY;
   if (!key) { res.status(503).json({ error: 'no_key' }); return; }
 
@@ -18,9 +16,9 @@ module.exports = async (req, res) => {
     + "Return ONLY a JSON object and nothing else, with exactly this shape: "
     + '{"confidence": <integer 0-100>, "reason": "<one short sentence>", "questions": ["<clarifying question>"], "suggest": {"skill": <name or null>, "template": <name or null>, "context": <name or null>}}. '
     + "confidence = how likely Claude can itself produce a useful result. High (75-100) for research, finding info/products online, writing, summarizing, planning, drafting. Low (<40) for tasks needing real-world action, sign-ins, payments, calls, or information only the user holds. "
-    + "questions = empty array if you are confident and the task is clear; otherwise 1-3 specific questions that would unblock you. "
+    + "questions = empty array if you are confident and the task is clear; otherwise 1-3 specific questions that would unblock you — and if no deliverable type is given and the end result is ambiguous, one question should ask what the finished deliverable should be (email, document, deck, spreadsheet, research brief, plan, etc.). "
     + "suggest = choose the single most relevant entry from each provided library list by its EXACT name, or null if none fits.";
-  var u = "TASK\n" + JSON.stringify({ title: task.title, notes: task.notes, category: task.category }, null, 2) + "\n\n"
+  var u = "TASK\n" + JSON.stringify({ title: task.title, notes: task.notes, category: task.category, deliverable: task.deliverable || undefined }, null, 2) + "\n\n"
     + "AVAILABLE LIBRARIES (names only)\n" + JSON.stringify({ skills: libs.skills || [], templates: libs.templates || [], context: libs.context || [] }, null, 2)
     + "\n\nReturn the JSON now.";
 

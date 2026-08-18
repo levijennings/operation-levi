@@ -1,17 +1,12 @@
 // Operation Levi 2.0 — send endpoint (email via Resend).
 // Sends only when the client POSTs here after an explicit human confirm in the UI.
 // Env: RESEND_API_KEY (required), RESEND_FROM (a verified sender, e.g. "Levi <levi@dvlmnt.com>";
-//      defaults to onboarding@resend.dev for testing), RUN_SHARED_SECRET (optional guard vs x-ol-key).
-module.exports = async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
+//      defaults to onboarding@resend.dev for testing), auth: signed-in Supabase JWT via api/_guard.js.
+var guard = require('./_guard.js');
 
-  var origin = req.headers.origin || req.headers.referer || '';
-  if (origin && !/^https?:\/\/(www\.)?levisprojects\.com|\.vercel\.app/i.test(origin)) {
-    res.status(403).json({ error: 'origin' }); return;
-  }
-  var secret = process.env.RUN_SHARED_SECRET;
-  if (secret && req.headers['x-ol-key'] !== secret) { res.status(403).json({ error: 'auth' }); return; }
+module.exports = async (req, res) => {
+  var user = await guard(req, res);
+  if (!user) return;
 
   var key = process.env.RESEND_API_KEY;
   if (!key) { res.status(503).json({ error: 'no_key' }); return; }
