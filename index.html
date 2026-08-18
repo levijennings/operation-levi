@@ -9078,6 +9078,32 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
 .ol2 .ol2-filter input::placeholder{color:#8A8D97}
 .ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
 .ol2 .ol2-filter button:hover{background:#23262d;color:#E9EAEE}
+/* ── The Overhaul 5e ── */
+.ol2 .col.colc{background:#121317;border:1px dashed #26272D;border-radius:12px;padding:10px 12px;align-self:start}
+.ol2 .colcbtn{display:block;width:100%;background:#15161A;border:1px solid #26272D;border-radius:8px;color:#9EA1AB;font-size:11.5px;font-weight:600;padding:7px 0;margin-top:7px;cursor:pointer;font-family:Inter}
+.ol2 .colcbtn:hover{color:#E9EAEE;border-color:#30323A}
+.ol2 .drow2{display:flex;align-items:center;gap:9px;padding:6px 8px;border-bottom:1px solid #1b1d22;font-size:12.5px;cursor:pointer;border-radius:7px}
+.ol2 .drow2:hover{background:#15161A}
+.ol2 .drow2 .t{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#d7dbe3}
+.ol2 .drow2 .m{color:#6E717B;font-size:11px;white-space:nowrap;margin-left:auto}
+.ol2 .drow2 .dv{font-family:'Space Mono',monospace;font-size:9.5px;color:#6E717B;border:1px solid #26272D;border-radius:5px;padding:0 6px;white-space:nowrap}
+.ol2 .drow2 .lk2{font-size:11px;color:#9EA1AB;white-space:nowrap}
+.ol2 .cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ol2 .ghdr2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#6E717B;margin:18px 0 4px;text-transform:uppercase}
+
+.ol2 .tin{width:100%;background:none;border:none;outline:none;color:#E9EAEE;font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;padding:2px 0}
+.ol2 .facts{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin:2px 0 18px}
+.ol2 .facts .fact .erl{margin-top:0}
+.ol2 .facts .esel,.ol2 .facts .ein{width:100%}
+.ol2 .draft2{background:#0e0f13;border:1px solid #26272D;border-radius:12px;padding:18px 20px;font-size:13.5px;line-height:1.7;color:#d7dbe3;min-height:120px;max-height:56vh;overflow:auto}
+.ol2 .draft2.run{color:#8A8D97;font-style:italic}
+.ol2 .draft2 p{margin:0 0 10px}
+.ol2 .draft2 ul,.ol2 .draft2 ol{margin:0 0 10px;padding-left:20px}
+.ol2 .draft2 li{margin-bottom:4px}
+.ol2 .draft2 b{color:#E9EAEE}
+.ol2 .wingq{border:1px dashed #3a3320;border-radius:11px;padding:4px 12px 12px;margin-top:12px;background:rgba(192,132,40,.03)}
+@media (max-width:900px){ .ol2 .facts{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:720px){ .ol2 .facts{grid-template-columns:1fr 1fr} .ol2 .tin{font-size:18px} }
 /* ── The Overhaul 5d ── */
 .ol2 .wtabs{display:flex;gap:6px;margin:0 0 16px}
 .ol2 .wtabs a{padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:600;color:#9EA1AB;border:1px solid #26272D;cursor:pointer}
@@ -9348,22 +9374,38 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
   // ── Gantt view ──
   function renderGantt(){ var board=document.getElementById('ol2Board'); if(!board) return; board.className=''; function pd(s){ var d=new Date((s||'')+'T00:00:00'); return isNaN(d)?null:d; } var b=lpRangeBounds(); var min=new Date(b.start); min.setHours(0,0,0,0); var max=new Date(b.end); max.setHours(0,0,0,0); var dayMs=86400000; var totalDays=Math.round((max-min)/dayMs)+1; var px= totalDays<=21?34:(totalDays<=40?20:(totalDays<=100?9:(totalDays<=200?5:3))); var width=totalDays*px; var all=ITEMS().filter(function(it){ if(!(lpMF?lpMF(it):true)||it.status==='done') return false; var s=pd(it.startDate)||pd(it.dueDate); var e=pd(it.dueDate)||pd(it.startDate); if(!s||!e) return false; var sN=new Date(s.getFullYear(),s.getMonth(),s.getDate()), eN=new Date(e.getFullYear(),e.getMonth(),e.getDate()); return !(eN<min||sN>max); }); all.sort(function(a,b2){ var ad=pd(a.dueDate)||pd(a.startDate), bd=pd(b2.dueDate)||pd(b2.startDate); return (ad?ad.getTime():0)-(bd?bd.getTime():0); }); var ticks=''; for(var i=0;i<totalDays;i++){ var d=new Date(min); d.setDate(min.getDate()+i); if(d.getDate()===1||i===0){ ticks+='<div class="tick" style="left:'+(i*px)+'px">'+d.toLocaleDateString(undefined,{month:'short'})+(totalDays>120?(" '"+String(d.getFullYear()).slice(2)):(i===0?(' '+d.getDate()):''))+'</div>'; } } var todayN=new Date(); todayN.setHours(0,0,0,0); var todayOff=Math.round((todayN-min)/dayMs); var todayLine=(todayOff>=0&&todayOff<totalDays)?('<div class="gtoday" style="left:'+(todayOff*px)+'px"></div>'):''; var rows=all.length?all.map(function(it){ var s=pd(it.startDate)||pd(it.dueDate); var e=pd(it.dueDate)||pd(it.startDate); var sN=new Date(s.getFullYear(),s.getMonth(),s.getDate()); var eN=new Date(e.getFullYear(),e.getMonth(),e.getDate()); var off=Math.round((sN-min)/dayMs); var endoff=Math.round((eN-min)/dayMs); if(off<0)off=0; if(endoff>totalDays-1)endoff=totalDays-1; var len=Math.max(1,endoff-off+1); return '<div class="grow"><div class="glabel" title="'+esc(it.title||'')+'">'+esc(it.title||'Untitled')+'</div><div class="gtrack" style="width:'+width+'px">'+todayLine+'<div class="gbar" data-open="'+esc(it.id)+'" title="'+esc(it.title||'')+(it.dueDate?(' · due '+esc(lpDueFull(it.dueDate))):'')+'" style="left:'+(off*px)+'px;width:'+(Math.max(6,len*px-2))+'px;background:'+lpCatColor(it.category)+'">'+(px>=14?esc(it.title||''):'')+'</div></div></div>'; }).join(''):'<div class="empty" style="padding:34px">No scheduled items in this range.</div>'; board.innerHTML=lpRangeBar()+'<div class="lp-gantt"><div class="ghead"><div class="glabel" style="font-weight:700;color:#9EA1AB">Task</div><div class="gticks" style="width:'+width+'px">'+ticks+todayLine+'</div></div>'+rows+'</div>'; lpWireRangeBar(board, renderGantt); [].forEach.call(board.querySelectorAll('.gbar[data-open]'),function(bb){ bb.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(bb.getAttribute('data-open'));})[0]; if(it&&lpOpenReview) lpOpenReview(it); }; }); }
   // ── Done view (grouped by workspace, with deliverable links) ──
+  var doneSort='date';
   function renderDoneView(){
     var board=document.getElementById('ol2Board'); if(!board) return; board.className='';
     var done=ITEMS().filter(function(i){ return i.status==='done'; });
-    var cats=[]; done.forEach(function(i){ var c=i.category||'Other'; if(cats.indexOf(c)<0) cats.push(c); });
-    if(doneFilter!=='all' && cats.indexOf(doneFilter)<0) doneFilter='all';
-    function rowHtml(it){ var links=lpLinks(it); return '<div class="drow" data-open="'+esc(it.id)+'"><button class="lp-pin'+(it.pinned?' on':'')+'" data-pin="'+esc(it.id)+'" title="'+(it.pinned?'Unpin deliverable':'Pin deliverable for quick reference')+'">'+(it.pinned?'★':'☆')+'</button><div class="main"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+(it.dueDate?(' · '+esc(lpDueFull(it.dueDate))):'')+(it.deliverable?(' · '+esc(it.deliverable)):'')+'</div></div>'+(links.length?('<div class="lk">'+links.map(function(l){ return '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(l.label)+' ↗</a>'; }).join('')+'</div>'):'')+'</div>'; }
-    var h='<div class="lp-donef"><button data-df="all" class="'+(doneFilter==='all'?'on':'')+'">All workspaces</button>'+cats.map(function(c){ return '<button data-df="'+esc(c)+'" class="'+(doneFilter===c?'on':'')+'">'+esc(c)+' <span style="color:'+lpCatColor(c)+'">●</span></button>'; }).join('')+'</div>';
-    var pinned=done.filter(function(i){ return i.pinned && (doneFilter==='all'||(i.category||'Other')===doneFilter); });
-    if(pinned.length){ h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:#C08428"><span class="dot" style="background:#C08428"></span>★ Highlighted deliverables <span class="n">'+pinned.length+'</span></div>'+pinned.map(rowHtml).join('')+'</div>'; }
+    function when(i){ if(i.completedAt){ var d=new Date(String(i.completedAt).slice(0,10)+'T00:00:00'); if(!isNaN(d)) return d.getTime(); } return i.columnEnteredAt||0; }
+    function rowHtml(it){ var links=lpLinks(it); var ts=when(it); var d=ts?new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}):''; var o=owner(it)||'';
+      return '<div class="drow2" data-open="'+esc(it.id)+'">'
+        +'<button class="lp-pin'+(it.pinned?' on':'')+'" data-pin="'+esc(it.id)+'" title="'+(it.pinned?'Unpin':'Pin deliverable')+'">'+(it.pinned?'★':'☆')+'</button>'
+        +'<span class="cdot" style="background:'+lpCatColor(it.category)+'"></span>'
+        +'<span class="t">'+esc(it.title||'Untitled')+'</span>'
+        +(it.deliverable?('<span class="dv">'+esc(it.deliverable)+'</span>'):'')
+        +(links.length?('<a class="lk2" href="'+esc(links[0].url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(links[0].label)+' ↗</a>'):'')
+        +'<span class="m">'+esc(o)+(d?(' · '+d):'')+'</span></div>'; }
+    var h='<div class="lp-donef"><button data-ds="date" class="'+(doneSort==='date'?'on':'')+'">Newest</button><button data-ds="team" class="'+(doneSort==='team'?'on':'')+'">By workspace</button><button data-ds="person" class="'+(doneSort==='person'?'on':'')+'">By person</button><span style="margin-left:auto;color:#6E717B;font-size:11px;align-self:center">'+done.length+' completed</span></div>';
     if(!done.length){ h+='<div class="empty" style="padding:40px">Nothing completed yet.</div>'; }
-    var groups=(doneFilter==='all')?cats:[doneFilter];
-    groups.forEach(function(c){ var items=done.filter(function(i){ return (i.category||'Other')===c; }); items.sort(function(a,b){ return (b.columnEnteredAt||0)-(a.columnEnteredAt||0); }); if(!items.length) return; h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:'+lpCatColor(c)+'"><span class="dot" style="background:'+lpCatColor(c)+'"></span>'+esc(c)+' <span class="n">'+items.length+'</span></div>'+items.map(rowHtml).join('')+'</div>'; });
+    var pinned=done.filter(function(i){ return i.pinned; });
+    if(pinned.length && doneSort==='date'){ h+='<div class="ghdr2" style="color:#C08428">★ HIGHLIGHTED</div>'+pinned.sort(function(a,b){ return when(b)-when(a); }).map(rowHtml).join(''); }
+    if(doneSort==='date'){
+      var sorted=done.slice().sort(function(a,b){ return when(b)-when(a); });
+      var lastM=null;
+      sorted.forEach(function(it){ var ts=when(it); var m=ts?new Date(ts).toLocaleDateString(undefined,{month:'long',year:'numeric'}):'Earlier'; if(m!==lastM){ lastM=m; h+='<div class="ghdr2">'+esc(m)+'</div>'; } h+=rowHtml(it); });
+    } else {
+      var keyf=(doneSort==='team')?function(i){ return i.category||'Other'; }:function(i){ return owner(i)||'—'; };
+      var groups={}, order=[];
+      done.forEach(function(i){ var k=keyf(i); if(!groups[k]){ groups[k]=[]; order.push(k); } groups[k].push(i); });
+      order.sort();
+      order.forEach(function(k){ var arr=groups[k].sort(function(a,b){ return when(b)-when(a); }); h+='<div class="ghdr2">'+(doneSort==='team'?('<span class="cdot" style="background:'+lpCatColor(k)+';display:inline-block;margin-right:6px"></span>'):'')+esc(k)+' <span style="color:#3a3f48">'+arr.length+'</span></div>'+arr.map(rowHtml).join(''); });
+    }
     board.innerHTML=h;
-    [].forEach.call(board.querySelectorAll('.lp-donef button'),function(b){ b.onclick=function(){ doneFilter=b.getAttribute('data-df'); renderDoneView(); }; });
+    [].forEach.call(board.querySelectorAll('.lp-donef button[data-ds]'),function(b){ b.onclick=function(){ doneSort=b.getAttribute('data-ds'); renderDoneView(); }; });
     [].forEach.call(board.querySelectorAll('.lp-pin[data-pin]'),function(b){ b.onclick=function(e){ e.stopPropagation(); var it=ITEMS().filter(function(x){return String(x.id)===String(b.getAttribute('data-pin'));})[0]; if(!it) return; it.pinned=!it.pinned; try{ persist(); }catch(err){} renderDoneView(); }; });
-    [].forEach.call(board.querySelectorAll('.drow[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it) openReview(it); }; });
+    [].forEach.call(board.querySelectorAll('.drow2[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it&&lpOpenReview) lpOpenReview(it); }; });
   }
   function showDone(){ showBoard('done'); }
   function _showDoneLegacy(){ hideAllPanels(); var dv=document.getElementById('ol2Done'); if(!dv) return; dv.style.display=''; var done=ITEMS().filter(function(i){ return i.status==='done'; }); var cats=[]; done.forEach(function(i){ var c=i.category||'Other'; if(cats.indexOf(c)<0) cats.push(c); }); if(doneFilter!=='all' && cats.indexOf(doneFilter)<0) doneFilter='all'; var h='<div class="hrow"><div><h1 class="syne">Done</h1><p>Completed work, grouped by workspace — with links to deliverables.</p></div></div>'; h+='<div class="lp-donef"><button data-df="all" class="'+(doneFilter==='all'?'on':'')+'">All workspaces</button>'+cats.map(function(c){ return '<button data-df="'+esc(c)+'" class="'+(doneFilter===c?'on':'')+'">'+esc(c)+' <span style="color:'+lpCatColor(c)+'">●</span></button>'; }).join('')+'</div>'; if(!done.length){ h+='<div class="empty" style="padding:40px">Nothing completed yet.</div>'; } var groups=(doneFilter==='all')?cats:[doneFilter]; groups.forEach(function(c){ var items=done.filter(function(i){ return (i.category||'Other')===c; }); items.sort(function(a,b){ return (b.columnEnteredAt||0)-(a.columnEnteredAt||0); }); if(!items.length) return; h+='<div class="lp-donegrp"><div class="ghdr" style="border-color:'+lpCatColor(c)+'"><span class="dot" style="background:'+lpCatColor(c)+'"></span>'+esc(c)+' <span class="n">'+items.length+'</span></div>'; items.forEach(function(it){ var links=lpLinks(it); h+='<div class="drow" data-open="'+esc(it.id)+'"><div class="main"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'')+(it.deliverable?(' · '+esc(it.deliverable)):'')+'</div></div>'+(links.length?('<div class="lk">'+links.map(function(l){ return '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+esc(l.label)+' ↗</a>'; }).join('')+'</div>'):'')+'</div>'; }); h+='</div>'; }); dv.innerHTML=h; [].forEach.call(dv.querySelectorAll('.lp-donef button'),function(b){ b.onclick=function(){ doneFilter=b.getAttribute('data-df'); showDone(); }; }); [].forEach.call(dv.querySelectorAll('.drow[data-open]'),function(r){ r.onclick=function(){ var it=ITEMS().filter(function(x){return String(x.id)===String(r.getAttribute('data-open'));})[0]; if(it&&lpOpenReview) lpOpenReview(it); }; }); }
@@ -9522,7 +9564,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       else if(kl==='a'){ e.preventDefault(); go('review'); }
       else if(k==='?'){ e.preventDefault(); go('docs'); }
     });
-    var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all';
+    var boardFocus='board', boardQuery='', boardCat='all', boardOwner='all', boardDoneCollapsed=true;
     function syncClear(){ var c=document.getElementById('ol2FClear'); if(c) c.style.display=(boardQuery||boardCat!=='all'||boardOwner!=='all')?'':'none'; }
     document.getElementById('ol2Search').oninput=function(){ boardQuery=this.value; syncClear(); renderColumns(); };
     document.getElementById('ol2FCat').onchange=function(){ boardCat=this.value; syncClear(); renderColumns(); };
@@ -9561,10 +9603,22 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var all=ITEMS();
       var showCols=(boardFocus==='review')?COLS.filter(function(c){ return c.set==='review'; }):COLS;
       showCols.forEach(function(c){
+        if(c.set==='done' && boardFocus!=='review' && boardDoneCollapsed){
+          var dcards=all.filter(function(i){ return i.status==='done' && matchesFilter(i); });
+          var colD=document.createElement('div'); colD.className='col colc';
+          colD.innerHTML='<h3 style="color:#3FA276">Done <span class="cnt">'+dcards.length+'</span></h3><div class="bar" style="background:#3FA276"></div><button class="colcbtn" data-dc="show">Show column</button><button class="colcbtn" data-dc="page">Done page →</button>';
+          colD.ondragover=function(e){ e.preventDefault(); colD.classList.add('drop'); };
+          colD.ondragleave=function(){ colD.classList.remove('drop'); };
+          colD.ondrop=function(e){ e.preventDefault(); colD.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!=='done'){ if(cardx.requireProof && !(cardx.proof&&cardx.proof.url) && !lpProof(cardx)){ renderColumns(); return; } cardx.status='done'; cardx.columnEnteredAt=Date.now(); persist(); toast('Moved to “Done”'); updateCounts(); } renderColumns(); };
+          colD.querySelector('[data-dc="show"]').onclick=function(){ boardDoneCollapsed=false; renderColumns(); };
+          colD.querySelector('[data-dc="page"]').onclick=function(){ showDone(); };
+          board.appendChild(colD); return;
+        }
         var col=document.createElement('div'); col.className='col';
         var cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0 && matchesFilter(i); });
         cards.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); });
-        col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#8A8D97':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span></h3><div class="bar" style="background:'+c.color+'"></div>';
+        col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#8A8D97':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span>'+(c.set==='done'?' <a style="font-size:10px;color:#6E717B;cursor:pointer;float:right;font-weight:400" data-dcol="1">collapse</a>':'')+'</h3><div class="bar" style="background:'+c.color+'"></div>';
+        if(c.set==='done'){ var dc=col.querySelector('[data-dcol]'); if(dc) dc.onclick=function(){ boardDoneCollapsed=true; renderColumns(); }; }
         col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
         col.ondragleave=function(){ col.classList.remove('drop'); };
         col.ondrop=function(e){ e.preventDefault(); col.classList.remove('drop'); var id=e.dataTransfer.getData('text/plain'); var cardx=ITEMS().filter(function(x){ return String(x.id)===String(id); })[0]; if(cardx && cardx.status!==c.set){ if(c.set==='done' && cardx.requireProof && !(cardx.proof&&cardx.proof.url) && !lpProof(cardx)){ renderColumns(); return; } cardx.status=c.set; cardx.columnEnteredAt=Date.now(); persist(); try{ if(typeof renderBoard==='function') renderBoard(); }catch(e2){} toast('Moved to “'+c.label+'”'); updateCounts(); } renderColumns(); };
@@ -9911,7 +9965,19 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var inbox=ITEMS().filter(function(i){ return i.status==='backlog'; });
       var nDo=inbox.filter(suggestsWingman).length;
       var html='<div class="hrow"><div><h1 class="syne">Wingman</h1><p>Your first officer. Route the inbox, teach the memory, run the plays.</p></div><div style="display:flex;gap:8px">'+(nDo?('<button class="gbtn amber" id="ol2TriRun">Run all do-it ('+nDo+')</button>'):'')+'</div></div>'+wingTabs('queue')+'<div id="ol2TriList"></div>';
-      if(!inbox.length){ html+='<div class="empty" style="padding:46px">Inbox cleared. Wingman’s drafts land in <b style="color:#C08428">Needs review</b>.</div>'; }
+      if(!inbox.length){ html+='<div class="empty" style="padding:30px">Inbox cleared. Wingman’s drafts land in <b style="color:#C08428">Needs review</b>.</div>'; }
+      // ── Wingman scan: open work it could pick up or sharpen right now ──
+      var scan=ITEMS().filter(function(i){ return ['thisweek','priority','active','today','waiting'].indexOf(i.status)>=0 && i.type!=='habit' && !(i.aiArtifact&&i.aiArtifact.content); })
+        .map(function(i){ var reason=''; if(suggestsWingman(i)) reason='looks draftable'; else if(i.deliverable) reason=i.deliverable+' — Wingman can draft it'; else if((i.aiConfidence||0)>=60) reason=i.aiConfidence+'% confident'; return reason?{it:i,reason:reason}:null; }).filter(Boolean).slice(0,8);
+      if(scan.length){
+        html+='<div class="ulbl" style="margin:26px 0 9px">Wingman can pick these up</div>';
+        scan.forEach(function(r){ var it=r.it; html+='<div class="trow"><div class="src" style="color:#C08428">✦</div><div style="flex:1;min-width:0"><div class="tt">'+esc(it.title||'Untitled')+'</div><div class="ts">'+esc(it.category||'')+(it.dueDate?(' · due '+esc(it.dueDate)):'')+' · <span style="color:#E0B871">'+esc(r.reason)+'</span></div></div><div class="sug"><button class="asn" data-scopen="'+esc(it.id)+'">Open</button><button class="asn cl" data-scdraft="'+esc(it.id)+'">▸ Draft it</button></div></div>'; });
+      }
+      var noDeliv=ITEMS().filter(function(i){ return ['thisweek','priority','active','today'].indexOf(i.status)>=0 && i.type!=='habit' && !i.deliverable && !(i.aiArtifact&&i.aiArtifact.content) && !suggestsWingman(i); }).slice(0,5);
+      if(noDeliv.length){
+        html+='<div class="ulbl" style="margin:22px 0 9px">No end result set — tap to pick the deliverable so Wingman can help</div>';
+        noDeliv.forEach(function(it){ html+='<div class="trow" data-scopen="'+esc(it.id)+'" style="cursor:pointer"><div class="src">▭</div><div style="flex:1;min-width:0"><div class="tt">'+esc(it.title||'Untitled')+'</div><div class="ts">'+esc(it.category||'')+(it.dueDate?(' · due '+esc(it.dueDate)):'')+'</div></div></div>'; });
+      }
       tr.innerHTML=html;
       var list=document.getElementById('ol2TriList');
       inbox.forEach(function(it){
@@ -9926,6 +9992,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         list.appendChild(row);
       });
       var runBtn=document.getElementById('ol2TriRun'); if(runBtn) runBtn.onclick=runAllTri;
+      [].forEach.call(tr.querySelectorAll('[data-scdraft]'),function(b){ b.onclick=function(e){ e.stopPropagation(); var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-scdraft')); })[0]; if(!it) return; it.execMode='do-it'; try{ persist(); }catch(err){} b.textContent='Drafting…'; b.disabled=true; toast('▸ Wingman is drafting — lands in Needs review'); draftFor(it); }; });
+      [].forEach.call(tr.querySelectorAll('[data-scopen]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-scopen')); })[0]; if(it) openReview(it); }; });
       lpWireWingTabs(tr);
     }
     function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){ if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); updateCounts(); } }); }
@@ -10087,6 +10155,30 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(goal.targetDate){ var wk=(new Date(goal.targetDate+'T00:00:00')-new Date())/(7*86400000); if(wk>0&&wk<8&&s.pct<60) return true; }
       return false;
     }
+    function lpGoalEdit(g){
+      var isNew=!g; g=g||{id:'goal'+Date.now().toString(36),title:'',description:'',category:'DVLMNT',targetDate:'',updates:[]};
+      var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(!cats.length) cats=['ACST','DVLMNT','Personal'];
+      if(g.category&&cats.indexOf(g.category)<0) cats.unshift(g.category);
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;overflow-y:auto;font-family:Inter';
+      ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
+        +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New goal':'Edit goal')+'</h2><button id="goClose" class="lp-mini">Close</button></div>'
+        +'<label class="lp-lbl">Goal</label><input class="ein" id="goTitle" value="'+esc(g.title||'')+'" placeholder="e.g. 10 paying customers for Orbital" style="margin-bottom:10px"/>'
+        +'<label class="lp-lbl">Why it matters (one line)</label><input class="ein" id="goDesc" value="'+esc(g.description||'')+'" style="margin-bottom:10px"/>'
+        +'<label class="lp-lbl">Workspace</label><select class="esel" id="goCat" style="margin-bottom:10px">'+cats.map(function(c){ return '<option'+(c===g.category?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'
+        +'<label class="lp-lbl">Target date</label><input class="ein" id="goDue" type="date" value="'+esc(g.targetDate||'')+'" style="margin-bottom:14px"/>'
+        +'<div style="display:flex;gap:10px;align-items:center">'+(isNew?'':'<button id="goDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete goal</button>')+'<button id="goSave" class="gbtn amber" style="margin-left:auto">Save goal</button></div>'
+        +'<div style="font-size:11px;color:#6E717B;margin-top:10px">Progress is earned by linked work — deleting a goal never touches its tasks.</div></div>';
+      document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.getElementById('goClose').onclick=function(){ ov.remove(); };
+      var gd=document.getElementById('goDel'); if(gd) gd.onclick=function(){ if(!window.confirm('Delete this goal? Its linked tasks stay.')) return; try{ for(var i=goals.length-1;i>=0;i--){ if(String(goals[i].id)===String(g.id)) goals.splice(i,1); } persist(); }catch(e){} ov.remove(); showGoals(); toast('Goal deleted'); };
+      document.getElementById('goSave').onclick=function(){
+        g.title=(document.getElementById('goTitle').value||'').trim(); if(!g.title){ toast('Name the goal'); return; }
+        g.description=(document.getElementById('goDesc').value||'').trim(); g.category=document.getElementById('goCat').value; g.targetDate=document.getElementById('goDue').value||'';
+        try{ if(isNew){ if(typeof goals!=='undefined'&&goals) goals.push(g); else { toast('Goals store not ready'); return; } } persist(); }catch(e){}
+        ov.remove(); showGoals(); toast('Goal saved');
+      };
+    }
     function showGoals(){
       hideAllPanels();
       var view=document.getElementById('ol2Goals'); view.style.display='';
@@ -10111,10 +10203,18 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         h+='</div>';
         h+='<div style="font-size:12px;color:'+(s.overdue.length?'#e0a07a':'#aab2c0')+';display:flex;gap:7px;align-items:baseline"><span style="color:#C08428;flex-shrink:0">✦</span><span id="ol2gn-'+esc(g.id)+'">'+esc(lpGoalNarrative(s))+'</span></div>';
         if(s.open.length){ h+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px">'+s.open.slice(0,6).map(function(it){ var t=it.title||'Untitled'; return '<button class="ol2-goaltask" data-open="'+esc(it.id)+'" style="background:#15161A;border:1px solid #26272D;border-radius:20px;padding:3px 10px;font-size:11px;color:#aab2c0;cursor:pointer;display:inline-flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:'+lpCatColor(it.category)+'"></span>'+esc(t.length>34?(t.slice(0,34)+'…'):t)+'</button>'; }).join('')+(s.open.length>6?('<span style="font-size:11px;color:#8A8D97;padding:3px 6px">+'+(s.open.length-6)+' more</span>'):'')+'</div>'; }
+        var ppl={}; s.open.forEach(function(itx){ [].concat(itx.assignees||[], itx.responsible?[itx.responsible]:[]).forEach(function(p){ if(p) ppl[p]=1; }); });
+        var pplA=Object.keys(ppl);
+        if(pplA.length){ h+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap"><span style="font-size:9.5px;color:#6E717B;font-family:\'Space Mono\',monospace;letter-spacing:.12em">CREW</span>'+pplA.slice(0,7).map(function(p){ return (typeof getAvatarHTML==='function')?getAvatarHTML(p,22):('<span style="font-size:11px;color:#9EA1AB">'+esc(p)+'</span>'); }).join('')+'</div>'; }
+        var ups=(g.updates||[]).slice(-2).reverse();
+        if(ups.length){ h+='<div style="margin-top:9px;border-top:1px solid #1d1f24;padding-top:8px">'+ups.map(function(u2){ return '<div style="font-size:11.5px;color:#9EA1AB;margin-bottom:3px"><span style="color:#6E717B">'+(u2.ts?new Date(u2.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'')+(u2.by?(' · '+esc(u2.by)):'')+'</span> — '+esc(u2.text||u2.note||'')+'</div>'; }).join('')+'</div>'; }
+        h+='<div style="display:flex;gap:6px;margin-top:10px"><button class="lp-mini" data-gupd="'+esc(g.id)+'">＋ Update</button><button class="lp-mini" data-gedit="'+esc(g.id)+'">Edit</button></div>';
         h+='</div>';
       });
       view.innerHTML=h;
-      var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ try{ if(typeof openNewGoalModal==='function'){ close(); openNewGoalModal(); } }catch(e){} };
+      var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ lpGoalEdit(null); };
+      [].forEach.call(view.querySelectorAll('[data-gedit]'),function(b){ b.onclick=function(){ var g2=gs.filter(function(x){ return String(x.id)===String(b.getAttribute('data-gedit')); })[0]; if(g2) lpGoalEdit(g2); }; });
+      [].forEach.call(view.querySelectorAll('[data-gupd]'),function(b){ b.onclick=function(){ var g2=gs.filter(function(x){ return String(x.id)===String(b.getAttribute('data-gupd')); })[0]; if(!g2) return; var t=window.prompt('Update for “'+(g2.title||'')+'”:'); if(t===null||!t.trim()) return; if(!g2.updates) g2.updates=[]; g2.updates.push({ts:Date.now(),by:meName(),text:t.trim()}); try{ persist(); }catch(e){} showGoals(); }; });
       [].forEach.call(view.querySelectorAll('.ol2-goaltask[data-open]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
       // Upgrade each goal's computed status line to a Wingman-written one (falls back silently).
       rows.forEach(function(rr){
@@ -10375,6 +10475,60 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       dp.innerHTML='<div class="hrow"><div><h1 class="syne">Docs</h1><p>Loading…</p></div></div>';
       fetch('/docs.json').then(function(r){ return r.json(); }).then(function(j){ _docsData=j; render(); }).catch(function(){ dp.innerHTML='<div class="empty">Couldn\'t load the docs. Check your connection and reopen.</div>'; });
     }
+    // ── Crew member editor: info, photo, and account-less members (Overhaul 5e) ──
+    function lpCrewEdit(name){
+      var isNew=!name;
+      var profs=lpProfilesObj(); var prof=(name&&profs[name])||{};
+      var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){}
+      var hasTasks=name?lpPersonItems(name).length>0:false;
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow-y:auto;font-family:Inter';
+      ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
+        +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'Add crew member':'Edit '+esc(name))+'</h2><button id="ceClose" class="lp-mini">Close</button></div>'
+        +'<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px"><div id="ceAv">'+((name&&typeof getAvatarHTML==='function')?getAvatarHTML(name,56):'<div class="pav" style="width:56px;height:56px;font-size:20px">?</div>')+'</div><div><label class="lp-lbl" style="display:block">Photo</label><input type="file" id="cePhoto" accept="image/*" style="font-size:11.5px;color:#9EA1AB;max-width:220px"/></div></div>'
+        +'<label class="lp-lbl">Name</label><input class="ein" id="ceName" value="'+esc(name||'')+'"'+(isNew?'':' disabled')+' style="margin-bottom:10px'+(isNew?'':';opacity:.55')+'"/>'
+        +(isNew?'':'<div style="font-size:10.5px;color:#6E717B;margin:-6px 0 10px">Names key the task history — renaming would orphan their work, so it stays fixed for now.</div>')
+        +'<label class="lp-lbl">Role</label><input class="ein" id="ceRole" value="'+esc(prof.role||prof.title||'')+'" placeholder="e.g. EA · Designer · Sales" style="margin-bottom:10px"/>'
+        +'<label class="lp-lbl">Email (optional — enables task notifications)</label><input class="ein" id="ceEmail" value="'+esc(prof.email||'')+'" style="margin-bottom:10px"/>'
+        +(cats.length?('<label class="lp-lbl">Workspace roster</label><select class="esel" id="ceTeam" style="margin-bottom:10px">'+cats.map(function(c){ var inT=false; try{ inT=(teams[c]||[]).indexOf(name)>=0; }catch(e){} return '<option'+(inT?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'):'')
+        +'<label class="lp-lbl">Notes (how you work with them, review cadence)</label><textarea class="ein" id="ceNotes" style="min-height:56px;resize:vertical;margin-bottom:10px">'+esc(prof.notes||'')+'</textarea>'
+        +'<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:#9EA1AB;margin-bottom:8px"><input type="checkbox" id="ceEA"'+(prof.isEA?' checked':'')+'/> This person is my EA</label>'
+        +(isNew?'<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:#9EA1AB;margin-bottom:8px"><input type="checkbox" id="ceAcct"/> Also create a sign-in account (invite by email)</label>':'')
+        +'<div style="display:flex;gap:10px;align-items:center;margin-top:8px">'+((!isNew&&!hasTasks)?'<button id="ceDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Remove from crew</button>':'')+'<button id="ceSave" class="gbtn amber" style="margin-left:auto">Save</button></div>'
+        +(isNew?'<div style="font-size:11px;color:#6E717B;margin-top:10px">No account is created unless you tick the box — right for people you manage manually and review with periodically. You can assign them tasks either way.</div>':'')
+        +'</div>';
+      document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.getElementById('ceClose').onclick=function(){ ov.remove(); };
+      var photoData=null;
+      document.getElementById('cePhoto').onchange=function(){
+        var f=this.files&&this.files[0]; if(!f) return;
+        var rd=new FileReader();
+        rd.onload=function(){ var img=new Image(); img.onload=function(){ try{ var c=document.createElement('canvas'); var m=Math.min(img.width,img.height); var S=128; c.width=S; c.height=S; var cx=c.getContext('2d'); cx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S); photoData=c.toDataURL('image/jpeg',.82); var av=document.getElementById('ceAv'); if(av) av.innerHTML='<img src="'+photoData+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover"/>'; }catch(e){} }; img.src=rd.result; };
+        rd.readAsDataURL(f);
+      };
+      var del=document.getElementById('ceDel'); if(del) del.onclick=function(){ if(!window.confirm('Remove '+name+' from the crew?')) return; try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles&&peopleProfiles[name]) delete peopleProfiles[name]; if(typeof teams!=='undefined'&&teams) Object.keys(teams).forEach(function(c){ var ix=(teams[c]||[]).indexOf(name); if(ix>=0) teams[c].splice(ix,1); }); var avs=JSON.parse(localStorage.getItem('op_levi_avatars')||'{}'); delete avs[name]; localStorage.setItem('op_levi_avatars',JSON.stringify(avs)); persist(); }catch(e){} ov.remove(); showPeople(); toast('Removed from crew'); };
+      document.getElementById('ceSave').onclick=function(){
+        var nm2=isNew?(document.getElementById('ceName').value||'').trim():name;
+        if(!nm2){ toast('Name is required'); return; }
+        try{
+          if(typeof peopleProfiles==='undefined'||!peopleProfiles||Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles=lpProfilesObj(); }
+          if(!peopleProfiles[nm2]) peopleProfiles[nm2]={};
+          var p2=peopleProfiles[nm2];
+          p2.role=(document.getElementById('ceRole').value||'').trim();
+          p2.email=(document.getElementById('ceEmail').value||'').trim();
+          p2.notes=(document.getElementById('ceNotes').value||'').trim();
+          p2.isEA=!!(document.getElementById('ceEA')&&document.getElementById('ceEA').checked);
+          if(isNew) p2.manual=true;
+          if(photoData){ p2.avatar=photoData; var avs2=JSON.parse(localStorage.getItem('op_levi_avatars')||'{}'); avs2[nm2]=photoData; localStorage.setItem('op_levi_avatars',JSON.stringify(avs2)); }
+          var tsel=document.getElementById('ceTeam');
+          if(tsel&&typeof teams!=='undefined'&&teams){ var tc=tsel.value; if(teams[tc]&&teams[tc].indexOf(nm2)<0) teams[tc].push(nm2); }
+          persist();
+        }catch(e){}
+        var wantAcct=!!(document.getElementById('ceAcct')&&document.getElementById('ceAcct').checked);
+        ov.remove(); showPeople(); toast(isNew?('Added '+nm2+' to the crew'):'Saved');
+        if(wantAcct&&typeof openAddMemberModal==='function'){ openAddMemberModal(); }
+      };
+    }
     function showPeople(){
       hideAllPanels();
       var pp=document.getElementById('ol2People'); pp.style.display='';
@@ -10386,7 +10540,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       if(names.indexOf(me)<0) names.unshift(me);
       names.sort(function(a,b){ return a===me?-1:(b===me?1:0); });
       var profiles={}; try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles){ if(Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles.forEach(function(p){ if(p&&p.name) profiles[p.name]=p; }); } else { profiles=peopleProfiles; } } }catch(e){}
-      var h='<div class="hrow"><div><h1 class="syne">Crew</h1><p>Who owns what, and what’s waiting on whom. Open any card to delegate.</p></div></div><div class="pgrid">';
+      Object.keys(profiles).forEach(function(n){ if(n&&names.indexOf(n)<0) names.push(n); });
+      var h='<div class="hrow"><div><h1 class="syne">Crew</h1><p>Everyone you run work with — with or without a sign-in. Open any card to delegate.</p></div><div style="display:flex;gap:8px"><button class="gbtn amber" id="ol2CrewAdd">＋ Add crew member</button></div></div><div class="pgrid">';
       // ── Wingman's own crew card ──
       (function(){
         var all=ITEMS();
@@ -10406,7 +10561,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       names.forEach(function(nm){
         var mine=open.filter(function(i){ return owner(i)===nm; });
         var st=lpPersonStats(nm);
-        if(!mine.length && nm!==me) return;
+        if(!mine.length && nm!==me && !profiles[nm]) return;
         var inprog=mine.filter(function(i){ return ['active','today'].indexOf(i.status)>=0; }).length;
         var waiting=mine.filter(function(i){ return i.status==='waiting'; }).length;
         var rev=mine.filter(function(i){ return i.status==='review'; }).length;
@@ -10414,7 +10569,7 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         var prof=profiles[nm]||{}; var role=prof.role||prof.title||(nm===me?'You':'');
         var isMe=nm===me; var list=mine.slice(0,5);
         h+='<div class="pcard">'+
-          '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div style="flex:1"><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+(prof.isEA?' <span style="font-size:9px;font-weight:700;color:#9573C9;border:1px solid #9573C9;border-radius:4px;padding:0 4px;vertical-align:middle">EA</span>':'')+'</div><div class="prole">'+esc(role||'—')+'</div></div><button class="lp-mini lp-profbtn" data-person="'+esc(nm)+'">Profile →</button></div>'+
+          '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div style="flex:1"><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+(prof.isEA?' <span style="font-size:9px;font-weight:700;color:#9573C9;border:1px solid #9573C9;border-radius:4px;padding:0 4px;vertical-align:middle">EA</span>':'')+'</div><div class="prole">'+esc(role||'—')+'</div></div><button class="lp-mini lp-crewedit" data-person="'+esc(nm)+'" title="Edit member">✎</button><button class="lp-mini lp-profbtn" data-person="'+esc(nm)+'">Profile →</button></div>'+
           '<div class="pstats"><div class="pstat"><b>'+mine.length+'</b>open</div><div class="pstat"><b>'+inprog+'</b>in progress</div><div class="pstat"><b>'+waiting+'</b>waiting</div>'+(rev?('<div class="pstat"><b>'+rev+'</b>review</div>'):'')+'<div class="pstat"><b>'+st.estH+'</b>est h</div><div class="pstat"><b>'+(Math.round(st.spentH*10)/10)+'</b>spent h</div><div class="pstat"><b>'+(Math.round(st.remH*10)/10)+'</b>left h</div></div>'+
           (waitOn?('<div style="font-size:11.5px;color:#C08428;margin-bottom:8px">⏳ '+waitOn+' item'+(waitOn===1?'':'s')+' waiting on '+esc(isMe?'you':nm)+'</div>'):'')+
           '<div class="plist">'+(list.length?list.map(function(it){ return '<div class="pli" data-open="'+esc(it.id)+'"><span class="pdot" style="background:'+stColor(it.status)+'"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.title||'Untitled')+'</span><span style="color:#8A8D97;font-size:11px;flex-shrink:0">'+esc(it.dueDate?dueLabel(it.dueDate):it.status)+'</span></div>'; }).join(''):'<div style="color:#8A8D97;font-size:12px;padding-top:6px">No open items.</div>')+'</div>'+
@@ -10425,6 +10580,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       pp.innerHTML=h;
       var wq=document.getElementById('lpWingQueue'); if(wq) wq.onclick=function(){ go('triage'); };
       [].forEach.call(pp.querySelectorAll('.lp-profbtn[data-person]'),function(el){ el.onclick=function(e){ e.stopPropagation(); lpPersonProfile(el.getAttribute('data-person')); }; });
+      [].forEach.call(pp.querySelectorAll('.lp-crewedit[data-person]'),function(el){ el.onclick=function(e){ e.stopPropagation(); lpCrewEdit(el.getAttribute('data-person')); }; });
+      var ca=document.getElementById('ol2CrewAdd'); if(ca) ca.onclick=function(){ lpCrewEdit(null); };
       [].forEach.call(pp.querySelectorAll('[data-open]'),function(el){ el.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(el.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
     }
 
@@ -10487,19 +10644,20 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
       var CATS=(function(){ var a=[]; try{ a=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(card.category&&a.indexOf(card.category)<0) a=[card.category].concat(a); if(!a.length) a=['Personal']; return a; })();
       function opts(list,cur){ return list.map(function(o){ var v=(o instanceof Array)?o[0]:o, lab=(o instanceof Array)?o[1]:o; return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); }
       rev.innerHTML=
-        '<div class="hrow"><div><h1 class="syne" id="ol2RevTitle">'+esc(card.title||'Untitled')+'</h1><p>Edit the card, run &amp; refine the draft, then approve. Nothing sends without you.</p></div>'+
-          '<button class="gbtn" id="ol2Back">← Back to board</button></div>'+
+        '<div class="hrow" style="align-items:center"><div style="flex:1;min-width:0"><input class="tin" id="edTitle" value="'+esc(card.title||'')+'" placeholder="Task title"/></div>'+
+          '<button class="gbtn" id="ol2Back">← Back</button></div>'+
+        '<div class="facts">'+
+          '<div class="fact"><label class="erl">Status</label><select class="esel" id="edStatus">'+opts(STATUSES,card.status)+'</select></div>'+
+          '<div class="fact"><label class="erl">Owner</label><select class="esel" id="edOwner">'+opts(OWNERS,owner(card))+'</select></div>'+
+          '<div class="fact"><label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/></div>'+
+          '<div class="fact"><label class="erl">Workspace</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select></div>'+
+          '<div class="fact"><label class="erl">Deliverable</label><select class="esel" id="edDeliv">'+DELIV_TYPES.map(function(d){ return '<option value="'+esc(d)+'"'+((card.deliverable||'')===d?' selected':'')+'>'+(d||'— end result —')+'</option>'; }).join('')+'</select></div>'+
+          '<div class="fact"><label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo">✦ Do-it</button><button type="button" class="emodeb" id="edTrack">◷ Track</button><button type="button" class="emodeb" id="edTop3">☆ Top 3</button></div></div>'+
+        '</div>'+
         '<div class="rev">'+
           '<div><div class="panelc">'+
-            '<label class="erl">Title</label><input class="ein" id="edTitle" value="'+esc(card.title||'')+'"/>'+
-            '<label class="erl">Status</label><select class="esel" id="edStatus">'+opts(STATUSES,card.status)+'</select>'+
-            '<label class="erl">Owner</label><select class="esel" id="edOwner">'+opts(OWNERS,owner(card))+'</select>'+
-            '<label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo">✦ Do-it</button><button type="button" class="emodeb" id="edTrack">◷ Track-it</button></div>'+
-            '<label class="erl">Top 3 today</label><div class="emode"><button type="button" class="emodeb" id="edTop3">☆ Add to Top 3</button></div>'+
-            '<label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/>'+
-            '<label class="erl">Category</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select>'+
-            '<label class="erl">Deliverable</label><select class="esel" id="edDeliv">'+DELIV_TYPES.map(function(d){ return '<option value="'+esc(d)+'"'+((card.deliverable||'')===d?' selected':'')+'>'+(d||'— pick the end result —')+'</option>'; }).join('')+'</select>'+
-            '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:58px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
+            '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
+            '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
             lpExtrasHtml(card)+
             '<div class="ulbl">Wingman uses</div>'+
             '<div class="used">'+
@@ -10508,12 +10666,11 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
               '<span class="chip'+(parts.ctx?'':' miss')+'">❖ '+(parts.ctx?esc(parts.ctx.name):'no context')+'</span>'+
               '<span class="chip">◷ '+parts.prefs.length+' preference'+(parts.prefs.length===1?'':'s')+'</span>'+
             '</div>'+
-            '<a href="javascript:void(0)" id="edClassic" style="display:inline-block;margin-top:12px;color:#9EA1AB;font-size:11.5px;text-decoration:underline">Edit all fields in classic →</a>'+
-            '<div style="margin-top:14px;border-top:1px solid #26272D;padding-top:13px"><button type="button" id="ol2Del" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">🗑 Delete task</button></div>'+
+            '<div style="margin-top:14px;border-top:1px solid #26272D;padding-top:13px"><button type="button" id="ol2Del" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete task</button></div>'+
           '</div></div>'+
           '<div>'+
-            '<div class="draft'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?esc(card.aiArtifact.content):'No draft yet — Run with Wingman to generate one.')+'</div>'+
-            '<div class="refine"><input id="ol2RefIn" placeholder="Refine by voice or text — e.g. “make the timeline 8 weeks”"/><button class="gbtn" id="ol2RefBtn">Refine</button></div>'+
+            '<div class="draft2'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?mdLite(card.aiArtifact.content):'No draft yet — run Wingman, or type any instruction below.')+'</div>'+
+            '<div class="refine"><input id="ol2RefIn" placeholder="Tell Wingman anything — refine this draft, or ask for something different"/><button class="gbtn amber" id="ol2RefBtn">▸ Go</button></div>'+
             '<div class="actions" id="ol2Acts"></div>'+
             '<div class="revmsg" id="ol2RevMsg"></div>'+
           '</div>'+
@@ -10534,9 +10691,8 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
         document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
         (function(){ var t3=document.getElementById('edTop3'); if(!t3) return; function setT3(){ var on=top3Ids().indexOf(String(card.id))>=0; t3.textContent=on?'★ In Top 3':'☆ Add to Top 3'; t3.classList.toggle('sel',on); } setT3(); t3.onclick=function(){ lpToggleTop3(card.id); setT3(); }; })();
-        document.getElementById('edClassic').onclick=function(){ shell.classList.remove('on'); try{ if(typeof openDetail==='function') openDetail(card.id); }catch(e){} };
         var db=document.getElementById('ol2Del');
-        if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='🗑 Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
+        if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
       })();
       lpWireExtras(card);
       var msg=document.getElementById('ol2RevMsg');
@@ -10566,12 +10722,12 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         if(res.ok&&res.j&&res.j.draft){
           card.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()};
           card.aiStatus='ready'; if(card.status!=='review'){ card.status='review'; card.columnEnteredAt=Date.now(); } persist();
-          var d=document.getElementById('ol2Draft'); d.classList.remove('run'); d.textContent=res.j.draft; msg.style.display='none'; renderActions();
+          var d=document.getElementById('ol2Draft'); d.classList.remove('run'); d.innerHTML=mdLite(res.j.draft); msg.style.display='none'; renderActions();
         } else if(res.status===503&&res.j&&res.j.error==='no_key'){
-          var d2=document.getElementById('ol2Draft'); d2.classList.remove('run'); d2.textContent=(card.aiArtifact&&card.aiArtifact.content)||'No draft yet.';
+          var d2=document.getElementById('ol2Draft'); d2.classList.remove('run'); if(card.aiArtifact&&card.aiArtifact.content){ d2.innerHTML=mdLite(card.aiArtifact.content); } else { d2.textContent='No draft yet.'; }
           showMsg('Add <b>ANTHROPIC_API_KEY</b> in Vercel to enable drafting.','warn'); renderActions();
         } else {
-          var d3=document.getElementById('ol2Draft'); d3.classList.remove('run'); d3.textContent=(card.aiArtifact&&card.aiArtifact.content)||'No draft yet.';
+          var d3=document.getElementById('ol2Draft'); d3.classList.remove('run'); if(card.aiArtifact&&card.aiArtifact.content){ d3.innerHTML=mdLite(card.aiArtifact.content); } else { d3.textContent='No draft yet.'; }
           showMsg('Couldn’t draft: '+esc((res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status)),'err'); renderActions();
         }
       }
@@ -10580,8 +10736,29 @@ Format: "Focus:" (2-3 key priorities for the week). "Progress:" (1 sentence on m
         document.getElementById('ol2Acts').innerHTML='';
         callRun(card, parts, instruction, (card.aiArtifact&&card.aiArtifact.content)||'', applyResult);
       }
-      document.getElementById('ol2RefBtn').onclick=function(){ var v=document.getElementById('ol2RefIn').value.trim(); if(!v) return; document.getElementById('ol2RefIn').value=''; if(card.aiArtifact&&card.aiArtifact.content){ doRun(v); } else { doRun(''); } };
+      document.getElementById('ol2RefBtn').onclick=function(){ var v=document.getElementById('ol2RefIn').value.trim(); if(!v) return; document.getElementById('ol2RefIn').value=''; doRun(v); };
       document.getElementById('ol2RefIn').addEventListener('keydown',function(e){ if(e.key==='Enter'){ document.getElementById('ol2RefBtn').click(); } });
+      // ── Wingman asks the clarifying questions; answers land on the card ──
+      (function(){
+        var wq=document.getElementById('ol2AskWing'), wb=document.getElementById('ol2WingQBody');
+        function renderQ(a){
+          if(!a){ wb.innerHTML='<div style="color:#8A8D97;font-size:12px;margin-top:8px">Couldn&#39;t reach Wingman just now.</div>'; return; }
+          card.aiAssess={reason:a.reason||'',questions:a.questions||[],suggest:a.suggest||{}}; if(a.confidence!=null) card.aiConfidence=a.confidence; try{ persist(); }catch(e){}
+          var qs=a.questions||[];
+          var h2='<div style="font-size:12.5px;color:#9EA1AB;margin-top:10px">'+(a.confidence!=null?('<b style="color:#E0B871">'+a.confidence+'% confident</b>'):'')+(a.reason?((a.confidence!=null?' · ':'')+esc(a.reason)):'')+'</div>';
+          if(qs.length){ h2+=qs.map(function(q,i){ return '<div style="margin-top:9px"><div style="font-size:12.5px;color:#E9EAEE;line-height:1.5">'+esc(q)+'</div><input class="ein wqa" data-i="'+i+'" placeholder="Your answer" style="margin-top:5px"/></div>'; }).join('')+'<button type="button" class="gbtn amber" id="ol2WingQSave" style="margin-top:10px">Save answers to the card</button>'; }
+          else h2+='<div style="font-size:12px;color:#3FA276;margin-top:6px">No open questions — Wingman has what it needs.</div>';
+          wb.innerHTML=h2;
+          var sv=document.getElementById('ol2WingQSave'); if(sv) sv.onclick=function(){
+            var add=[]; [].forEach.call(wb.querySelectorAll('.wqa'),function(inp){ var i=+inp.getAttribute('data-i'); if((inp.value||'').trim()) add.push('Q: '+qs[i]+'\nA: '+inp.value.trim()); });
+            if(!add.length){ toast('Type at least one answer'); return; }
+            card.notes=((card.notes||'')+'\n\n'+add.join('\n')).trim(); var en=document.getElementById('edNotes'); if(en) en.value=card.notes; try{ persist(); }catch(e){}
+            toast('Saved — run Wingman again for a sharper draft'); wb.innerHTML='<div style="font-size:12px;color:#3FA276;margin-top:8px">Answers saved to the notes.</div>';
+          };
+        }
+        if(card.aiAssess&&(card.aiAssess.questions||[]).length){ renderQ({confidence:card.aiConfidence,reason:card.aiAssess.reason,questions:card.aiAssess.questions,suggest:card.aiAssess.suggest}); }
+        wq.onclick=function(){ wq.disabled=true; wq.textContent='▸ Thinking…'; lpAssess(card,function(a){ wq.disabled=false; wq.textContent='▸ What does Wingman need to know?'; renderQ(a); }); };
+      })();
       renderActions();
     }
 
