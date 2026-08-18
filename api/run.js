@@ -1,19 +1,12 @@
 // Operation Levi 2.0 — Phase 3 execution endpoint.
 // Vercel serverless function. Calls the Claude API server-side; the key never reaches the browser.
 // Env: ANTHROPIC_API_KEY (required), ANTHROPIC_MODEL (optional, default claude-opus-4-8),
-//      RUN_SHARED_SECRET (optional extra guard — if set, requests must send a matching x-ol-key header).
-module.exports = async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
+//      auth: signed-in Supabase JWT via api/_guard.js.
+var guard = require('./_guard.js');
 
-  // Same-origin guard: only our own site / its Vercel deployments may call this.
-  var origin = req.headers.origin || req.headers.referer || '';
-  if (origin && !/^https?:\/\/(www\.)?levisprojects\.com|\.vercel\.app/i.test(origin)) {
-    res.status(403).json({ error: 'origin' }); return;
-  }
-  // Optional shared secret.
-  var secret = process.env.RUN_SHARED_SECRET;
-  if (secret && req.headers['x-ol-key'] !== secret) { res.status(403).json({ error: 'auth' }); return; }
+module.exports = async (req, res) => {
+  var user = await guard(req, res);
+  if (!user) return;
 
   var key = process.env.ANTHROPIC_API_KEY;
   if (!key) { res.status(503).json({ error: 'no_key' }); return; }
@@ -31,7 +24,8 @@ module.exports = async (req, res) => {
     + "Do NOT send, publish, purchase, sign in, or take any real-world action — produce the result only so the user can review and act. "
     + "Follow the SKILL instructions, use the TEMPLATE structure if given, match the BRAND / CONTEXT (voice, terms, sensitivities), and honour the PREFERENCES. "
     + "If a CURRENT DRAFT and a REVISION are provided, revise that draft to satisfy the revision while preserving everything else, and output the full revised result only. "
-    + "If something essential is missing, make a reasonable assumption and note it briefly at the end under 'Assumptions'.";
+    + "If something essential is missing, make a reasonable assumption and note it briefly at the end under 'Assumptions'. "
+    + "If the task card specifies a DELIVERABLE type (Email, Document, Deck, Spreadsheet, Research brief, Plan, Design / asset, Code, Message, Decision), shape the Result as exactly that asset type: an Email gets a subject line and ready-to-send body; a Deck gets slide-by-slide content; a Spreadsheet gets a markdown table with headers ready to paste; a Research brief gets findings with sources; a Plan gets phased steps with owners and dates. The deliverable type wins over any conflicting format hint.";
 
   // Pull the chosen skill's REAL instructions if a catalog source is linked and the stored body is thin.
   if (skill && skill.source && (!skill.body || String(skill.body).trim().length < 40)) {
@@ -47,7 +41,7 @@ module.exports = async (req, res) => {
     }
   }
 
-  var u = "TASK CARD\n" + JSON.stringify({ title: card.title, notes: card.notes, dueDate: card.dueDate, category: card.category, assignees: card.assignees }, null, 2) + "\n\n";
+  var u = "TASK CARD\n" + JSON.stringify({ title: card.title, notes: card.notes, dueDate: card.dueDate, category: card.category, assignees: card.assignees, deliverable: card.deliverable || undefined }, null, 2) + "\n\n";
   if (skill) u += "SKILL (how to do it)\n" + (skill.name ? ('# ' + skill.name + '\n') : '') + (skill.whenToUse ? ('When to use: ' + skill.whenToUse + '\n') : '') + (skill.body || '') + (skill.outputFormat ? ('\nOutput format: ' + skill.outputFormat) : '') + (skill.example ? ('\n\nExample output:\n' + skill.example) : '') + "\n\n";
   if (template) u += "TEMPLATE (structure to follow)\n" + (template.body || '') + "\n\n";
   if (context) u += "BRAND / CONTEXT\n" + JSON.stringify(context, null, 2) + "\n\n";

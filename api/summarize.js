@@ -1,14 +1,12 @@
 // Levi's Projects — short natural-language narrative for Goals and Pulse.
 // POST { kind: 'goal'|'pulse', data: {...} }  ->  { text: "<one or two sentences>" }
 // Mirrors api/assess.js. Env: ANTHROPIC_API_KEY (required), ANTHROPIC_SUMMARY_MODEL (optional),
-// RUN_SHARED_SECRET (optional guard via x-ol-key). Callers degrade gracefully if this 503s.
+// auth: signed-in Supabase JWT via api/_guard.js. Callers degrade gracefully if this 503s.
+var guard = require('./_guard.js');
+
 module.exports = async (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
-  var origin = req.headers.origin || req.headers.referer || '';
-  if (origin && !/^https?:\/\/(www\.)?levisprojects\.com|\.vercel\.app/i.test(origin)) { res.status(403).json({ error: 'origin' }); return; }
-  var secret = process.env.RUN_SHARED_SECRET;
-  if (secret && req.headers['x-ol-key'] !== secret) { res.status(403).json({ error: 'auth' }); return; }
+  var user = await guard(req, res);
+  if (!user) return;
   var key = process.env.ANTHROPIC_API_KEY;
   if (!key) { res.status(503).json({ error: 'no_key' }); return; }
 
