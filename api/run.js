@@ -47,9 +47,11 @@ module.exports = async (req, res) => {
   if (context) u += "BRAND / CONTEXT\n" + JSON.stringify(context, null, 2) + "\n\n";
   if (preferences && preferences.length) u += "PREFERENCES\n" + preferences.map(function (p) { return '- ' + (p.key || '') + ': ' + (p.value || ''); }).join('\n') + "\n\n";
   if (instruction) {
-    u += "CURRENT DRAFT\n" + previousDraft + "\n\n";
-    u += "REVISION REQUESTED\n" + instruction + "\n\n";
-    u += "Apply the revision to the draft above, keep everything else intact, and output the full revised draft only.";
+    if (previousDraft) u += "CURRENT DRAFT\n" + previousDraft + "\n\n";
+    u += "USER INSTRUCTION — HIGHEST AUTHORITY\n" + instruction + "\n\n";
+    u += "The user's instruction above outranks the task card, the skill, and any current draft. "
+      + "If it is a tweak to the current draft, apply it and output the full revised draft. "
+      + "If it asks for something different or additional (a new list, new research, a different deliverable), do exactly that instead — do not restate or force-fit the old draft or the card's framing. Output only the deliverable.";
   } else {
     u += "Write the draft now.";
   }
