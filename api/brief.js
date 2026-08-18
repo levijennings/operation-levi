@@ -45,13 +45,49 @@ function assemble(rows, blob) {
   var top = overdue.concat(dueToday).slice(0, 12).map(function (c) {
     return { title: c.title, due: c.dueDate, cat: c.category, deliverable: c.deliverable || '', owner: (c.assignees && c.assignees[0]) || c.responsible || '' };
   });
+  // ── 5c alert rules: the graphs raise their hand inside the brief ──
+  var alerts = [];
+  var odBy = {};
+  overdue.forEach(function (c) {
+    (c.assignees && c.assignees.length ? c.assignees : [c.responsible]).forEach(function (p) { if (p) odBy[p] = (odBy[p] || 0) + 1; });
+  });
+  Object.keys(odBy).forEach(function (p) { if (odBy[p] >= 3) alerts.push(p + ' is carrying ' + odBy[p] + ' overdue tasks — suggest rebalancing or a deadline reset'); });
+  if (review.length >= 5) alerts.push(review.length + ' Wingman drafts are sitting unreviewed — drafting is ahead of decisions');
+  // intake vs completed, last 3 whole weeks (createdAt tracking began Aug 2026)
+  try {
+    var now = Date.now(), wk = 7 * 86400000, worse = 0;
+    for (var wI = 1; wI <= 3; wI++) {
+      var ws = now - wI * wk, we = now - (wI - 1) * wk;
+      var madeN = items.filter(function (c) { return c.createdAt && c.createdAt >= ws && c.createdAt < we; }).length;
+      var doneN = items.filter(function (c) { if (!c.completedAt) return false; var d = new Date(String(c.completedAt).slice(0, 10) + 'T00:00:00Z').getTime(); return d >= ws && d < we; }).length;
+      if (madeN > doneN && madeN > 0) worse++;
+    }
+    if (worse === 3) alerts.push('More work has come in than gone out for 3 straight weeks — the team is falling behind');
+  } catch (e) {}
+  // goal pace: >20 points behind a linear run-rate to the target date
+  ((blob && blob.goals) || []).forEach(function (g) {
+    if (!g || !g.targetDate || !g.id) return;
+    var linked = items.filter(function (c) { return (c.goalIds || []).indexOf(g.id) >= 0; });
+    if (linked.length < 2) return;
+    var doneL = linked.filter(function (c) { return c.status === 'done'; }).length;
+    var pct = Math.round(doneL / linked.length * 100);
+    try {
+      var yr = new Date(g.targetDate + 'T00:00:00Z').getUTCFullYear();
+      var st = Date.UTC(yr, 0, 1), tg = new Date(g.targetDate + 'T00:00:00Z').getTime();
+      if (tg > st) {
+        var exp = Math.max(0, Math.min(100, Math.round((Date.now() - st) / (tg - st) * 100)));
+        if (pct < exp - 20) alerts.push('Goal "' + g.title + '" is ' + (exp - pct) + ' points behind pace for ' + g.targetDate + ' — cut scope, move the date, or push');
+      }
+    } catch (e) {}
+  });
   return {
     date: today,
     counts: { open: open.length, overdue: overdue.length, dueToday: dueToday.length, needsReview: review.length },
     urgent: top,
     awaitingApproval: review.slice(0, 8).map(function (c) { return { title: c.title, deliverable: c.deliverable || '' }; }),
     crew: byPerson,
-    goals: goals
+    goals: goals,
+    alerts: alerts.slice(0, 4)
   };
 }
 
@@ -60,6 +96,7 @@ async function writeNarrative(data, key) {
   var sys = "You are Wingman, the AI first officer inside Levi's Projects. Write the morning executive brief for Levi. "
     + "Voice: clipped, confident, zero filler — a trusted first officer, not a chatbot. Second person. "
     + "Structure: one headline sentence naming the single most needle-moving thing today; then 2-4 short sentences covering what you flag from overdue/due items, drafts awaiting approval, and crew load; close with one sentence on goal pace if goal data exists. "
+    + "ALERTS in the data are pre-computed warnings from the analytics — if any are present, weave the most important one in plainly; they exist so nobody quietly falls behind. "
     + "Never invent tasks or numbers — use only the data given. Under 120 words. No markdown headers, no bullet lists, no emoji.";
   var r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
