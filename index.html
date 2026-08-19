@@ -1630,7 +1630,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .lp-tcard .st{font-size:11.5px;color:#9EA1AB;margin-top:2px}
 .ol2 .lp-tcard .st b{color:#C7C9D1}
 .ol2 .lp-expand{margin-top:10px}
-.ol2 .lp-lbl{font-size:11px;color:#9EA1AB;margin-bottom:4px}
+.ol2 .lp-lbl{display:block;font-size:12px;font-weight:600;color:#C7C9D1;margin-bottom:5px}
 .ol2 .lp-sts{display:flex;flex-direction:column;gap:6px}
 .ol2 .lp-st{display:flex;align-items:flex-start;gap:9px;background:#15161A;border:1px solid #20232a;border-radius:9px;padding:8px 11px}
 .ol2 .lp-st .b{flex:1;min-width:0}
@@ -1729,9 +1729,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .tcard[draggable]{cursor:grab}
 .ol2 .panelc .erl{display:block;font-size:11px;color:#8A8D97;text-transform:uppercase;letter-spacing:.05em;margin:13px 0 5px}
 .ol2 .panelc .erl:first-child{margin-top:0}
-.ol2 .ein,.ol2 .esel{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:9px 11px;color:#E9EAEE;font-size:13.5px;font-family:'Inter'}
 .ol2 .emode{display:flex;gap:7px}
-.ol2 .emodeb{flex:1;border:1px solid #30353d;background:#191B20;color:#aab2c0;border-radius:9px;padding:8px;font-weight:600;font-size:12px;cursor:pointer;font-family:'Inter'}
+.ol2 .emodeb{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;min-height:42px;border:1px solid #2E323A;background:#191B20;color:#aab2c0;border-radius:10px;padding:8px 6px;font-weight:600;font-size:12px;line-height:1.15;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif;white-space:nowrap;transition:.12s}
+.ol2 .emodeb:hover{border-color:#3a3f49;color:#E9EAEE}
 .ol2 .emodeb.sel{border-color:#4a3514;background:#2c2009;color:#C08428}
 .ol2 .md-top3{display:grid;gap:10px}
 .ol2 .md-card{display:flex;align-items:center;gap:13px;background:#191B20;border:1px solid #26272D;border-radius:12px;padding:14px 16px;cursor:pointer;transition:.14s}
@@ -1749,7 +1749,13 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .ol2-filter input::placeholder{color:#8A8D97}
 .ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
 .ol2 .ol2-filter button:hover{background:#23262d;color:#E9EAEE}
-.ein,.esel{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:9px 11px;color:#E9EAEE;font-size:13.5px;font-family:'Inter'}
+.ein,.esel,.etxt{width:100%;box-sizing:border-box;background:#0E0F13;border:1px solid #2E323A;border-radius:10px;padding:11px 12px;color:#E9EAEE;font-size:14px;line-height:1.45;font-family:Inter,-apple-system,system-ui,sans-serif;min-height:42px;transition:border-color .12s,box-shadow .12s;-webkit-appearance:none;appearance:none}
+.ein::placeholder,.etxt::placeholder{color:#5C6068}
+.ein:focus,.esel:focus,.etxt:focus{outline:none;border-color:#4F8AD1;box-shadow:0 0 0 3px rgba(79,138,209,.16)}
+.ein:disabled,.esel:disabled,.etxt:disabled{opacity:.5;cursor:not-allowed}
+.ein[type=date]::-webkit-calendar-picker-indicator,.ein[type=time]::-webkit-calendar-picker-indicator{filter:invert(.62);cursor:pointer}
+.esel{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.75L6 6.25L11 1.75' stroke='%238A8D97' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:11px;padding-right:34px;cursor:pointer}
+.etxt{min-height:88px;resize:vertical;line-height:1.6}
 /* Overlays mount outside .ol2 (modals on document.body) — the shared controls
    need unscoped copies or they render as raw browser widgets. Classic is gone,
    so there is nothing left for these to collide with. */
@@ -1760,7 +1766,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .gbtn.blue{border-color:#3E6FA8;color:#9cc4ec}
 .gbtn:disabled{opacity:.5;cursor:default}
 .lp-mini{background:#23262e;border:1px solid #30353d;color:#C7C9D1;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
-.lp-lbl{font-size:11px;color:#9EA1AB;margin-bottom:4px}
+.lp-lbl{display:block;font-size:12px;font-weight:600;color:#C7C9D1;margin-bottom:5px}
 .empty{color:#8A8D97;font-size:12px;text-align:center;padding:18px;border:1px dashed #30353d;border-radius:10px}
 .pav.wing{background:#3a2b12;color:#C08428;font-size:17px}
 .pav{width:38px;height:38px;border-radius:50%;background:#33405a;color:#cdd8ea;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -1849,7 +1855,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .ghdr2{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:#6E717B;margin:18px 0 4px;text-transform:uppercase}
 
 .ol2 .tin{width:100%;background:none;border:none;outline:none;color:#E9EAEE;font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.01em;padding:2px 0}
-.ol2 .facts{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin:2px 0 18px}
+.ol2 .facts{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr)) minmax(215px,1.5fr);gap:10px;margin:2px 0 18px}
 .ol2 .facts .fact .erl{margin-top:0}
 .ol2 .facts .esel,.ol2 .facts .ein{width:100%}
 .ol2 .draft2{background:#0e0f13;border:1px solid #26272D;border-radius:12px;padding:18px 20px;font-size:13.5px;line-height:1.7;color:#d7dbe3;min-height:120px;max-height:56vh;overflow:auto}
@@ -1859,7 +1865,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .draft2 li{margin-bottom:4px}
 .ol2 .draft2 b{color:#E9EAEE}
 .ol2 .wingq{border:1px dashed #3a3320;border-radius:11px;padding:4px 12px 12px;margin-top:12px;background:rgba(192,132,40,.03)}
-@media (max-width:900px){ .ol2 .facts{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:900px){ .ol2 .facts{grid-template-columns:repeat(3,1fr)} .ol2 .facts .fact:last-child{grid-column:1/-1} }
 @media (max-width:720px){ .ol2 .facts{grid-template-columns:1fr 1fr} .ol2 .tin{font-size:18px} }
 /* ── The Overhaul 5d ── */
 .ol2 .wtabs{display:flex;gap:6px;margin:0 0 16px}
@@ -1951,6 +1957,76 @@ dots + 'Levi&#39;s Projects</td></tr>' +
   .ol2cap{padding-top:5vh}
   .ol2cap .cap{padding:22px 18px 20px}
   .ol2cap .cact{flex-wrap:wrap}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   FORM SYSTEM — every data-entry surface in the app is built from these.
+   Unscoped on purpose: modals mount on document.body, outside .ol2.
+   Rules: label always ABOVE its control, controls always full-width,
+   help text is persistent (never a placeholder that vanishes on focus),
+   the primary action never scrolls out of reach.
+   ══════════════════════════════════════════════════════════════════════ */
+.lpm{position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.86);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.lpmbox{width:600px;max-width:96vw;background:#15161A;border:1px solid #30323A;border-radius:16px;color:#E9EAEE;box-shadow:0 30px 90px rgba(0,0,0,.6);display:flex;flex-direction:column;max-height:90vh}
+.lpmbox.wide{width:720px}
+.lpmh{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 15px;border-bottom:1px solid #23252B;flex-shrink:0}
+.lpmh .ht{flex:1;min-width:0}
+.lpmh h2{font-size:18px;margin:0;font-weight:700;line-height:1.25;letter-spacing:-.005em}
+.lpmh .sub{font-size:12.5px;color:#8A8D97;margin-top:6px;line-height:1.55}
+.lpmb{padding:18px 22px 20px;overflow-y:auto;flex:1;min-height:0}
+.lpmf{display:flex;gap:10px;align-items:center;padding:14px 22px;border-top:1px solid #23252B;flex-shrink:0;border-radius:0 0 16px 16px;background:#15161A}
+.lpmf .sp{flex:1}
+.lpmf .note{font-size:11.5px;color:#6E717B;flex:1;line-height:1.5}
+.lpx{background:#1d2129;border:1px solid #30353d;color:#9EA1AB;border-radius:8px;width:30px;height:30px;font-size:14px;line-height:1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.lpx:hover{background:#23262d;color:#E9EAEE}
+.lpf{margin-bottom:17px}
+.lpf:last-child{margin-bottom:0}
+.lpf>label{display:block;font-size:12px;font-weight:600;color:#C7C9D1;margin-bottom:5px}
+.lpf>label .opt{font-weight:400;color:#6E717B;margin-left:5px}
+.lpf .hint{font-size:11.5px;color:#7C7F89;margin:0 0 7px;line-height:1.55}
+.lpfrow{display:grid;gap:13px;margin-bottom:17px}
+.lpfrow.c2{grid-template-columns:1fr 1fr}
+.lpfrow.c3{grid-template-columns:1fr 1fr 1fr}
+.lpfrow .lpf{margin-bottom:0}
+.lpfs{margin:24px 0 15px;padding-top:18px;border-top:1px solid #21232A}
+.lpfs:first-child{margin-top:0;padding-top:0;border-top:none}
+.lpfs h3{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6E717B;margin:0;font-weight:400}
+.lpfs p{font-size:12px;color:#7C7F89;margin:6px 0 0;line-height:1.55}
+.lpck{display:flex;gap:11px;align-items:flex-start;padding:12px 13px;border:1px solid #2E323A;border-radius:10px;background:#0E0F13;cursor:pointer;margin-bottom:10px}
+.lpck:hover{border-color:#3a3f49}
+.lpck input{margin:1px 0 0;width:16px;height:16px;flex-shrink:0;accent-color:#4F8AD1;cursor:pointer}
+.lpck .ct{font-size:13.5px;color:#E9EAEE;font-weight:500}
+.lpck .cd{font-size:11.5px;color:#7C7F89;margin-top:3px;line-height:1.5}
+.lpdanger{background:none;border:1px solid #4a2727;color:#E08A8A;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lpdanger:hover{background:rgba(224,138,138,.07);border-color:#5f3232}
+.lpfile{font-size:12px;color:#9EA1AB;font-family:inherit;max-width:100%}
+.lpfile::file-selector-button{background:#1d2129;border:1px solid #30353d;color:#E9EAEE;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:10px}
+.lpfile::file-selector-button:hover{background:#23262d}
+/* Step cards — one card per step so nothing truncates and every field is labelled */
+.lpstep{background:#0E0F13;border:1px solid #262A31;border-radius:12px;padding:14px;margin-bottom:10px}
+.lpstep:focus-within{border-color:#343a44}
+.lpstep .sh{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.lpstep .sn{width:25px;height:25px;border-radius:7px;background:#1d2129;color:#9EA1AB;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lpstep .sh .ein{flex:1}
+.lpstep .sacts{display:flex;gap:4px;flex-shrink:0}
+.lpstep .sbtn{background:none;border:1px solid #2A2E36;color:#6E717B;border-radius:7px;width:28px;height:28px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:inherit;padding:0}
+.lpstep .sbtn:hover{color:#E9EAEE;border-color:#3a3f49}
+.lpstep .sbtn:disabled{opacity:.3;cursor:default}
+.lpstep .sbtn.del:hover{color:#E08A8A;border-color:#5a2b2b}
+.lpaddstep{width:100%;justify-content:center;display:flex;align-items:center;gap:7px;border-style:dashed!important;color:#9EA1AB!important;margin-top:2px}
+.lpaddstep:hover{color:#E9EAEE!important;border-color:#3a3f49!important}
+@media (max-width:640px){
+  .lpm{padding:0}
+  .lpmbox{max-height:100vh;height:100%;width:100%;max-width:100%;border-radius:0;border:none}
+  .lpmf{border-radius:0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+  .lpfrow.c2,.lpfrow.c3{grid-template-columns:1fr}
+  /* 16px keeps iOS from zooming the viewport when a field takes focus */
+  .ein,.esel,.etxt{font-size:16px;min-height:46px}
+  .lpmf .gbtn,.lpmf .lpdanger{min-height:46px}
+  .lpmf .note{display:none}
+  .lpstep .sh{flex-wrap:wrap}
+  .lpstep .sh .ein{order:3;flex-basis:100%;min-width:0}
+  .lpstep .sacts{margin-left:auto}
 }
 </style>
 <style>
@@ -2175,7 +2251,14 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     var h='<div style="width:660px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
     h+='<div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">'+av+'<div style="flex:1"><div style="font-size:19px;font-weight:700" class="syne">'+esc(name)+'</div><input class="ein" id="lpPfRole" placeholder="Role / title" value="'+esc(prof.role||'')+'" style="margin-top:6px"/></div><button id="lpPfClose" class="lp-mini">✕ Close</button></div>';
     h+='<div class="lp-pfstats"><div><b>'+st.open+'</b>open</div><div><b>'+st.done+'</b>done</div><div><b>'+st.estH+'</b>est hrs</div><div><b>'+(Math.round(st.spentH*10)/10)+'</b>spent hrs</div><div><b>'+(Math.round(st.remH*10)/10)+'</b>left hrs</div></div>';
-    h+='<div class="lp-sec"><div class="lp-sech"><span>Capacity & rate</span></div><div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end"><div><div class="lp-lbl">Capacity (hrs)</div><input class="ein" id="lpPfCap" type="number" min="0" step="1" value="'+(cap||'')+'" style="width:100px"/></div><div><div class="lp-lbl">Per</div><select class="esel" id="lpPfCad" style="width:120px"><option value="weekly"'+(cad==='weekly'?' selected':'')+'>Weekly</option><option value="biweekly"'+(cad==='biweekly'?' selected':'')+'>Bi-weekly</option><option value="monthly"'+(cad==='monthly'?' selected':'')+'>Monthly</option></select></div>'+(admin?('<div><div class="lp-lbl">Hourly rate ($) · <span style="color:#8A8D97">private</span></div><input class="ein" id="lpPfRate" type="number" min="0" step="1" value="'+(rate||'')+'" style="width:110px"/></div>'):'')+'<label class="lp-check" style="align-self:center;margin-right:6px"><input type="checkbox" id="lpPfEA"'+(prof.isEA?' checked':'')+'/> EA / Assistant</label><button class="gbtn amber" id="lpPfSave">Save</button></div>';
+    h+='<div class="lp-sec"><div class="lp-sech"><span>Capacity &amp; rate</span></div>'
+      +lpRow(
+        lpFld({label:'Capacity (hrs)',id:'lpPfCap',type:'number',value:cap||'',attrs:' min="0" step="1"'}),
+        lpFld({label:'Per',id:'lpPfCad',type:'select',value:cad||'weekly',opts:[{v:'weekly',l:'Weekly'},{v:'biweekly',l:'Bi-weekly'},{v:'monthly',l:'Monthly'}]})
+      )
+      +(admin?lpFld({label:'Hourly rate ($)',id:'lpPfRate',type:'number',value:rate||'',optional:true,attrs:' min="0" step="1"',hint:'Only admins can see this.'}):'')
+      +lpCheck('lpPfEA','EA / Assistant','Play steps tagged EA get assigned here.',prof.isEA)
+      +'<div style="display:flex"><button class="gbtn amber" id="lpPfSave" style="margin-left:auto">Save</button></div>';
     if(cap){ var utilPct=Math.round((st.remH/cap)*100); h+='<div style="font-size:12px;color:#9EA1AB;margin-top:8px">Remaining work ('+(Math.round(st.remH*10)/10)+' hrs) is '+utilPct+'% of '+cap+' hrs '+capPer+' capacity.</div>'; }
     h+='</div>';
     h+='<div class="lp-sec"><div class="lp-sech"><span>Work & cost</span><select class="esel" id="lpPfTf" style="width:150px"><option value="all"'+(tf==='all'?' selected':'')+'>All time</option><option value="week"'+(tf==='week'?' selected':'')+'>This week</option><option value="month"'+(tf==='month'?' selected':'')+'>This month</option></select></div><div style="font-size:13px;color:#C7C9D1;margin-bottom:10px">Tracked: <b>'+(Math.round(rangeSpentH*10)/10)+' hrs</b>'+(admin?(' · Cost: <b>$'+Math.round(rangeCost).toLocaleString()+'</b>'):'')+'</div><div class="lp-pfproj">'+(Object.keys(byCat).map(function(c){ var bb=byCat[c]; var sh=bb.spentMin/60; return '<div class="row"><span class="dot" style="background:'+lpCatColor(c)+'"></span><span class="c">'+esc(c)+'</span><span class="v">'+bb.n+' tasks · '+(Math.round(bb.est*10)/10)+' est · '+(Math.round(sh*10)/10)+' h spent'+(admin?(' · $'+Math.round(sh*rate).toLocaleString()):'')+'</span></div>'; }).join('')||'<span class="lp-empty">No tasks.</span>')+'</div></div>';
@@ -2591,22 +2674,77 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       ov.onclick=function(e){ if(e.target===ov && (inp.disabled||transcript.length===0)){ ov.remove(); showLibraries(); } };
       turn(false); setTimeout(function(){ try{ inp.focus(); }catch(e){} },300);
     }
+    // ── Form kit ───────────────────────────────────────────────────────────
+    // One way to build every data-entry screen: label above the control,
+    // help text that stays put instead of a placeholder that vanishes on
+    // focus, full-width fields that never truncate what you typed, and a
+    // header/footer that stay put so Save is always one tap away.
+    function lpFld(o){
+      o=o||{}; var t=o.type||'text';
+      var h='<div class="lpf">';
+      if(o.label) h+='<label for="'+o.id+'">'+esc(o.label)+(o.optional?'<span class="opt">optional</span>':'')+'</label>';
+      if(o.hint) h+='<div class="hint">'+esc(o.hint)+'</div>';
+      var a=' id="'+o.id+'"'+(o.ph?(' placeholder="'+esc(o.ph)+'"'):'')+(o.disabled?' disabled':'')+(o.attrs||'');
+      if(t==='select'){
+        h+='<select class="esel"'+a+'>'+(o.opts||[]).map(function(op){
+          var v=(op&&typeof op==='object')?op.v:op, lb=(op&&typeof op==='object')?op.l:op;
+          return '<option value="'+esc(v)+'"'+(String(o.value==null?'':o.value)===String(v)?' selected':'')+'>'+esc(lb)+'</option>';
+        }).join('')+'</select>';
+      } else if(t==='textarea'){
+        h+='<textarea class="etxt"'+a+(o.rows?(' style="min-height:'+(o.rows*22+26)+'px"'):'')+'>'+esc(o.value||'')+'</textarea>';
+      } else {
+        h+='<input class="ein" type="'+esc(t)+'"'+a+' value="'+esc(o.value==null?'':o.value)+'"/>';
+      }
+      return h+'</div>';
+    }
+    function lpRow(){ var f=[].slice.call(arguments); return '<div class="lpfrow c'+f.length+'">'+f.join('')+'</div>'; }
+    function lpSect(t,p){ return '<div class="lpfs"><h3>'+esc(t)+'</h3>'+(p?('<p>'+esc(p)+'</p>'):'')+'</div>'; }
+    function lpCheck(id,title,desc,on){
+      return '<label class="lpck"><input type="checkbox" id="'+id+'"'+(on?' checked':'')+'/>'
+        +'<span><span class="ct">'+esc(title)+'</span>'+(desc?('<span class="cd">'+esc(desc)+'</span>'):'')+'</span></label>';
+    }
+    // Builds the shell. `sub` and `footer` are trusted literal markup from the
+    // call sites; everything user-supplied goes through esc() before it gets here.
+    function lpModal(o){
+      var ov=document.createElement('div'); ov.className='lpm'; if(o.id) ov.id=o.id;
+      ov.innerHTML='<div class="lpmbox'+(o.wide?' wide':'')+'">'
+        +'<div class="lpmh"><div class="ht"><h2 class="syne">'+esc(o.title)+'</h2>'
+        +(o.sub?('<div class="sub">'+o.sub+'</div>'):'')+'</div>'
+        +'<button class="lpx" data-lpclose="1" aria-label="Close">✕</button></div>'
+        +'<div class="lpmb">'+o.body+'</div>'
+        +'<div class="lpmf">'+(o.footer||'')+'</div></div>';
+      function onKey(e){ if(e.key==='Escape'){ e.stopPropagation(); ov.remove(); } }
+      document.addEventListener('keydown',onKey,true);
+      var _rm=ov.remove.bind(ov);
+      ov.remove=function(){ document.removeEventListener('keydown',onKey,true); _rm(); };
+      ov.addEventListener('click',function(e){ if(e.target===ov) ov.remove(); });
+      [].forEach.call(ov.querySelectorAll('[data-lpclose]'),function(b){ b.onclick=function(){ ov.remove(); }; });
+      ov.body=ov.querySelector('.lpmb');
+      return ov;
+    }
+    function lpOpen(ov){ document.body.appendChild(ov); setTimeout(function(){ var f=ov.querySelector('.lpmb .ein,.lpmb .etxt'); if(f&&!f.disabled&&!f.value){ try{ f.focus(); }catch(e){} } },60); return ov; }
     function lpLibEdit(type, item){
       var libo=L(); if(!libo[type]) libo[type]=[];
       var isNew=!item; item=item||{}; var cats=lpLibCats();
-      function field(label,id,val,ph,tag,opts){ tag=tag||'input'; var f='<div style="margin-bottom:12px"><label class="lp-lbl">'+esc(label)+'</label>'; if(tag==='select'){ f+='<select class="esel" id="'+id+'">'+opts.map(function(o){ return '<option value="'+esc(o)+'"'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>'; } else if(tag==='textarea'){ f+='<textarea class="ein" id="'+id+'" style="min-height:72px;resize:vertical"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'>'+esc(val||'')+'</textarea>'; } else { f+='<input class="ein" id="'+id+'" value="'+esc(val||'')+'"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'/>'; } return f+'</div>'; }
+      // Hints are the second half of a label here, so they stay on screen instead
+      // of living in a placeholder that disappears the moment you start typing.
+      function field(label,id,val,ph,tag,opts,hint,optional){
+        return lpFld({label:label,id:id,value:val,ph:ph,hint:hint,optional:!!optional,
+                      type:(tag==='select'?'select':(tag==='textarea'?'textarea':'text')),opts:opts,rows:3});
+      }
       var titleMap={skills:'Skill',templates:'Template',preferences:'Tone & Voice',context:'Context'};
-      var ov=document.createElement('div'); ov.id='lpLibOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
-      var h='<div style="width:600px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
-      h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New ':'Edit ')+esc(titleMap[type]||type)+'</h2><button id="lpLibClose" class="lp-mini">Close</button></div>';
-      if(type==='skills'){ h+=field('Name','lfName',item.name,'e.g. Draft client proposal'); h+=field('When to use','lfDesc',item.description||item.whenToUse,'When should Wingman use this skill?','textarea'); h+=field('Instructions','lfBody',item.body,'How Wingman should do it, step by step','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); h+=field('Tags (comma-separated)','lfTags',item.tags,'proposal, sales, pitch'); }
-      else if(type==='templates'){ h+=field('Name','lfName',item.name,'e.g. SOW template'); h+=field('Description','lfDesc',item.description,'What this template is for','textarea'); h+=field('Format','lfFormat',item.format,'email / doc / slide'); h+=field('Template body','lfBody',item.body,'The structure Wingman fills in','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); }
-      else if(type==='preferences'){ h+=field('Name','lfName',item.key||item.name,'e.g. Brand voice'); h+=field('Tone & voice guidance','lfVal',item.value,'e.g. Warm, concise, confident; no jargon; first-person plural','textarea'); h+=field('Applies to','lfScope',item.scope||'global',null,'select',['global'].concat(cats.filter(function(c){ return c!=='All'; }))); }
-      else { h+=field('Name','lfName',item.name,'e.g. Orbital (client)'); h+=field('Type','lfType',item.type||'project',null,'select',['client','project','person','decision','glossary','source']); h+=field('Summary','lfSum',item.summary,'One line Wingman can use as quick context','textarea'); h+=field('Details','lfDet',item.details,'Full reference: facts, background, do/donts','textarea'); h+=field('Links / sources (one URL per line)','lfLinks',(item.links||[]).map(function(l){ return (typeof l==='string')?l:((l&&l.url)||''); }).filter(Boolean).join('\n'),'https://...','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); }
-      h+='<div style="display:flex;gap:10px;margin-top:6px;align-items:center">'+(isNew?'':'<button id="lpLibDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete</button>')+'<button id="lpLibSave" class="gbtn amber" style="margin-left:auto">Save</button></div></div>';
-      ov.innerHTML=h; document.body.appendChild(ov);
-      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
-      document.getElementById('lpLibClose').onclick=function(){ ov.remove(); };
+      var subMap={skills:'A skill is how you want a kind of work done. Wingman follows it whenever a matching task comes up.',
+        templates:'A template is the structure Wingman fills in — the shape of the finished thing.',
+        preferences:'Tone and voice rules apply to everything Wingman writes for you.',
+        context:'Context is what Wingman needs to know about a client, project or person to sound like it works here.'};
+      var h='';
+      if(type==='skills'){ h+=field('Name','lfName',item.name,'e.g. Draft client proposal'); h+=field('When to use it','lfDesc',item.description||item.whenToUse,'e.g. When a client asks for a proposal or an SOW','textarea',null,'Wingman matches this against the task to decide whether to reach for this skill.'); h+=field('Instructions','lfBody',item.body,'Step by step, the way you would explain it to a new hire','textarea',null,'The more specific this is, the less you have to fix afterwards.'); h+=field('Applies to','lfCat',item.category||'All',null,'select',cats,'Limit it to one workspace, or leave on All.'); h+=field('Tags','lfTags',item.tags,'proposal, sales, pitch',null,null,'Comma-separated. These carry the most weight when Wingman picks a skill.',true); }
+      else if(type==='templates'){ h+=field('Name','lfName',item.name,'e.g. SOW template'); h+=field('What it is for','lfDesc',item.description,'One line','textarea',null,null,true); h+=field('Format','lfFormat',item.format,'email / doc / slide',null,null,null,true); h+=field('Template body','lfBody',item.body,'Paste the structure — headings, sections, the bits that never change','textarea'); h+=field('Applies to','lfCat',item.category||'All',null,'select',cats); }
+      else if(type==='preferences'){ h+=field('Name','lfName',item.key||item.name,'e.g. Brand voice'); h+=field('The rule','lfVal',item.value,'e.g. Warm, concise, confident; no jargon; first-person plural','textarea',null,'Write it as an instruction. Wingman applies this to everything it drafts.'); h+=field('Applies to','lfScope',item.scope||'global',null,'select',['global'].concat(cats.filter(function(c){ return c!=='All'; })),'Global covers every workspace.'); }
+      else { h+=field('Name','lfName',item.name,'e.g. Orbital (client)'); h+=field('Type','lfType',item.type||'project',null,'select',['client','project','person','decision','glossary','source']); h+=field('Summary','lfSum',item.summary,'One line','textarea',null,'The short version Wingman leans on most often.'); h+=field('Details','lfDet',item.details,'Facts, background, the dos and donts','textarea',null,null,true); h+=field('Links / sources','lfLinks',(item.links||[]).map(function(l){ return (typeof l==='string')?l:((l&&l.url)||''); }).filter(Boolean).join('\n'),'https://...','textarea',null,'One URL per line.',true); h+=field('Applies to','lfCat',item.category||'All',null,'select',cats); }
+      var ov=lpModal({id:'lpLibOv',title:(isNew?'New ':'Edit ')+(titleMap[type]||type),sub:subMap[type]||'',body:h,
+        footer:(isNew?'':'<button class="lpdanger" id="lpLibDel">Delete</button>')+'<span class="sp"></span><button id="lpLibSave" class="gbtn amber">'+(isNew?'Create':'Save')+'</button>'});
+      lpOpen(ov);
       var del=document.getElementById('lpLibDel'); if(del) del.onclick=function(){ var arr=libo[type]; for(var i=arr.length-1;i>=0;i--){ if(arr[i]===item || (item.id&&arr[i].id===item.id)) arr.splice(i,1); } try{ persist(); }catch(e){} ov.remove(); showLibraries(); toast('Deleted'); };
       document.getElementById('lpLibSave').onclick=function(){ function g(id){ var e=document.getElementById(id); return e?e.value:''; }
         var rec=item.id?item:{ id:'lib'+Date.now().toString(36) };
@@ -2738,7 +2876,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       {k:'airlines',l:'Preferred airlines',ph:'e.g. Alaska, then Delta'},
       {k:'airlineLoyalty',l:'Airline loyalty numbers',ph:'e.g. Alaska MP 1234567'},
       {k:'cabin',l:'Cabin',ph:'e.g. Economy; first on redeyes'},
-      {k:'seat',l:'Seat',ph:'e.g. Aisle, forward, not by the galley'},
+      {k:'seat',l:'Seat',ph:'e.g. Aisle, forward'},
       {k:'rentalCar',l:'Rental car company',ph:'e.g. National Emerald'},
       {k:'rentalLoyalty',l:'Rental loyalty number',ph:''},
       {k:'hotels',l:'Hotel chains',ph:'e.g. Marriott, then Hyatt'},
@@ -2747,19 +2885,34 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     ];
     function lpTravelEdit(){
       var tp=lpTravel();
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
-      var h='<div style="width:600px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
-        +'<div style="display:flex;align-items:center;margin-bottom:6px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">Travel profile</h2><button id="tvClose" class="lp-mini">Close</button></div>'
-        +'<div style="font-size:12px;color:#8A8D97;margin-bottom:16px">How you like to travel. Wingman pulls these into every travel step so options come back your way — and puts the right loyalty number on each booking instruction.</div>'
-        +'<div class="tvgrid">'+TRAV_FIELDS.map(function(f){ return '<div><label class="lp-lbl">'+esc(f.l)+'</label><input class="ein" id="tv_'+f.k+'" value="'+esc(tp[f.k]||'')+'"'+(f.ph?(' placeholder="'+esc(f.ph)+'"'):'')+'/></div>'; }).join('')+'</div>'
-        +'<div style="margin-top:12px"><label class="lp-lbl">Standing rules</label><textarea class="ein" id="tv_rules" style="min-height:60px;resize:vertical" placeholder="e.g. No red-eyes. Land by 4pm the day before a demo. Always a rental car in the West, car service in NYC.">'+esc(tp.rules||'')+'</textarea></div>'
-        +'<div style="display:flex;gap:10px;margin-top:16px;align-items:center"><span style="font-size:11px;color:#6E717B;flex:1">Never put card numbers or passport details here — Wingman doesn&#39;t need them and won&#39;t store them.</span><button id="tvSave" class="gbtn amber">Save profile</button></div></div>';
-      ov.innerHTML=h; document.body.appendChild(ov);
-      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
-      document.getElementById('tvClose').onclick=function(){ ov.remove(); };
+      function f(k,extra){
+        var d=null; for(var i=0;i<TRAV_FIELDS.length;i++){ if(TRAV_FIELDS[i].k===k) d=TRAV_FIELDS[i]; }
+        if(!d) return '';
+        return lpFld({label:d.l,id:'tv_'+k,value:tp[k]||'',ph:d.ph,hint:(extra||null)});
+      }
+      // Grouped the way a trip is actually booked — air, then ground, then a bed.
+      var body=lpSect('In the air')
+        +lpRow(f('homeAirport','Where you normally fly out of.'),f('airlines','In order of preference.'))
+        +lpRow(f('cabin'),f('seat'))
+        +f('airlineLoyalty','Wingman puts this on the booking instruction so the miles actually land.')
+        +lpSect('On the ground')
+        +lpRow(f('rentalCar'),f('rentalLoyalty'))
+        +f('carService','Include the account it should be billed to, if there is one.')
+        +lpSect('Where you stay')
+        +lpRow(f('hotels','In order of preference.'),f('hotelLoyalty'))
+        +lpSect('Standing rules','The things you would otherwise have to say every single time.')
+        +lpFld({label:'Rules',id:'tv_rules',type:'textarea',value:tp.rules||'',rows:3,
+                ph:'e.g. No red-eyes. Land by 4pm the day before a demo. Rental car in the West, car service in NYC.'});
+
+      var ov=lpModal({title:'Travel profile',
+        sub:'How you like to travel. Every field is optional — fill in what matters and Wingman applies it to each trip it researches, attaching the right loyalty number to the booking instructions it hands you or your EA.',
+        body:body,
+        footer:'<span class="note">Never put card or passport numbers here — Wingman does not need them and will not store them.</span><button id="tvSave" class="gbtn amber">Save profile</button>'});
+      lpOpen(ov);
+
       document.getElementById('tvSave').onclick=function(){
         var t=lpTravel();
-        TRAV_FIELDS.forEach(function(f){ var el=document.getElementById('tv_'+f.k); if(el) t[f.k]=(el.value||'').trim(); });
+        TRAV_FIELDS.forEach(function(fd){ var el=document.getElementById('tv_'+fd.k); if(el) t[fd.k]=(el.value||'').trim(); });
         var rl=document.getElementById('tv_rules'); if(rl) t.rules=(rl.value||'').trim();
         t.updatedAt=Date.now();
         try{ persist(); }catch(e){}
@@ -2840,14 +2993,18 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         shell('<div style="display:flex;align-items:center;margin-bottom:6px"><h2 class="syne" style="font-size:19px;flex:1;margin:0"><span style="color:#C08428">▸</span> Plan a trip</h2><button id="trClose" class="lp-mini">Close</button></div>'
           +'<div style="font-size:12.5px;color:#8A8D97;margin-bottom:16px">Wingman researches the route live — who flies it, what it runs, where to stay — then hands you or your EA an exact booking list. It never books and never pays.</div>'
           +(hasProfile?'':'<div class="tripwarn">Wingman doesn&#39;t know how you like to travel yet. <a id="trProf">Set your travel profile</a> and every option comes back your way.</div>')
-          +'<div class="tvgrid">'
-          +'<div><label class="lp-lbl">From</label><input class="ein" id="trFrom" value="'+esc(seed.origin||tp.homeAirport||'')+'" placeholder="Home airport"/></div>'
-          +'<div><label class="lp-lbl">To</label><input class="ein" id="trTo" value="'+esc(seed.destination||'')+'" placeholder="City or airport"/></div>'
-          +'<div><label class="lp-lbl">Depart</label><input class="ein" id="trDep" type="date" value="'+esc(seed.depart||'')+'"/></div>'
-          +'<div><label class="lp-lbl">Return</label><input class="ein" id="trRet" type="date" value="'+esc(seed.ret||'')+'"/></div>'
-          +'</div>'
-          +'<div style="margin-top:10px"><label class="lp-lbl">What&#39;s the trip for?</label><input class="ein" id="trPurp" value="'+esc(seed.purpose||'')+'" placeholder="e.g. ACST demo + two customer meetings"/></div>'
-          +'<div style="margin-top:10px"><label class="lp-lbl">Anything else Wingman should know</label><textarea class="ein" id="trNotes" style="min-height:54px;resize:vertical" placeholder="Meetings already set, people travelling with you, must-land-by times…">'+esc(seed.notes||'')+'</textarea></div>'
+          +lpRow(
+            lpFld({label:'From',id:'trFrom',value:seed.origin||tp.homeAirport||'',ph:'Home airport'}),
+            lpFld({label:'To',id:'trTo',value:seed.destination||'',ph:'City or airport'})
+          )
+          +lpRow(
+            lpFld({label:'Depart',id:'trDep',type:'date',value:seed.depart||''}),
+            lpFld({label:'Return',id:'trRet',type:'date',value:seed.ret||'',optional:true,hint:'Leave blank for one-way.'})
+          )
+          +lpFld({label:'What the trip is for',id:'trPurp',value:seed.purpose||'',ph:'e.g. ACST demo + two customer meetings',
+                  hint:'This drives where you stay and how the days get laid out.'})
+          +lpFld({label:'Anything else Wingman should know',id:'trNotes',type:'textarea',value:seed.notes||'',optional:true,rows:2,
+                  ph:'Meetings already set, who is travelling with you, must-land-by times'})
           +'<div style="display:flex;gap:10px;margin-top:16px;align-items:center"><span style="font-size:11px;color:#6E717B;flex:1">Live research takes ~30 seconds.</span><button id="trGo" class="gbtn amber">▸ Research this trip</button></div>');
         document.getElementById('trClose').onclick=function(){ ov.remove(); };
         var pf=document.getElementById('trProf'); if(pf) pf.onclick=function(){ ov.remove(); lpTravelEdit(); };
@@ -3005,41 +3162,93 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var Lo=L(); if(!Lo.plays) Lo.plays=[];
       var isNew=!play; play=play||{id:'play'+Date.now().toString(36),name:'',description:'',category:'All',steps:[]};
       var people=(typeof getAllAssignees==='function'?getAllAssignees():[]);
-      var ownerOpts=['me','Wingman'].concat(people.filter(function(p){ return p!==meName(); }));
+      var ownerOpts=[{v:'me',l:'You'},{v:'Wingman',l:'Wingman (AI)'}]
+        .concat(people.filter(function(x){ return x!==meName() && x!=='Wingman'; }).map(function(x){ return {v:x,l:x}; }));
       var steps=(play.steps||[]).map(function(sp){ return {title:sp.title||'',owner:sp.owner||'me',deliverable:sp.deliverable||'',notes:sp.notes||''}; });
       if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''});
-      var ov=document.createElement('div'); ov.id='lpPlayOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
-      function render(){
-        var h='<div style="width:680px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
-        h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New play':'Edit play')+'</h2><button id="lpPlayClose" class="lp-mini">Close</button></div>';
-        h+='<div style="margin-bottom:10px"><label class="lp-lbl">Name</label><input class="ein" id="ppName" value="'+esc(play.name)+'" placeholder="e.g. Book travel"/></div>';
-        h+='<div style="margin-bottom:14px"><label class="lp-lbl">What this play does</label><input class="ein" id="ppDesc" value="'+esc(play.description||'')+'" placeholder="One line"/></div>';
-        h+='<label class="lp-lbl">Steps — tap the owner to reassign</label><div id="ppSteps">';
-        steps.forEach(function(sp,i){
-          h+='<div class="pprow"><span class="ppn">'+(i+1)+'</span><input class="ein ppt" data-i="'+i+'" value="'+esc(sp.title)+'" placeholder="Step"/><button class="ppo'+(sp.owner==='Wingman'?' wing':'')+'" data-i="'+i+'">'+(sp.owner==='me'?'You':esc(sp.owner))+'</button><select class="esel ppd" data-i="'+i+'">'+DELIVS.map(function(d){ return '<option value="'+esc(d)+'"'+(d===sp.deliverable?' selected':'')+'>'+(d||'— output —')+'</option>'; }).join('')+'</select><button class="ppx" data-i="'+i+'">✕</button></div>';
-          h+='<input class="ein ppnotes" data-i="'+i+'" value="'+esc(sp.notes||'')+'" placeholder="How you want it (preferences, accounts, details)" style="margin:0 0 8px 26px;width:calc(100% - 26px);font-size:12px"/>';
+      var delivOpts=DELIVS.map(function(d){ return {v:d,l:d||'No set output'}; });
+
+      // Read whatever is on screen back into `steps` before any re-render, or
+      // typing gets thrown away when you add, delete or move a step.
+      function pull(ov){
+        [].forEach.call(ov.querySelectorAll('[data-sf]'),function(el){
+          var i=+el.getAttribute('data-i'); if(steps[i]) steps[i][el.getAttribute('data-sf')]=el.value;
         });
-        h+='</div><button class="gbtn" id="ppAdd" style="margin-top:4px">＋ Add step</button>';
-        h+='<div style="display:flex;gap:10px;margin-top:16px;align-items:center">'+(isNew?'':'<button id="ppDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete play</button>')+'<button id="ppSave" class="gbtn amber" style="margin-left:auto">Save play</button></div></div>';
-        ov.innerHTML=h;
-        ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
-        document.getElementById('lpPlayClose').onclick=function(){ ov.remove(); };
-        function pull(){ [].forEach.call(ov.querySelectorAll('.ppt'),function(inp){ steps[+inp.getAttribute('data-i')].title=inp.value; }); [].forEach.call(ov.querySelectorAll('.ppnotes'),function(inp){ steps[+inp.getAttribute('data-i')].notes=inp.value; }); [].forEach.call(ov.querySelectorAll('.ppd'),function(sel){ steps[+sel.getAttribute('data-i')].deliverable=sel.value; }); }
-        [].forEach.call(ov.querySelectorAll('.ppo'),function(b){ b.onclick=function(){ pull(); var i=+b.getAttribute('data-i'); var cur=ownerOpts.indexOf(steps[i].owner); steps[i].owner=ownerOpts[(cur+1)%ownerOpts.length]; render(); }; });
-        [].forEach.call(ov.querySelectorAll('.ppx'),function(b){ b.onclick=function(){ pull(); steps.splice(+b.getAttribute('data-i'),1); if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''}); render(); }; });
-        document.getElementById('ppAdd').onclick=function(){ pull(); steps.push({title:'',owner:'me',deliverable:'',notes:''}); render(); };
-        var del=document.getElementById('ppDel'); if(del) del.onclick=function(){ var arr=Lo.plays; for(var i=arr.length-1;i>=0;i--){ if(arr[i].id===play.id) arr.splice(i,1); } try{ persist(); }catch(e){} ov.remove(); showPlays(); toast('Play deleted'); };
-        document.getElementById('ppSave').onclick=function(){ pull();
-          play.name=(document.getElementById('ppName').value||'').trim();
-          play.description=(document.getElementById('ppDesc').value||'').trim();
-          if(!play.name){ toast('Name the play first'); return; }
-          play.steps=steps.filter(function(sp){ return (sp.title||'').trim(); });
-          play.updatedAt=Date.now(); if(!play.createdAt) play.createdAt=Date.now();
-          if(isNew) Lo.plays.push(play);
-          try{ persist(); }catch(e){} ov.remove(); showPlays(); toast('Play saved');
+      }
+      function stepHtml(sp,i,n){
+        return '<div class="lpstep">'
+          +'<div class="sh"><span class="sn">'+(i+1)+'</span>'
+          +'<input class="ein" data-sf="title" data-i="'+i+'" value="'+esc(sp.title)+'" placeholder="What happens in this step"/>'
+          +'<span class="sacts">'
+          +'<button class="sbtn" data-mv="-1" data-i="'+i+'"'+(i===0?' disabled':'')+' title="Move up">↑</button>'
+          +'<button class="sbtn" data-mv="1" data-i="'+i+'"'+(i===n-1?' disabled':'')+' title="Move down">↓</button>'
+          +'<button class="sbtn del" data-del="'+i+'" title="Remove step">✕</button>'
+          +'</span></div>'
+          +lpRow(
+            lpFld({label:'Owner',id:'sp_o_'+i,type:'select',value:sp.owner,opts:ownerOpts,attrs:' data-sf="owner" data-i="'+i+'"'}),
+            lpFld({label:'Output',id:'sp_d_'+i,type:'select',value:sp.deliverable,opts:delivOpts,attrs:' data-sf="deliverable" data-i="'+i+'"'})
+          )
+          +lpFld({label:'How you want it done',id:'sp_n_'+i,type:'textarea',value:sp.notes,optional:true,rows:2,
+                  ph:'Preferences, accounts, the details you would otherwise have to repeat every time',
+                  attrs:' data-sf="notes" data-i="'+i+'"'})
+          +'</div>';
+      }
+      function stepsHtml(){ return steps.map(function(sp,i){ return stepHtml(sp,i,steps.length); }).join('')
+        +'<button class="gbtn lpaddstep" id="ppAdd">＋ Add step</button>'; }
+
+      var body=lpFld({label:'Name',id:'ppName',value:play.name,ph:'e.g. Book travel',
+                      hint:'What you would call this when you ask for it.'})
+        +lpFld({label:'What this play does',id:'ppDesc',value:play.description||'',optional:true,
+                ph:'e.g. Flights, rental car, ground transport and the itinerary email'})
+        +lpSect('Steps','Each step gets an owner and an output. Wingman drafts the steps you give it; the rest become assigned tasks when you run the play.')
+        +'<div id="ppSteps">'+stepsHtml()+'</div>';
+
+      var footer=(isNew?'':'<button class="lpdanger" id="ppDel">Delete play</button>')
+        +'<span class="sp"></span><button id="ppSave" class="gbtn amber">'+(isNew?'Create play':'Save play')+'</button>';
+
+      var ov=lpModal({id:'lpPlayOv',wide:true,title:isNew?'New play':'Edit play',
+        sub:'A play is a procedure you run the same way every time. Write it once, then hand the whole thing to Wingman or your EA.',
+        body:body,footer:footer});
+      lpOpen(ov);
+
+      function bindSteps(){
+        var host=ov.querySelector('#ppSteps'); if(!host) return;
+        [].forEach.call(host.querySelectorAll('[data-del]'),function(b){ b.onclick=function(){
+          pull(ov); steps.splice(+b.getAttribute('data-del'),1);
+          if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''});
+          host.innerHTML=stepsHtml(); bindSteps();
+        }; });
+        [].forEach.call(host.querySelectorAll('[data-mv]'),function(b){ b.onclick=function(){
+          pull(ov); var i=+b.getAttribute('data-i'), d=+b.getAttribute('data-mv'), j=i+d;
+          if(j<0||j>=steps.length) return;
+          var tmp=steps[i]; steps[i]=steps[j]; steps[j]=tmp;
+          host.innerHTML=stepsHtml(); bindSteps();
+        }; });
+        var add=ov.querySelector('#ppAdd');
+        if(add) add.onclick=function(){
+          pull(ov); steps.push({title:'',owner:'me',deliverable:'',notes:''});
+          host.innerHTML=stepsHtml(); bindSteps();
+          var last=host.querySelectorAll('[data-sf="title"]'); if(last.length) try{ last[last.length-1].focus(); }catch(e){}
         };
       }
-      document.body.appendChild(ov); render();
+      bindSteps();
+
+      var del=document.getElementById('ppDel');
+      if(del) del.onclick=function(){
+        if(!window.confirm('Delete the play "'+(play.name||'Untitled')+'"?')) return;
+        var arr=Lo.plays; for(var i=arr.length-1;i>=0;i--){ if(arr[i].id===play.id) arr.splice(i,1); }
+        try{ persist(); }catch(e){} ov.remove(); showPlays(); toast('Play deleted');
+      };
+      document.getElementById('ppSave').onclick=function(){
+        pull(ov);
+        play.name=(document.getElementById('ppName').value||'').trim();
+        play.description=(document.getElementById('ppDesc').value||'').trim();
+        if(!play.name){ toast('Name the play first'); try{ document.getElementById('ppName').focus(); }catch(e){} return; }
+        play.steps=steps.filter(function(sp){ return (sp.title||'').trim(); });
+        play.updatedAt=Date.now(); if(!play.createdAt) play.createdAt=Date.now();
+        if(isNew) Lo.plays.push(play);
+        try{ persist(); }catch(e){} ov.remove(); showPlays(); toast(isNew?'Play created':'Play saved');
+      };
     }
     function showTriage(){
       hideAllPanels();
@@ -3242,24 +3451,37 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var isNew=!g; g=g||{id:'goal'+Date.now().toString(36),title:'',description:'',category:'DVLMNT',targetDate:'',updates:[]};
       var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(!cats.length) cats=['ACST','DVLMNT','Personal'];
       if(g.category&&cats.indexOf(g.category)<0) cats.unshift(g.category);
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
-      ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
-        +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New goal':'Edit goal')+'</h2><button id="goClose" class="lp-mini">Close</button></div>'
-        +'<label class="lp-lbl">Goal</label><input class="ein" id="goTitle" value="'+esc(g.title||'')+'" placeholder="e.g. 10 paying customers for Orbital" style="margin-bottom:10px"/>'
-        +'<label class="lp-lbl">Why it matters (one line)</label><input class="ein" id="goDesc" value="'+esc(g.description||'')+'" style="margin-bottom:10px"/>'
-        +'<label class="lp-lbl">Workspace</label><select class="esel" id="goCat" style="margin-bottom:10px">'+cats.map(function(c){ return '<option'+(c===g.category?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'
-        +'<label class="lp-lbl">Target date</label><input class="ein" id="goDue" type="date" value="'+esc(g.targetDate||'')+'" style="margin-bottom:14px"/>'
-        +'<div style="display:flex;gap:10px;align-items:center">'+(isNew?'':'<button id="goDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete goal</button>')+'<button id="goSave" class="gbtn amber" style="margin-left:auto">Save goal</button></div>'
-        +'<div style="font-size:11px;color:#6E717B;margin-top:10px">Progress is earned by linked work — deleting a goal never touches its tasks.</div></div>';
-      document.body.appendChild(ov);
-      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
-      document.getElementById('goClose').onclick=function(){ ov.remove(); };
-      var gd=document.getElementById('goDel'); if(gd) gd.onclick=function(){ if(!window.confirm('Delete this goal? Its linked tasks stay.')) return; try{ for(var i=goals.length-1;i>=0;i--){ if(String(goals[i].id)===String(g.id)) goals.splice(i,1); } persist(); }catch(e){} ov.remove(); showGoals(); toast('Goal deleted'); };
+
+      var body=lpFld({label:'Goal',id:'goTitle',value:g.title||'',ph:'e.g. 10 paying customers for Orbital',
+                      hint:'Make it countable. A number and a date beat a direction.'})
+        +lpFld({label:'Why it matters',id:'goDesc',value:g.description||'',optional:true,
+                ph:'One line — the reason this is on the board at all'})
+        +lpRow(
+          lpFld({label:'Workspace',id:'goCat',type:'select',value:g.category,opts:cats}),
+          lpFld({label:'Target date',id:'goDue',type:'date',value:g.targetDate||'',
+                 hint:'Sets the pace marker on the progress bar.'})
+        );
+      var footer=(isNew?'':'<button class="lpdanger" id="goDel">Delete goal</button>')
+        +'<span class="note">Progress is earned by linked work — deleting a goal never touches its tasks.</span>'
+        +'<button id="goSave" class="gbtn amber">'+(isNew?'Create goal':'Save goal')+'</button>';
+
+      var ov=lpModal({title:isNew?'New goal':'Edit goal',
+        sub:'Goals do not move on their own — they fill up as the projects and tasks linked beneath them get done.',
+        body:body,footer:footer});
+      lpOpen(ov);
+
+      var gd=document.getElementById('goDel');
+      if(gd) gd.onclick=function(){ if(!window.confirm('Delete this goal? Its linked tasks stay.')) return;
+        try{ for(var i=goals.length-1;i>=0;i--){ if(String(goals[i].id)===String(g.id)) goals.splice(i,1); } persist(); }catch(e){}
+        ov.remove(); showGoals(); toast('Goal deleted'); };
       document.getElementById('goSave').onclick=function(){
-        g.title=(document.getElementById('goTitle').value||'').trim(); if(!g.title){ toast('Name the goal'); return; }
-        g.description=(document.getElementById('goDesc').value||'').trim(); g.category=document.getElementById('goCat').value; g.targetDate=document.getElementById('goDue').value||'';
+        g.title=(document.getElementById('goTitle').value||'').trim();
+        if(!g.title){ toast('Name the goal'); try{ document.getElementById('goTitle').focus(); }catch(e){} return; }
+        g.description=(document.getElementById('goDesc').value||'').trim();
+        g.category=document.getElementById('goCat').value;
+        g.targetDate=document.getElementById('goDue').value||'';
         try{ if(isNew){ if(typeof goals!=='undefined'&&goals) goals.push(g); else { toast('Goals store not ready'); return; } } persist(); }catch(e){}
-        ov.remove(); showGoals(); toast('Goal saved');
+        ov.remove(); showGoals(); toast(isNew?'Goal created':'Goal saved');
       };
     }
     function showGoals(){
@@ -3566,35 +3788,58 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var profs=lpProfilesObj(); var prof=(name&&profs[name])||{};
       var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){}
       var hasTasks=name?lpPersonItems(name).length>0:false;
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
-      ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
-        +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'Add crew member':'Edit '+esc(name))+'</h2><button id="ceClose" class="lp-mini">Close</button></div>'
-        +'<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px"><div id="ceAv">'+((name&&typeof getAvatarHTML==='function')?getAvatarHTML(name,56):'<div class="pav" style="width:56px;height:56px;font-size:20px">?</div>')+'</div><div><label class="lp-lbl" style="display:block">Photo</label><input type="file" id="cePhoto" accept="image/*" style="font-size:11.5px;color:#9EA1AB;max-width:220px"/></div></div>'
-        +'<label class="lp-lbl">Name</label><input class="ein" id="ceName" value="'+esc(name||'')+'"'+(isNew?'':' disabled')+' style="margin-bottom:10px'+(isNew?'':';opacity:.55')+'"/>'
-        +(isNew?'':'<div style="font-size:10.5px;color:#6E717B;margin:-6px 0 10px">Names key the task history — renaming would orphan their work, so it stays fixed for now.</div>')
-        +'<label class="lp-lbl">Role</label><input class="ein" id="ceRole" value="'+esc(prof.role||prof.title||'')+'" placeholder="e.g. EA · Designer · Sales" style="margin-bottom:10px"/>'
-        +'<label class="lp-lbl">Email (optional — enables task notifications)</label><input class="ein" id="ceEmail" value="'+esc(prof.email||'')+'" style="margin-bottom:10px"/>'
-        +(cats.length?('<label class="lp-lbl">Workspace roster</label><select class="esel" id="ceTeam" style="margin-bottom:10px">'+cats.map(function(c){ var inT=false; try{ inT=(teams[c]||[]).indexOf(name)>=0; }catch(e){} return '<option'+(inT?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'):'')
-        +'<label class="lp-lbl">Notes (how you work with them, review cadence)</label><textarea class="ein" id="ceNotes" style="min-height:56px;resize:vertical;margin-bottom:10px">'+esc(prof.notes||'')+'</textarea>'
-        +'<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:#9EA1AB;margin-bottom:8px"><input type="checkbox" id="ceEA"'+(prof.isEA?' checked':'')+'/> This person is my EA</label>'
-        +(isNew?'<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:#9EA1AB;margin-bottom:8px"><input type="checkbox" id="ceAcct"/> Also create a sign-in account (invite by email)</label>':'')
-        +'<div style="display:flex;gap:10px;align-items:center;margin-top:8px">'+((!isNew&&!hasTasks)?'<button id="ceDel" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Remove from crew</button>':'')+'<button id="ceSave" class="gbtn amber" style="margin-left:auto">Save</button></div>'
-        +(isNew?'<div style="font-size:11px;color:#6E717B;margin-top:10px">No account is created unless you tick the box — right for people you manage manually and review with periodically. You can assign them tasks either way.</div>':'')
-        +'</div>';
-      document.body.appendChild(ov);
-      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
-      document.getElementById('ceClose').onclick=function(){ ov.remove(); };
+      var avatar=(name&&typeof getAvatarHTML==='function')?getAvatarHTML(name,56):'<div class="pav" style="width:56px;height:56px;font-size:20px">?</div>';
+
+      var body=lpSect('Who they are')
+        +'<div class="lpf"><label>Photo<span class="opt">optional</span></label>'
+        +'<div style="display:flex;gap:14px;align-items:center"><div id="ceAv" style="flex-shrink:0">'+avatar+'</div>'
+        +'<input type="file" id="cePhoto" accept="image/*" class="lpfile"/></div></div>'
+        +lpFld({label:'Name',id:'ceName',value:name||'',disabled:!isNew,ph:'Full name as you would write it on a task',
+                hint:isNew?'':'Names key the task history, so this stays fixed — renaming would orphan their work.'})
+        +lpFld({label:'Role',id:'ceRole',value:prof.role||prof.title||'',optional:true,ph:'e.g. EA · Designer · Sales'})
+        +lpFld({label:'Email',id:'ceEmail',type:'email',value:prof.email||'',optional:true,ph:'name@company.com',
+                hint:'Only needed if you want them emailed when you assign them something.'})
+        +(cats.length?lpFld({label:'Workspace roster',id:'ceTeam',type:'select',
+             value:(function(){ for(var i=0;i<cats.length;i++){ try{ if((teams[cats[i]]||[]).indexOf(name)>=0) return cats[i]; }catch(e){} } return cats[0]; })(),
+             opts:cats,hint:'Which side of the business they show up under.'}):'')
+        +lpFld({label:'Notes',id:'ceNotes',type:'textarea',value:prof.notes||'',optional:true,rows:3,
+                ph:'How you work with them, what they own, how often you review'})
+        +lpSect('Settings')
+        +lpCheck('ceEA','This person is my EA','Steps a play hands to "EA" get assigned to them automatically.',prof.isEA)
+        +(isNew?lpCheck('ceAcct','Also create a sign-in account','Leave this off for people you manage manually — you can still assign them tasks.',false):'');
+
+      var footer=((!isNew&&!hasTasks)?'<button class="lpdanger" id="ceDel">Remove from crew</button>':'')
+        +'<span class="sp"></span><button id="ceSave" class="gbtn amber">'+(isNew?'Add to crew':'Save')+'</button>';
+
+      var ov=lpModal({title:isNew?'Add crew member':'Edit '+name,
+        sub:isNew?'No account is created unless you ask for one — right for people you manage manually and review with periodically.':'',
+        body:body,footer:footer});
+      lpOpen(ov);
+
       var photoData=null;
       document.getElementById('cePhoto').onchange=function(){
         var f=this.files&&this.files[0]; if(!f) return;
         var rd=new FileReader();
-        rd.onload=function(){ var img=new Image(); img.onload=function(){ try{ var c=document.createElement('canvas'); var m=Math.min(img.width,img.height); var S=128; c.width=S; c.height=S; var cx=c.getContext('2d'); cx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S); photoData=c.toDataURL('image/jpeg',.82); var av=document.getElementById('ceAv'); if(av) av.innerHTML='<img src="'+photoData+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover"/>'; }catch(e){} }; img.src=rd.result; };
+        rd.onload=function(){ var img=new Image(); img.onload=function(){ try{
+          var c=document.createElement('canvas'); var m=Math.min(img.width,img.height); var S=128;
+          c.width=S; c.height=S; var cx=c.getContext('2d');
+          cx.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+          photoData=c.toDataURL('image/jpeg',.82);
+          var av=document.getElementById('ceAv');
+          if(av) av.innerHTML='<img src="'+photoData+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover"/>';
+        }catch(e){} }; img.src=rd.result; };
         rd.readAsDataURL(f);
       };
-      var del=document.getElementById('ceDel'); if(del) del.onclick=function(){ if(!window.confirm('Remove '+name+' from the crew?')) return; try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles&&peopleProfiles[name]) delete peopleProfiles[name]; if(typeof teams!=='undefined'&&teams) Object.keys(teams).forEach(function(c){ var ix=(teams[c]||[]).indexOf(name); if(ix>=0) teams[c].splice(ix,1); }); var avs=JSON.parse(localStorage.getItem('op_levi_avatars')||'{}'); delete avs[name]; localStorage.setItem('op_levi_avatars',JSON.stringify(avs)); persist(); }catch(e){} ov.remove(); showPeople(); toast('Removed from crew'); };
+      var del=document.getElementById('ceDel');
+      if(del) del.onclick=function(){ if(!window.confirm('Remove '+name+' from the crew?')) return;
+        try{ if(typeof peopleProfiles!=='undefined'&&peopleProfiles&&peopleProfiles[name]) delete peopleProfiles[name];
+          if(typeof teams!=='undefined'&&teams) Object.keys(teams).forEach(function(c){ var ix=(teams[c]||[]).indexOf(name); if(ix>=0) teams[c].splice(ix,1); });
+          var avs=JSON.parse(localStorage.getItem('op_levi_avatars')||'{}'); delete avs[name]; localStorage.setItem('op_levi_avatars',JSON.stringify(avs));
+          persist(); }catch(e){}
+        ov.remove(); showPeople(); toast('Removed from crew'); };
       document.getElementById('ceSave').onclick=function(){
         var nm2=isNew?(document.getElementById('ceName').value||'').trim():name;
-        if(!nm2){ toast('Name is required'); return; }
+        if(!nm2){ toast('Name is required'); try{ document.getElementById('ceName').focus(); }catch(e){} return; }
         try{
           if(typeof peopleProfiles==='undefined'||!peopleProfiles||Object.prototype.toString.call(peopleProfiles)==='[object Array]'){ peopleProfiles=lpProfilesObj(); }
           if(!peopleProfiles[nm2]) peopleProfiles[nm2]={};
@@ -3693,7 +3938,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       h+='</div>';
       h+='<div class="lp-sec"><div class="lp-sech"><span>Links</span><button type="button" class="lp-mini" id="edAddLink">+ Add link</button></div>';
       h+='<div class="lp-links">'+(links.length?links.map(function(l){ return '<a class="lp-link" href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.label)+' ↗</a>'; }).join(''):'<span class="lp-empty">No links yet — add a Google Doc / Sheet / Slides, Figma, etc.</span>')+'</div></div>';
-      h+='<div class="lp-sec"><div class="lp-sech"><span>Time</span></div><div class="lp-time"><span class="lp-lbl">Estimate (hrs)</span><input class="ein" id="edEst" type="number" min="0" step="0.25" value="'+(card.timeEstimate||'')+'" style="width:90px"/><button type="button" class="lp-timerbtn'+(running?' on':'')+'" id="edTimer">'+(running?'⏹ Stop timer':'▶ Start timer')+'</button><span class="lp-tracked">'+(tracked?('Tracked: '+lpMins(tracked)):'')+(running?' · running…':'')+'</span></div>';
+      h+='<div class="lp-sec"><div class="lp-sech"><span>Time</span></div><div class="lp-time"><span class="lp-lbl" style="display:inline;margin:0">Estimate (hrs)</span><input class="ein" id="edEst" type="number" min="0" step="0.25" value="'+(card.timeEstimate||'')+'" style="width:90px"/><button type="button" class="lp-timerbtn'+(running?' on':'')+'" id="edTimer">'+(running?'⏹ Stop timer':'▶ Start timer')+'</button><span class="lp-tracked">'+(tracked?('Tracked: '+lpMins(tracked)):'')+(running?' · running…':'')+'</span></div>';
       if(tl.length){ h+='<div class="lp-tl">'+tl.slice().reverse().map(function(e){ return '<div class="lp-tlrow"><span class="m">'+lpMins(e.mins||0)+'</span><span class="n">'+esc(e.note||'')+'</span><span class="w">'+esc(e.by||'')+' · '+lpWhen(e.end||e.start)+'</span></div>'; }).join('')+'</div>'; }
       h+='</div>';
       h+='<div class="lp-sec"><div class="lp-sech"><span>Completion proof</span></div><label class="lp-check"><input type="checkbox" id="edReqProof"'+(card.requireProof?' checked':'')+'/> Require a proof link + explanation to mark Done</label>';
@@ -3797,7 +4042,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<div class="fact"><label class="erl">Due</label><input class="ein" id="edDue" type="date" value="'+esc(card.dueDate||'')+'"/></div>'+
           '<div class="fact"><label class="erl">Workspace</label><select class="esel" id="edCat">'+opts(CATS,card.category)+'</select></div>'+
           '<div class="fact"><label class="erl">Deliverable</label><select class="esel" id="edDeliv">'+DELIV_TYPES.map(function(d){ return '<option value="'+esc(d)+'"'+((card.deliverable||'')===d?' selected':'')+'>'+(d||'— end result —')+'</option>'; }).join('')+'</select></div>'+
-          '<div class="fact"><label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo">✦ Do-it</button><button type="button" class="emodeb" id="edTrack">◷ Track</button><button type="button" class="emodeb" id="edTop3">☆ Top 3</button></div></div>'+
+          '<div class="fact"><label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo" title="Wingman drafts this">✦ Do-it</button><button type="button" class="emodeb" id="edTrack" title="Just track it">◷ Track</button><button type="button" class="emodeb" id="edTop3" title="Pin to this week&#39;s Top 3">☆ Top 3</button></div></div>'+
         '</div>'+
         '<div class="rev">'+
           '<div><div class="panelc">'+
@@ -3836,7 +4081,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         document.getElementById('edNotes').onchange=function(){ card.notes=this.value; persist(); };
         document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
         document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
-        (function(){ var t3=document.getElementById('edTop3'); if(!t3) return; function setT3(){ var on=top3Ids().indexOf(String(card.id))>=0; t3.textContent=on?'★ In Top 3':'☆ Add to Top 3'; t3.classList.toggle('sel',on); } setT3(); t3.onclick=function(){ lpToggleTop3(card.id); setT3(); }; })();
+        (function(){ var t3=document.getElementById('edTop3'); if(!t3) return; function setT3(){ var on=top3Ids().indexOf(String(card.id))>=0; t3.textContent=on?'★ Top 3':'☆ Top 3'; t3.title=on?'In this week&#39;s Top 3 — click to remove':'Pin to this week&#39;s Top 3'; t3.classList.toggle('sel',on); } setT3(); t3.onclick=function(){ lpToggleTop3(card.id); setT3(); }; })();
         var db=document.getElementById('ol2Del');
         if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
       })();
