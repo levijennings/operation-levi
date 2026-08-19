@@ -1498,7 +1498,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .cap-part{display:flex;align-items:center;gap:9px;background:#15161A;border:1px solid #26272D;border-radius:9px;padding:8px 10px;margin-bottom:6px;text-align:left}
 .ol2 .cap-part .t{flex:1;font-size:12px;color:#E9EAEE;line-height:1.35;min-width:0}
 .ol2 .cap-part .t em{font-style:normal;color:#8A8D97;font-size:10px;display:block;margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
-.ol2 .cap-own{border-radius:99px;font-size:10px;font-weight:700;padding:6px 11px;cursor:pointer;border:1px solid #30353d;background:#191B20;color:#C7C9D1;white-space:nowrap;font-family:Inter;min-height:30px}
+.ol2 .cap-own{border-radius:99px;font-size:10px;font-weight:700;padding:6px 11px;cursor:pointer;border:1px solid #30353d;background:#191B20;color:#C7C9D1;white-space:nowrap;font-family:Inter,-apple-system,system-ui,sans-serif;min-height:30px}
 .ol2 .cap-own.wg{background:rgba(192,132,40,.16);color:#E0B871;border-color:rgba(192,132,40,.4)}
 .ol2 .cap-own.team{background:rgba(79,138,209,.14);color:#8FB7E6;border-color:rgba(79,138,209,.4)}
 .ol2 .lp-brief{background:linear-gradient(135deg,rgba(192,132,40,.10),#15161A 60%);border:1px solid rgba(192,132,40,.35);border-radius:13px;padding:16px 18px;margin:0 0 16px}
@@ -1506,7 +1506,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .lp-brief .bt{font-size:13.5px;line-height:1.65;color:#E9EAEE}
 .ol2 .lp-brief .bs{font-size:11px;color:#8A8D97;margin-top:8px}
 .ol2 .doc-ask{display:flex;gap:8px;margin:0 0 10px}
-.ol2 .doc-ask input{flex:1;background:#15161A;border:1px solid #30323A;border-radius:10px;padding:11px 13px;color:#E9EAEE;font-size:13.5px;font-family:Inter;outline:none;min-height:44px}
+.ol2 .doc-ask input{flex:1;background:#15161A;border:1px solid #30323A;border-radius:10px;padding:11px 13px;color:#E9EAEE;font-size:13.5px;font-family:Inter,-apple-system,system-ui,sans-serif;outline:none;min-height:44px}
 .ol2 .doc-ask input:focus{border-color:rgba(192,132,40,.5)}
 .ol2 .doc-askout{background:rgba(192,132,40,.08);border:1px solid rgba(192,132,40,.3);border-radius:11px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:14px}
 .ol2 .doc-wrap{display:grid;grid-template-columns:225px 1fr;gap:22px;align-items:start}
@@ -1749,6 +1749,69 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .ol2-filter input::placeholder{color:#8A8D97}
 .ol2 .ol2-filter button{background:#1d2129;border:1px solid #30353d;border-radius:9px;padding:9px 13px;color:#aab2c0;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter'}
 .ol2 .ol2-filter button:hover{background:#23262d;color:#E9EAEE}
+.ein,.esel{width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:9px 11px;color:#E9EAEE;font-size:13.5px;font-family:'Inter'}
+/* Overlays mount outside .ol2 (modals on document.body) — the shared controls
+   need unscoped copies or they render as raw browser widgets. Classic is gone,
+   so there is nothing left for these to collide with. */
+.gbtn{border:1px solid #30353d;background:#1d2129;color:#E9EAEE;border-radius:10px;padding:10px 15px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter';white-space:nowrap}
+.gbtn:hover{background:#23262d}
+.gbtn.amber{background:#C08428;color:#1c1304;border:none}
+.gbtn.amber:hover{filter:brightness(1.06)}
+.gbtn.blue{border-color:#3E6FA8;color:#9cc4ec}
+.gbtn:disabled{opacity:.5;cursor:default}
+.lp-mini{background:#23262e;border:1px solid #30353d;color:#C7C9D1;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:Inter}
+.lp-lbl{font-size:11px;color:#9EA1AB;margin-bottom:4px}
+.empty{color:#8A8D97;font-size:12px;text-align:center;padding:18px;border:1px dashed #30353d;border-radius:10px}
+.pav.wing{background:#3a2b12;color:#C08428;font-size:17px}
+.pav{width:38px;height:38px;border-radius:50%;background:#33405a;color:#cdd8ea;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pav.me{background:#3a2b12;color:#C08428}
+.pprow{display:flex;gap:7px;align-items:center;margin-bottom:6px}
+.ppn{font-family:'Space Mono',monospace;font-size:11px;color:#6E717B;width:18px;text-align:right;flex-shrink:0}
+.ppt{flex:1}
+.ppo{background:#191B20;border:1px solid #30353d;color:#E9EAEE;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif;white-space:nowrap}
+.ppo.wing{border-color:rgba(192,132,40,.55);color:#E0B871}
+.ppd{max-width:130px}
+.ppx{background:none;border:none;color:#5a6270;cursor:pointer;font-size:13px;padding:4px}
+.tvgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.memempty{font-size:12.5px;color:#6E717B;border:1px dashed #26272D;border-radius:11px;padding:16px;line-height:1.6}
+.lp-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#C7C9D1;cursor:pointer}
+.ulbl{color:#8A8D97;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 0}
+/* ── Phase 4: Travel ── */
+.ol2 .travcard{background:#15161A;border:1px solid #26272D;border-radius:12px;padding:13px 16px;margin-top:18px}
+.ol2 .travcard .tvh{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.16em;color:#6E717B}
+.ol2 .travcard .tvh span{flex:1}
+.ol2 .travcard .tvs{font-size:13px;color:#E9EAEE;margin-top:8px;line-height:1.5}
+.ol2 .travcard .tvn{font-size:11.5px;color:#6E717B;margin-top:4px}
+.ol2 .tvgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ol2 .tvgrid .ein{width:100%}
+.tripbox{width:660px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.55);font-family:Inter}
+.tripbox .lp-lbl{display:block;font-size:10.5px;color:#8A8D97;margin-bottom:4px;font-family:'Space Mono',monospace;letter-spacing:.08em}
+.tripbox .ein{width:100%;background:#0e0f13;border:1px solid #30353d;border-radius:8px;padding:9px 11px;color:#E9EAEE;font-size:13px;font-family:Inter,-apple-system,system-ui,sans-serif;box-sizing:border-box}
+.tripbox .ein::placeholder{color:#5a6270}
+.tripwarn{background:rgba(192,132,40,.07);border:1px dashed #3a3320;border-radius:10px;padding:10px 13px;font-size:12.5px;color:#9EA1AB;margin-bottom:14px}
+.tripwarn a{color:#E0B871;cursor:pointer;text-decoration:underline}
+.triph{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.16em;color:#6E717B;text-transform:uppercase;margin:18px 0 7px}
+.tripopt{background:#0e0f13;border:1px solid #26272D;border-radius:10px;padding:10px 13px;margin-bottom:7px}
+.tripopt .a{font-size:13.5px;font-weight:600;color:#E9EAEE}
+.tripopt .a .r{font-weight:400;color:#9EA1AB;font-size:12.5px}
+.tripopt .m{font-size:12px;color:#8A8D97;margin-top:2px}
+.tripopt .w{font-size:12px;color:#6E717B;margin-top:5px;line-height:1.5}
+.tripday{border-left:2px solid #26272D;padding:2px 0 2px 12px;margin-bottom:10px}
+.tripday .d{font-size:12.5px;font-weight:600;color:#E0B871}
+.tripday .i{font-size:12.5px;color:#9EA1AB;margin-top:3px;line-height:1.5}
+.tripbook{background:#0e0f13;border:1px solid #26272D;border-left:2px solid #C08428;border-radius:10px;padding:10px 13px;margin-bottom:7px}
+.tripbook .a{font-size:13.5px;font-weight:600;color:#E9EAEE;display:flex;align-items:center;gap:8px}
+.tripbook .a .who{margin-left:auto;font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#9EA1AB;border:1px solid #30323A;border-radius:5px;padding:1px 7px;flex-shrink:0}
+.tripbook .a .who.ea{color:#9573C9;border-color:#4a3a63}
+.tripbook .m{font-size:12px;color:#8A8D97;margin-top:3px;line-height:1.5}
+.tripbook .loy{font-family:'Space Mono',monospace;font-size:11px;color:#E0B871;margin-top:5px}
+.tripq{background:rgba(192,132,40,.06);border-radius:9px;padding:9px 12px;font-size:12.5px;color:#E0B871;margin-bottom:6px}
+.tripacts{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.triploading{padding:26px 4px}
+.tripbar{height:3px;background:#26272D;border-radius:2px;margin-top:16px;overflow:hidden}
+.tripbar span{display:block;height:100%;width:35%;background:#C08428;border-radius:2px;animation:tripslide 1.5s ease-in-out infinite}
+@keyframes tripslide{0%{margin-left:-35%}100%{margin-left:100%}}
+@media (max-width:720px){ .ol2 .tvgrid{grid-template-columns:1fr} .tripbox{padding:18px 15px} }
 /* ── The Overhaul 5f (5b lanes + 5c graphs + board spec) ── */
 .ol2 .tcard{position:relative}
 .ol2 .tact{position:absolute;top:6px;right:6px;display:none;gap:4px;z-index:5}
@@ -1820,7 +1883,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .pprow{display:flex;gap:7px;align-items:center;margin-bottom:6px}
 .ol2 .ppn{font-family:'Space Mono',monospace;font-size:11px;color:#6E717B;width:18px;text-align:right;flex-shrink:0}
 .ol2 .ppt{flex:1}
-.ol2 .ppo{background:#191B20;border:1px solid #30353d;color:#E9EAEE;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter;white-space:nowrap}
+.ol2 .ppo{background:#191B20;border:1px solid #30353d;color:#E9EAEE;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif;white-space:nowrap}
 .ol2 .ppo.wing{border-color:rgba(192,132,40,.55);color:#E0B871}
 .ol2 .ppd{max-width:130px}
 .ol2 .ppx{background:none;border:none;color:#5a6270;cursor:pointer;font-size:13px;padding:4px}
@@ -1834,7 +1897,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2k{position:fixed;inset:0;z-index:100000;background:rgba(6,7,9,.6);display:none;align-items:flex-start;justify-content:center;padding-top:14vh}
 .ol2k.on{display:flex}
 .ol2k .kbox{width:min(560px,92vw);background:#15161A;border:1px solid #30323A;border-radius:14px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden}
-.ol2k input{width:100%;background:none;border:none;outline:none;color:#E9EAEE;font-size:15px;padding:15px 18px;font-family:Inter;border-bottom:1px solid #26272D;box-sizing:border-box}
+.ol2k input{width:100%;background:none;border:none;outline:none;color:#E9EAEE;font-size:15px;padding:15px 18px;font-family:Inter,-apple-system,system-ui,sans-serif;border-bottom:1px solid #26272D;box-sizing:border-box}
 .ol2k .klist{max-height:46vh;overflow:auto;padding:6px}
 .ol2k .krow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:#9EA1AB;font-size:13.5px;cursor:pointer}
 .ol2k .krow.on,.ol2k .krow:hover{background:#1d2129;color:#E9EAEE}
@@ -2087,7 +2150,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     var rangeSpentH=st.items.reduce(function(s,it){return s+spentMinsIn(it);},0)/60; var rangeCost=rangeSpentH*rate;
     var capPer=cad==='monthly'?'/mo':(cad==='biweekly'?'/2wk':'/wk');
     var av=(typeof getAvatarHTML==='function')?getAvatarHTML(name,46):('<div class="av">'+esc(initials(name).toUpperCase())+'</div>');
-    var ov=document.createElement('div'); ov.id='lpProfOv'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter';
+    var ov=document.createElement('div'); ov.id='lpProfOv'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
     var h='<div style="width:660px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
     h+='<div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">'+av+'<div style="flex:1"><div style="font-size:19px;font-weight:700" class="syne">'+esc(name)+'</div><input class="ein" id="lpPfRole" placeholder="Role / title" value="'+esc(prof.role||'')+'" style="margin-top:6px"/></div><button id="lpPfClose" class="lp-mini">✕ Close</button></div>';
     h+='<div class="lp-pfstats"><div><b>'+st.open+'</b>open</div><div><b>'+st.done+'</b>done</div><div><b>'+st.estH+'</b>est hrs</div><div><b>'+(Math.round(st.spentH*10)/10)+'</b>spent hrs</div><div><b>'+(Math.round(st.remH*10)/10)+'</b>left hrs</div></div>';
@@ -2269,6 +2332,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         {g:'Actions',t:'Review Wingman drafts',k:'A',f:function(){ _laneIdx=0; lpReviewLane(); }},
         {g:'Actions',t:'Seed Wingman&#39;s memory (interview)',f:function(){ lpSeedInterview(); }},
         {g:'Actions',t:'Run a play…',f:function(){ showPlays(); }},
+        {g:'Actions',t:'Plan a trip',f:function(){ lpTripPlanner(); }},
+        {g:'Go to',t:'Travel profile',f:function(){ lpTravelEdit(); }},
         {g:'Go to',t:'Today',k:'G T',f:function(){ go('home'); }},
         {g:'Go to',t:'Missions',k:'G M',f:function(){ go('board'); }},
         {g:'Go to',t:'Goals',k:'G G',f:function(){ go('goals'); }},
@@ -2471,7 +2536,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     function lpLibCats(){ var cats=['All']; try{ var t=(typeof teams!=='undefined'&&teams)?Object.keys(teams):['ACST','DVLMNT','Personal']; t.forEach(function(c){ if(cats.indexOf(c)<0) cats.push(c); }); }catch(e){} return cats; }
     function lpSeedInterview(){
       var transcript=[]; var filed=0;
-      var ov=document.createElement('div'); ov.id='lpSeedOv'; ov.style.cssText='position:fixed;inset:0;z-index:100004;background:rgba(4,5,8,.86);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Inter';
+      var ov=document.createElement('div'); ov.id='lpSeedOv'; ov.style.cssText='position:fixed;inset:0;z-index:100004;background:rgba(4,5,8,.86);display:flex;align-items:center;justify-content:center;padding:16px;font-family:Inter,-apple-system,system-ui,sans-serif';
       ov.innerHTML='<div style="width:620px;max-width:96vw;max-height:88vh;background:#15161A;border:1px solid rgba(192,132,40,.4);border-radius:16px;display:flex;flex-direction:column;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.6)">'
         +'<div style="display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid #26272D"><span style="color:#C08428;font-size:17px">▸</span><div style="flex:1"><div class="syne" style="font-weight:700">Wingman is learning your world</div><div style="font-size:11.5px;color:#8A8D97">Answer naturally — entries get filed to your library as you talk.</div></div><span id="lpSeedCount" style="font-size:11px;color:#C08428;border:1px solid rgba(192,132,40,.4);border-radius:99px;padding:3px 9px">0 filed</span></div>'
         +'<div id="lpSeedMsgs" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:220px"></div>'
@@ -2510,7 +2575,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var isNew=!item; item=item||{}; var cats=lpLibCats();
       function field(label,id,val,ph,tag,opts){ tag=tag||'input'; var f='<div style="margin-bottom:12px"><label class="lp-lbl">'+esc(label)+'</label>'; if(tag==='select'){ f+='<select class="esel" id="'+id+'">'+opts.map(function(o){ return '<option value="'+esc(o)+'"'+(String(val)===String(o)?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>'; } else if(tag==='textarea'){ f+='<textarea class="ein" id="'+id+'" style="min-height:72px;resize:vertical"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'>'+esc(val||'')+'</textarea>'; } else { f+='<input class="ein" id="'+id+'" value="'+esc(val||'')+'"'+(ph?(' placeholder="'+esc(ph)+'"'):'')+'/>'; } return f+'</div>'; }
       var titleMap={skills:'Skill',templates:'Template',preferences:'Tone & Voice',context:'Context'};
-      var ov=document.createElement('div'); ov.id='lpLibOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter';
+      var ov=document.createElement('div'); ov.id='lpLibOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       var h='<div style="width:600px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
       h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New ':'Edit ')+esc(titleMap[type]||type)+'</h2><button id="lpLibClose" class="lp-mini">Close</button></div>';
       if(type==='skills'){ h+=field('Name','lfName',item.name,'e.g. Draft client proposal'); h+=field('When to use','lfDesc',item.description||item.whenToUse,'When should Wingman use this skill?','textarea'); h+=field('Instructions','lfBody',item.body,'How Wingman should do it, step by step','textarea'); h+=field('Applies to (workspace)','lfCat',item.category||'All',null,'select',cats); h+=field('Tags (comma-separated)','lfTags',item.tags,'proposal, sales, pitch'); }
@@ -2590,12 +2655,23 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         .concat(sks.map(function(it,i){ return card(it.name, it.whenToUse||it.description, 'method', 'skills:'+i); }));
       h+=how.length?how.join(''):'<div class="memempty">Your voice, formats, and standing choices — airline &amp; seat preferences, loyalty numbers, how emails should sound.</div>';
       h+='</div></div>';
+      // ── Travel profile (Phase 4) — structured, because every travel step reads from it ──
+      (function(){
+        var tp=lpTravel();
+        var set=[]; if(tp.homeAirport) set.push('home '+tp.homeAirport); if(tp.airlines) set.push(tp.airlines); if(tp.cabin||tp.seat) set.push([tp.cabin,tp.seat].filter(Boolean).join(' / ')); if(tp.rentalCar) set.push(tp.rentalCar); if(tp.hotels) set.push(tp.hotels); if(tp.carService) set.push(tp.carService);
+        var nLoy=[tp.airlineLoyalty,tp.rentalLoyalty,tp.hotelLoyalty].filter(Boolean).length;
+        h+='<div class="travcard"><div class="tvh"><span>TRAVEL PROFILE</span><button class="lp-mini" id="ol2TravEdit">'+(set.length?'Edit':'Set it up')+'</button></div>';
+        h+=set.length?('<div class="tvs">'+esc(set.join(' · '))+'</div><div class="tvn">'+(nLoy?(nLoy+' loyalty number'+(nLoy===1?'':'s')+' on file · '):'')+'Wingman applies these on every travel step.</div>')
+          :'<div class="memempty" style="margin-top:8px">Airline, seat, rental car, hotel and car-service preferences plus loyalty numbers — so a trip comes back booked your way. Payment cards are never stored here.</div>';
+        h+='</div>';
+      })();
       h+='<div style="margin-top:18px;font-size:11.5px;color:#6E717B">'+total+' memor'+(total===1?'y':'ies')+' · Plays live in the <a style="color:#9EA1AB;cursor:pointer;text-decoration:underline" id="ol2MemPl">Plays tab</a> · <a style="color:#6E717B;cursor:pointer;text-decoration:underline" id="ol2MemAdv">advanced view</a></div>';
       lib.innerHTML=h;
       lpWireWingTabs(lib);
       document.getElementById('ol2MemInt').onclick=function(){ lpSeedInterview(); };
       var mp=document.getElementById('ol2MemPl'); if(mp) mp.onclick=function(){ showPlays(); };
       var mv=document.getElementById('ol2MemAdv'); if(mv) mv.onclick=function(){ showLibraries(); };
+      var tv=document.getElementById('ol2TravEdit'); if(tv) tv.onclick=function(){ lpTravelEdit(); };
       [].forEach.call(lib.querySelectorAll('.madd[data-add]'),function(b){ b.onclick=function(){ lpLibEdit(b.getAttribute('data-add'), null); }; });
       [].forEach.call(lib.querySelectorAll('.memcard[data-mc]'),function(el){ el.onclick=function(){ var p=el.getAttribute('data-mc').split(':'); var arr=L()[p[0]]||[]; var it=arr[+p[1]]; if(it) lpLibEdit(p[0], it); }; });
       // Teach inline → /api/interview extracts and files entries in one shot
@@ -2619,6 +2695,198 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       }
       tb.onclick=teach; ti.onkeydown=function(e){ if(e.key==='Enter') teach(); };
     }
+    // ══════════════════════════════════════════════════════════════════
+    // Phase 4 — Travel. Wingman researches and preps; a human books and pays.
+    // ══════════════════════════════════════════════════════════════════
+    function lpTravel(){ var Lo=L(); if(!Lo.travel) Lo.travel={}; return Lo.travel; }
+    var TRAV_FIELDS=[
+      {k:'homeAirport',l:'Home airport(s)',ph:'e.g. RDM, PDX'},
+      {k:'airlines',l:'Preferred airlines',ph:'e.g. Alaska, then Delta'},
+      {k:'airlineLoyalty',l:'Airline loyalty numbers',ph:'e.g. Alaska MP 1234567'},
+      {k:'cabin',l:'Cabin',ph:'e.g. Economy; first on redeyes'},
+      {k:'seat',l:'Seat',ph:'e.g. Aisle, forward, not by the galley'},
+      {k:'rentalCar',l:'Rental car company',ph:'e.g. National Emerald'},
+      {k:'rentalLoyalty',l:'Rental loyalty number',ph:''},
+      {k:'hotels',l:'Hotel chains',ph:'e.g. Marriott, then Hyatt'},
+      {k:'hotelLoyalty',l:'Hotel loyalty numbers',ph:''},
+      {k:'carService',l:'Preferred car service',ph:'e.g. Blacklane — account under DVLMNT'}
+    ];
+    function lpTravelEdit(){
+      var tp=lpTravel();
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:6vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
+      var h='<div style="width:600px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
+        +'<div style="display:flex;align-items:center;margin-bottom:6px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">Travel profile</h2><button id="tvClose" class="lp-mini">Close</button></div>'
+        +'<div style="font-size:12px;color:#8A8D97;margin-bottom:16px">How you like to travel. Wingman pulls these into every travel step so options come back your way — and puts the right loyalty number on each booking instruction.</div>'
+        +'<div class="tvgrid">'+TRAV_FIELDS.map(function(f){ return '<div><label class="lp-lbl">'+esc(f.l)+'</label><input class="ein" id="tv_'+f.k+'" value="'+esc(tp[f.k]||'')+'"'+(f.ph?(' placeholder="'+esc(f.ph)+'"'):'')+'/></div>'; }).join('')+'</div>'
+        +'<div style="margin-top:12px"><label class="lp-lbl">Standing rules</label><textarea class="ein" id="tv_rules" style="min-height:60px;resize:vertical" placeholder="e.g. No red-eyes. Land by 4pm the day before a demo. Always a rental car in the West, car service in NYC.">'+esc(tp.rules||'')+'</textarea></div>'
+        +'<div style="display:flex;gap:10px;margin-top:16px;align-items:center"><span style="font-size:11px;color:#6E717B;flex:1">Never put card numbers or passport details here — Wingman doesn&#39;t need them and won&#39;t store them.</span><button id="tvSave" class="gbtn amber">Save profile</button></div></div>';
+      ov.innerHTML=h; document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.getElementById('tvClose').onclick=function(){ ov.remove(); };
+      document.getElementById('tvSave').onclick=function(){
+        var t=lpTravel();
+        TRAV_FIELDS.forEach(function(f){ var el=document.getElementById('tv_'+f.k); if(el) t[f.k]=(el.value||'').trim(); });
+        var rl=document.getElementById('tv_rules'); if(rl) t.rules=(rl.value||'').trim();
+        t.updatedAt=Date.now();
+        try{ persist(); }catch(e){}
+        ov.remove(); toast('Travel profile saved'); try{ showMemory(); }catch(e){}
+      };
+    }
+    // ── Calendar export: all-day trip block + a block per itinerary day ──
+    function lpIcsEsc(t){ return String(t==null?'':t).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n'); }
+    function lpIcsFold(line){ if(line.length<=73) return line; var out=[line.slice(0,73)], r=line.slice(73); while(r.length){ out.push(' '+r.slice(0,72)); r=r.slice(72); } return out.join('\r\n'); }
+    function lpIcsDay(d,plus){ var dt=new Date(String(d)+'T00:00:00'); if(isNaN(dt)) return null; if(plus) dt.setDate(dt.getDate()+plus); return dt.getFullYear()+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0'); }
+    function lpTripIcs(plan){
+      var t=plan.trip||{}; var start=lpIcsDay(t.depart), end=lpIcsDay(t.ret||t.depart,1);
+      if(!start){ toast('Add a departure date first'); return; }
+      var stamp=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+      var body=[]; 
+      (plan.toBook||[]).forEach(function(b){ body.push('• '+b.what+(b.details?(' — '+b.details):'')); });
+      var L2=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Levis Projects//Wingman//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+      function ev(uid,ds,de,sum,desc,loc){
+        L2.push('BEGIN:VEVENT'); L2.push('UID:'+uid); L2.push('DTSTAMP:'+stamp);
+        L2.push('DTSTART;VALUE=DATE:'+ds); L2.push('DTEND;VALUE=DATE:'+de);
+        L2.push(lpIcsFold('SUMMARY:'+lpIcsEsc(sum)));
+        if(desc) L2.push(lpIcsFold('DESCRIPTION:'+lpIcsEsc(desc)));
+        if(loc) L2.push(lpIcsFold('LOCATION:'+lpIcsEsc(loc)));
+        L2.push('END:VEVENT');
+      }
+      var base='lptrip'+Date.now().toString(36);
+      ev(base+'@levisprojects.com', start, end, 'Trip: '+(t.destination||'')+(t.purpose?(' — '+t.purpose):''),
+         (plan.headline||'')+'\n\nTO BOOK\n'+(body.join('\n')||'—')+'\n\nPlanned by Wingman — fares and schedules to be confirmed at booking.', t.destination||'');
+      (plan.itinerary||[]).forEach(function(d,i){
+        var ds=null; try{ var m=String(d.day||'').match(/(\d{4}-\d{2}-\d{2})/); if(m) ds=lpIcsDay(m[1]); }catch(e){}
+        if(!ds){ var off=new Date(String(t.depart)+'T00:00:00'); if(isNaN(off)) return; off.setDate(off.getDate()+i); ds=off.getFullYear()+String(off.getMonth()+1).padStart(2,'0')+String(off.getDate()).padStart(2,'0'); }
+        var de=lpIcsDay(ds.slice(0,4)+'-'+ds.slice(4,6)+'-'+ds.slice(6,8),1);
+        ev(base+'-d'+i+'@levisprojects.com', ds, de, (t.destination||'Trip')+' · '+(d.day||('Day '+(i+1))), (d.items||[]).map(function(x){ return '• '+x; }).join('\n'), t.destination||'');
+      });
+      L2.push('END:VCALENDAR');
+      try{
+        var blob=new Blob([L2.join('\r\n')],{type:'text/calendar;charset=utf-8'});
+        var a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+        a.download='trip-'+String(t.destination||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'.ics';
+        document.body.appendChild(a); a.click(); setTimeout(function(){ try{ URL.revokeObjectURL(a.href); a.remove(); }catch(e){} },1000);
+        toast('Calendar file downloaded — open it to add the holds');
+      }catch(e){ toast('Could not build the calendar file'); }
+    }
+    // ── The exact brief whoever books works from ──
+    function lpTripBrief(plan){
+      var t=plan.trip||{}; var tp=lpTravel(); var out=[];
+      out.push('TRIP — '+(t.destination||'')+(t.purpose?(' · '+t.purpose):''));
+      out.push((t.origin?('From '+t.origin+'  '):'')+(t.depart?('Depart '+t.depart):'')+(t.ret?('  Return '+t.ret):''));
+      out.push('');
+      if(plan.headline) out.push(plan.headline+'\n');
+      (plan.flights||[]).forEach(function(f){
+        out.push((f.leg||'Flight').toUpperCase());
+        (f.options||[]).forEach(function(o,i){ out.push('  '+(i+1)+'. '+[o.airline,o.route,o.timing,o.fare].filter(Boolean).join(' · ')+(o.why?('\n     '+o.why):'')); });
+        out.push('');
+      });
+      if((plan.lodging||[]).length){ out.push('LODGING'); plan.lodging.forEach(function(l){ out.push('  • '+[l.name,l.area,l.rate].filter(Boolean).join(' · ')+(l.why?('\n     '+l.why):'')); }); out.push(''); }
+      if((plan.ground||[]).length){ out.push('GROUND'); plan.ground.forEach(function(g){ out.push('  • '+[g.mode,g.detail,g.cost].filter(Boolean).join(' · ')); }); out.push(''); }
+      out.push('TO BOOK');
+      (plan.toBook||[]).forEach(function(b){ out.push('  □ '+b.what+(b.details?(' — '+b.details):'')+(b.loyalty?('\n     Loyalty: '+b.loyalty):'')+('\n     Owner: '+(b.who==='EA'?'EA':'Levi'))); });
+      out.push('');
+      if((plan.questions||[]).length){ out.push('OPEN QUESTIONS'); plan.questions.forEach(function(q){ out.push('  ? '+q); }); out.push(''); }
+      var loy=[tp.airlineLoyalty&&('Air: '+tp.airlineLoyalty), tp.hotelLoyalty&&('Hotel: '+tp.hotelLoyalty), tp.rentalLoyalty&&('Car: '+tp.rentalLoyalty)].filter(Boolean);
+      if(loy.length) out.push('LOYALTY ON FILE\n  '+loy.join('\n  ')+'\n');
+      out.push('Fares and schedules must be confirmed at booking — this is researched, not reserved. No payment details are stored in the app.');
+      return out.join('\n');
+    }
+    // ── The planner ──
+    var _tripPlan=null;
+    function lpTripPlanner(seed){
+      seed=seed||{};
+      var ov=document.createElement('div'); ov.id='lpTripOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.86);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
+      document.body.appendChild(ov);
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      var tp=lpTravel(); var hasProfile=!!(tp.homeAirport||tp.airlines||tp.carService||tp.hotels);
+      function shell(inner){ ov.innerHTML='<div class="tripbox">'+inner+'</div>'; }
+      function form(){
+        shell('<div style="display:flex;align-items:center;margin-bottom:6px"><h2 class="syne" style="font-size:19px;flex:1;margin:0"><span style="color:#C08428">▸</span> Plan a trip</h2><button id="trClose" class="lp-mini">Close</button></div>'
+          +'<div style="font-size:12.5px;color:#8A8D97;margin-bottom:16px">Wingman researches the route live — who flies it, what it runs, where to stay — then hands you or your EA an exact booking list. It never books and never pays.</div>'
+          +(hasProfile?'':'<div class="tripwarn">Wingman doesn&#39;t know how you like to travel yet. <a id="trProf">Set your travel profile</a> and every option comes back your way.</div>')
+          +'<div class="tvgrid">'
+          +'<div><label class="lp-lbl">From</label><input class="ein" id="trFrom" value="'+esc(seed.origin||tp.homeAirport||'')+'" placeholder="Home airport"/></div>'
+          +'<div><label class="lp-lbl">To</label><input class="ein" id="trTo" value="'+esc(seed.destination||'')+'" placeholder="City or airport"/></div>'
+          +'<div><label class="lp-lbl">Depart</label><input class="ein" id="trDep" type="date" value="'+esc(seed.depart||'')+'"/></div>'
+          +'<div><label class="lp-lbl">Return</label><input class="ein" id="trRet" type="date" value="'+esc(seed.ret||'')+'"/></div>'
+          +'</div>'
+          +'<div style="margin-top:10px"><label class="lp-lbl">What&#39;s the trip for?</label><input class="ein" id="trPurp" value="'+esc(seed.purpose||'')+'" placeholder="e.g. ACST demo + two customer meetings"/></div>'
+          +'<div style="margin-top:10px"><label class="lp-lbl">Anything else Wingman should know</label><textarea class="ein" id="trNotes" style="min-height:54px;resize:vertical" placeholder="Meetings already set, people travelling with you, must-land-by times…">'+esc(seed.notes||'')+'</textarea></div>'
+          +'<div style="display:flex;gap:10px;margin-top:16px;align-items:center"><span style="font-size:11px;color:#6E717B;flex:1">Live research takes ~30 seconds.</span><button id="trGo" class="gbtn amber">▸ Research this trip</button></div>');
+        document.getElementById('trClose').onclick=function(){ ov.remove(); };
+        var pf=document.getElementById('trProf'); if(pf) pf.onclick=function(){ ov.remove(); lpTravelEdit(); };
+        document.getElementById('trGo').onclick=run;
+      }
+      function run(){
+        var trip={ origin:(document.getElementById('trFrom').value||'').trim(), destination:(document.getElementById('trTo').value||'').trim(),
+          depart:document.getElementById('trDep').value||'', ret:document.getElementById('trRet').value||'',
+          purpose:(document.getElementById('trPurp').value||'').trim(), notes:(document.getElementById('trNotes').value||'').trim() };
+        if(!trip.destination){ toast('Where are you going?'); return; }
+        shell('<div class="triploading"><div class="syne" style="font-size:17px;margin-bottom:8px"><span style="color:#C08428">▸</span> Wingman is researching '+esc(trip.destination)+'…</div><div style="font-size:12.5px;color:#8A8D97">Checking who flies the route, what it runs, and where to stay. About 30 seconds.</div><div class="tripbar"><span></span></div></div>');
+        fetch('/api/trip',{method:'POST',headers:apiHeaders(),body:JSON.stringify({trip:trip,profile:lpTravel()})})
+          .then(function(r){ return r.json().then(function(j){ return {ok:r.ok,j:j}; }); })
+          .then(function(res){
+            if(res.ok&&res.j&&!res.j.error){ _tripPlan=res.j; plan(res.j); }
+            else { shell('<div style="display:flex;align-items:center;margin-bottom:10px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">Couldn&#39;t plan that one</h2><button id="trClose" class="lp-mini">Close</button></div><div style="font-size:13px;color:#E08A8A">'+esc((res.j&&(res.j.detail||res.j.error))||('HTTP '+res.status))+'</div><div style="margin-top:14px"><button class="gbtn" id="trBack">← Try again</button></div>');
+              document.getElementById('trClose').onclick=function(){ ov.remove(); }; document.getElementById('trBack').onclick=function(){ seed=trip; form(); }; }
+          }).catch(function(e){ shell('<div style="font-size:13px;color:#E08A8A">Failed: '+esc(e.message)+'</div><div style="margin-top:14px"><button class="gbtn" id="trBack">← Back</button></div>'); document.getElementById('trBack').onclick=function(){ seed=trip; form(); }; });
+      }
+      function plan(P){
+        var t=P.trip||{};
+        var h='<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:4px"><div style="flex:1"><h2 class="syne" style="font-size:19px;margin:0">'+esc(t.destination||'Trip')+(t.depart?('<span style="color:#6E717B;font-weight:400;font-size:13px"> · '+esc(t.depart)+(t.ret?(' → '+esc(t.ret)):'')+'</span>'):'')+'</h2></div><button id="trClose" class="lp-mini">Close</button></div>';
+        if(P.headline) h+='<div style="font-size:13.5px;color:#9EA1AB;line-height:1.6;margin-bottom:16px"><span style="color:#C08428">▸</span> '+esc(P.headline)+'</div>';
+        (P.flights||[]).forEach(function(f){
+          h+='<div class="triph">'+esc(f.leg||'Flight')+'</div>';
+          (f.options||[]).forEach(function(o){
+            h+='<div class="tripopt"><div class="a">'+esc(o.airline||'')+(o.route?(' <span class="r">'+esc(o.route)+'</span>'):'')+'</div><div class="m">'+[o.timing,o.fare].filter(Boolean).map(esc).join(' · ')+'</div>'+(o.why?('<div class="w">'+esc(o.why)+'</div>'):'')+'</div>';
+          });
+        });
+        if((P.lodging||[]).length){ h+='<div class="triph">Lodging</div>'; P.lodging.forEach(function(l){ h+='<div class="tripopt"><div class="a">'+esc(l.name||'')+(l.area?(' <span class="r">'+esc(l.area)+'</span>'):'')+'</div><div class="m">'+esc(l.rate||'')+'</div>'+(l.why?('<div class="w">'+esc(l.why)+'</div>'):'')+'</div>'; }); }
+        if((P.ground||[]).length){ h+='<div class="triph">Ground</div>'; P.ground.forEach(function(g){ h+='<div class="tripopt"><div class="a">'+esc(g.mode||'')+'</div><div class="m">'+[g.detail,g.cost].filter(Boolean).map(esc).join(' · ')+'</div></div>'; }); }
+        if((P.itinerary||[]).length){ h+='<div class="triph">Itinerary</div>'; P.itinerary.forEach(function(d){ h+='<div class="tripday"><div class="d">'+esc(d.day||'')+'</div>'+(d.items||[]).map(function(x){ return '<div class="i">'+esc(x)+'</div>'; }).join('')+'</div>'; }); }
+        if((P.toBook||[]).length){ h+='<div class="triph">To book <span style="color:#6E717B;font-weight:400;text-transform:none;letter-spacing:0"> — a human does these</span></div>';
+          P.toBook.forEach(function(b){ h+='<div class="tripbook"><div class="a">'+esc(b.what||'')+'<span class="who'+(b.who==='EA'?' ea':'')+'">'+(b.who==='EA'?'EA':'You')+'</span></div>'+(b.details?('<div class="m">'+esc(b.details)+'</div>'):'')+(b.loyalty?('<div class="loy">'+esc(b.loyalty)+'</div>'):'')+'</div>'; }); }
+        if((P.questions||[]).length){ h+='<div class="triph">Wingman needs</div>'+P.questions.map(function(q){ return '<div class="tripq">'+esc(q)+'</div>'; }).join(''); }
+        if((P.sources||[]).length){ h+='<div style="margin-top:14px;font-size:11px;color:#6E717B">Researched from '+P.sources.length+' source'+(P.sources.length===1?'':'s')+': '+P.sources.slice(0,4).map(function(u){ return '<a href="'+esc(u)+'" target="_blank" rel="noopener" style="color:#6E717B;text-decoration:underline">'+esc(lpHost(u))+'</a>'; }).join(' · ')+'</div>'; }
+        h+='<div style="font-size:11px;color:#6E717B;margin-top:10px;border-top:1px solid #26272D;padding-top:10px">Researched, not reserved — confirm fares and schedules when booking. Wingman never books or pays.</div>';
+        h+='<div class="tripacts"><button class="gbtn amber" id="trMission">Create the mission</button><button class="gbtn" id="trIcs">Calendar file</button><button class="gbtn" id="trCopy">Copy booking brief</button><button class="gbtn" id="trRedo">Re-research</button></div>';
+        shell(h);
+        document.getElementById('trClose').onclick=function(){ ov.remove(); };
+        document.getElementById('trIcs').onclick=function(){ lpTripIcs(P); };
+        document.getElementById('trCopy').onclick=function(){ try{ navigator.clipboard.writeText(lpTripBrief(P)); toast('Booking brief copied'); }catch(e){ toast('Copy failed'); } };
+        document.getElementById('trRedo').onclick=function(){ seed=t; form(); };
+        document.getElementById('trMission').onclick=function(){ lpTripMission(P); ov.remove(); };
+      }
+      form();
+    }
+    // ── Turn the plan into real work, owned by real people ──
+    function lpTripMission(P){
+      var t=P.trip||{}; var me=meName();
+      var ea=null; try{ var pr=lpProfilesObj(); Object.keys(pr).forEach(function(n){ if(!ea && pr[n] && pr[n].isEA) ea=n; }); }catch(e){}
+      var cat=''; try{ cat=(ITEMS()[0]&&ITEMS()[0].category)||''; }catch(e){}
+      var parent=newItemBase('Trip: '+(t.destination||'')+(t.purpose?(' — '+t.purpose):''), cat, t.depart||'', 'Plan', me);
+      parent.type='project';
+      parent.notes=lpTripBrief(P);
+      var kids=[];
+      (P.toBook||[]).forEach(function(b){
+        var owner=(b.who==='EA'&&ea)?ea:me;
+        var k=newItemBase(b.what||'Book', parent.category, t.depart||'', '', owner);
+        k.parentItemId=parent.id;
+        k.notes=(b.details||'')+(b.loyalty?('\nLoyalty: '+b.loyalty):'')
+          +((b.who==='EA'&&!ea)?'\n\nWingman suggested your EA for this one — nobody is marked as EA in Crew yet, so it came to you.':'')
+          +'\n\nBooking and payment are human steps — confirm the fare when you book.';
+        kids.push(k);
+      });
+      var itin=newItemBase('Itinerary + calendar holds', parent.category, t.depart||'', 'Document', me);
+      itin.parentItemId=parent.id; itin.execMode='do-it';
+      itin.notes='Compile the final itinerary once bookings are confirmed.\n\n'+lpTripBrief(P);
+      kids.push(itin);
+      try{ items.push(parent); kids.forEach(function(k){ items.push(k); }); persist(); }catch(e){}
+      kids.forEach(function(k){ if(k.responsible && k.responsible!==me){ try{ lpNotifyAssign(k.responsible, k); }catch(e){} } });
+      toast('▸ Trip mission created — '+kids.length+' steps');
+      go('board');
+    }
     // ── Plays: your repeatable procedures, runnable by Wingman, you, or the crew ──
     function lpDefaultPlays(){
       function st(t,o,d,n){ return {title:t,owner:o,deliverable:d||'',notes:n||''}; }
@@ -2640,7 +2908,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           st('Summarize the week — done, slipped, stuck','Wingman','Research brief'),
           st('Clear triage and make the overdue calls','me'),
           st('Pick next week\'s Top 3','me')]},
-        {name:'Book travel',description:'Flights, rental car, ground — booked exactly the way you like.',steps:[
+        {name:'Book travel',travel:true,description:'Wingman researches the route live, then hands over an exact booking list.',steps:[
           st('Confirm trip dates, destination, purpose','me'),
           st('Flight options per your preferences','Wingman','Research brief','Uses Memory: airline + seat preferences, loyalty numbers'),
           st('Book flights + rental car','me','','You or your EA — bookings and payment always stay human'),
@@ -2664,7 +2932,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       lib.innerHTML=h;
       lpWireWingTabs(lib);
       document.getElementById('ol2PlayNew').onclick=function(){ lpPlayEdit(null); };
-      [].forEach.call(lib.querySelectorAll('[data-prun]'),function(b){ b.onclick=function(){ var p=(L().plays||[])[+b.getAttribute('data-prun')]; if(p) lpRunPlay(p); }; });
+      [].forEach.call(lib.querySelectorAll('[data-prun]'),function(b){ b.onclick=function(){ var p=(L().plays||[])[+b.getAttribute('data-prun')]; if(!p) return;
+        if(p.travel || /^book travel$/i.test(p.name||'')){ lpTripPlanner(); return; }
+        lpRunPlay(p); }; });
       [].forEach.call(lib.querySelectorAll('[data-pedit]'),function(el){ el.onclick=function(){ var p=(L().plays||[])[+el.getAttribute('data-pedit')]; if(p) lpPlayEdit(p); }; });
     }
     function lpRunPlay(play){
@@ -2695,7 +2965,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var ownerOpts=['me','Wingman'].concat(people.filter(function(p){ return p!==meName(); }));
       var steps=(play.steps||[]).map(function(sp){ return {title:sp.title||'',owner:sp.owner||'me',deliverable:sp.deliverable||'',notes:sp.notes||''}; });
       if(!steps.length) steps.push({title:'',owner:'me',deliverable:'',notes:''});
-      var ov=document.createElement('div'); ov.id='lpPlayOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter';
+      var ov=document.createElement('div'); ov.id='lpPlayOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       function render(){
         var h='<div style="width:680px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
         h+='<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New play':'Edit play')+'</h2><button id="lpPlayClose" class="lp-mini">Close</button></div>';
@@ -2815,9 +3085,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var old=document.getElementById('lpDuePop'); if(old){ try{ old.remove(); }catch(e){} }
       var r=anchor?anchor.getBoundingClientRect():{left:120,bottom:140};
       var pop=document.createElement('div'); pop.id='lpDuePop';
-      pop.style.cssText='position:fixed;z-index:100001;left:'+Math.round(r.left)+'px;top:'+Math.round((r.bottom||140)+6)+'px;background:#191B20;border:1px solid #30353d;border-radius:10px;padding:10px;box-shadow:0 16px 40px rgba(0,0,0,.5);display:flex;gap:8px;align-items:center;font-family:Inter';
-      var inp=document.createElement('input'); inp.type='date'; inp.value=it.dueDate||''; inp.style.cssText='background:#0e0f13;border:1px solid #30353d;border-radius:7px;padding:6px 8px;color:#E9EAEE;font-size:13px;font-family:Inter';
-      var clr=document.createElement('button'); clr.textContent='Clear date'; clr.style.cssText='background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter';
+      pop.style.cssText='position:fixed;z-index:100001;left:'+Math.round(r.left)+'px;top:'+Math.round((r.bottom||140)+6)+'px;background:#191B20;border:1px solid #30353d;border-radius:10px;padding:10px;box-shadow:0 16px 40px rgba(0,0,0,.5);display:flex;gap:8px;align-items:center;font-family:Inter,-apple-system,system-ui,sans-serif';
+      var inp=document.createElement('input'); inp.type='date'; inp.value=it.dueDate||''; inp.style.cssText='background:#0e0f13;border:1px solid #30353d;border-radius:7px;padding:6px 8px;color:#E9EAEE;font-size:13px;font-family:Inter,-apple-system,system-ui,sans-serif';
+      var clr=document.createElement('button'); clr.textContent='Clear date'; clr.style.cssText='background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif';
       pop.appendChild(inp); pop.appendChild(clr); document.body.appendChild(pop);
       function cleanup(){ try{ pop.remove(); }catch(e){} document.removeEventListener('mousedown', outside, true); }
       function outside(e){ if(!pop.contains(e.target)) cleanup(); }
@@ -2866,7 +3136,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 
     // ── Home / landing ──
     function lpHomeList(title, list){
-      var ov=document.createElement('div'); ov.id='lpListOv'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:Inter';
+      var ov=document.createElement('div'); ov.id='lpListOv'; ov.style.cssText='position:fixed;inset:0;z-index:100002;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       var h='<div style="width:640px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:20px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">';
       h+='<div style="display:flex;align-items:center;margin-bottom:12px"><h2 class="syne" style="font-size:17px;flex:1;margin:0">'+esc(title)+' <span style="color:#8A8D97;font-weight:600">'+list.length+'</span></h2><button id="lpListClose" class="lp-mini">Close</button></div>';
       if(!list.length){ h+='<div class="empty" style="padding:24px">Nothing here right now.</div>'; }
@@ -2929,7 +3199,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var isNew=!g; g=g||{id:'goal'+Date.now().toString(36),title:'',description:'',category:'DVLMNT',targetDate:'',updates:[]};
       var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(!cats.length) cats=['ACST','DVLMNT','Personal'];
       if(g.category&&cats.indexOf(g.category)<0) cats.unshift(g.category);
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;overflow-y:auto;font-family:Inter';
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:8vh 16px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
         +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'New goal':'Edit goal')+'</h2><button id="goClose" class="lp-mini">Close</button></div>'
         +'<label class="lp-lbl">Goal</label><input class="ein" id="goTitle" value="'+esc(g.title||'')+'" placeholder="e.g. 10 paying customers for Orbital" style="margin-bottom:10px"/>'
@@ -3253,7 +3523,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var profs=lpProfilesObj(); var prof=(name&&profs[name])||{};
       var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){}
       var hasTasks=name?lpPersonItems(name).length>0:false;
-      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow-y:auto;font-family:Inter';
+      var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       ov.innerHTML='<div style="width:520px;max-width:95vw;background:#15161A;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)">'
         +'<div style="display:flex;align-items:center;margin-bottom:14px"><h2 class="syne" style="font-size:18px;flex:1;margin:0">'+(isNew?'Add crew member':'Edit '+esc(name))+'</h2><button id="ceClose" class="lp-mini">Close</button></div>'
         +'<div style="display:flex;gap:14px;align-items:center;margin-bottom:14px"><div id="ceAv">'+((name&&typeof getAvatarHTML==='function')?getAvatarHTML(name,56):'<div class="pav" style="width:56px;height:56px;font-size:20px">?</div>')+'</div><div><label class="lp-lbl" style="display:block">Photo</label><input type="file" id="cePhoto" accept="image/*" style="font-size:11.5px;color:#9EA1AB;max-width:220px"/></div></div>'
@@ -3608,13 +3878,13 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var ov=document.createElement('div'); ov.style.cssText='position:fixed;inset:0;z-index:9300;background:rgba(4,5,8,.82);display:flex;align-items:flex-start;justify-content:center;padding:7vh 16px 40px;overflow-y:auto;font-family:Inter,system-ui,sans-serif';
       var box=document.createElement('div'); box.style.cssText='width:560px;max-width:94vw;background:#121317;border:1px solid #30323A;border-radius:16px;padding:22px;color:#E9EAEE;box-shadow:0 30px 80px rgba(0,0,0,.5)';
       box.innerHTML='<div style="font-weight:700;font-size:17px;margin-bottom:4px">✉ Send email</div><div style="color:#9EA1AB;font-size:12.5px;margin-bottom:16px">This sends for real, from your dvlmnt.com address. Review and confirm — nothing sends on its own.</div>';
-      function field(label,tag,val,ph){ var w=document.createElement('div'); w.style.marginBottom='11px'; var l=document.createElement('label'); l.textContent=label; l.style.cssText='display:block;font-size:11px;color:#9EA1AB;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em'; var inp=document.createElement(tag); inp.style.cssText='width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#E9EAEE;font-size:14px;font-family:Inter'; if(tag==="textarea"){inp.style.minHeight="150px";inp.style.lineHeight="1.5";inp.style.resize="vertical";} if(val!=null) inp.value=val; if(ph) inp.placeholder=ph; w.appendChild(l); w.appendChild(inp); box.appendChild(w); return inp; }
+      function field(label,tag,val,ph){ var w=document.createElement('div'); w.style.marginBottom='11px'; var l=document.createElement('label'); l.textContent=label; l.style.cssText='display:block;font-size:11px;color:#9EA1AB;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em'; var inp=document.createElement(tag); inp.style.cssText='width:100%;box-sizing:border-box;background:#0e0f13;border:1px solid #30353d;border-radius:9px;padding:10px 12px;color:#E9EAEE;font-size:14px;font-family:Inter,-apple-system,system-ui,sans-serif'; if(tag==="textarea"){inp.style.minHeight="150px";inp.style.lineHeight="1.5";inp.style.resize="vertical";} if(val!=null) inp.value=val; if(ph) inp.placeholder=ph; w.appendChild(l); w.appendChild(inp); box.appendChild(w); return inp; }
       var toI=field('To','input',to,'name@client.com'); var ccI=field('CC (optional)','input','',''); var subI=field('Subject','input',it.title||'',''); var bodyI=field('Message','textarea',text,'');
       var msg=document.createElement('div'); msg.style.cssText='font-size:12.5px;margin-top:4px;line-height:1.5;display:none'; box.appendChild(msg);
-      function showFallback(t){ msg.style.display='block'; msg.style.color='#E0B871'; msg.innerHTML=''; var d=document.createElement('div'); d.innerHTML=t; d.style.marginBottom='8px'; msg.appendChild(d); var fb=document.createElement('button'); fb.textContent='Open in mail app instead'; fb.style.cssText='border:1px solid #30353d;background:#1d2129;color:#aab2c0;border-radius:9px;padding:9px 13px;font-weight:600;cursor:pointer;font-family:Inter'; fb.onclick=function(){ try{document.body.removeChild(ov);}catch(e){} sendMailto(it, bodyI.value); }; msg.appendChild(fb); }
+      function showFallback(t){ msg.style.display='block'; msg.style.color='#E0B871'; msg.innerHTML=''; var d=document.createElement('div'); d.innerHTML=t; d.style.marginBottom='8px'; msg.appendChild(d); var fb=document.createElement('button'); fb.textContent='Open in mail app instead'; fb.style.cssText='border:1px solid #30353d;background:#1d2129;color:#aab2c0;border-radius:9px;padding:9px 13px;font-weight:600;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif'; fb.onclick=function(){ try{document.body.removeChild(ov);}catch(e){} sendMailto(it, bodyI.value); }; msg.appendChild(fb); }
       var btns=document.createElement('div'); btns.style.cssText='display:flex;gap:10px;margin-top:16px';
-      var cancel=document.createElement('button'); cancel.textContent='Cancel'; cancel.style.cssText='flex:1;border:1px solid #30353d;background:#1d2129;color:#E9EAEE;border-radius:10px;padding:12px;font-weight:600;cursor:pointer;font-family:Inter'; cancel.onclick=function(){ document.body.removeChild(ov); };
-      var go=document.createElement('button'); go.textContent='Confirm & send'; go.style.cssText='flex:1;border:none;background:#3E6FA8;color:#fff;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-family:Inter';
+      var cancel=document.createElement('button'); cancel.textContent='Cancel'; cancel.style.cssText='flex:1;border:1px solid #30353d;background:#1d2129;color:#E9EAEE;border-radius:10px;padding:12px;font-weight:600;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif'; cancel.onclick=function(){ document.body.removeChild(ov); };
+      var go=document.createElement('button'); go.textContent='Confirm & send'; go.style.cssText='flex:1;border:none;background:#3E6FA8;color:#fff;border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-family:Inter,-apple-system,system-ui,sans-serif';
       go.onclick=function(){
         if(!toI.value.trim()){ msg.style.display='block'; msg.style.color='#C08428'; msg.textContent='Add a recipient first.'; return; }
         go.textContent='Sending…'; go.disabled=true; cancel.disabled=true; msg.style.display='none';
