@@ -549,7 +549,16 @@ html,body{margin:0;padding:0;background:#0E0F12;color:#E9EAEE;font-family:'Inter
                         if (!haveIds.has(String(r.id)) && r.card) items.push(r.card);
                     });
                     rowData.forEach(r => { window._lpKnownTaskIds.add(String(r.id)); });
-                    items.forEach(it => { window._lpTaskSnapshots[String(it.id)] = JSON.stringify(it); });
+                    // Only snapshot tasks that actually HAVE a row. Snapshotting a row-less
+                    // task makes the bootstrap push below see it as unchanged, so it never
+                    // gets a row — and once that happens the server can never see it again,
+                    // however many times it is edited. That is how a task could sit in the
+                    // app's review queue while the morning brief had no idea it existed.
+                    items.forEach(it => {
+                        const _k = String(it.id);
+                        if (window._lpKnownTaskIds.has(_k)) window._lpTaskSnapshots[_k] = JSON.stringify(it);
+                        else delete window._lpTaskSnapshots[_k];
+                    });
                     window._lpRowsLoaded = true;
                 } else {
                     window._lpRowsLoaded = false; // rows unavailable — never prune on this session
@@ -1659,6 +1668,50 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .empty{color:#8A8D97;font-size:12px;text-align:center;padding:18px;border:1px dashed #30353d;border-radius:10px}
 /* review */
 .ol2 .rev{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+/* ── Task detail: one screen, no page scroll ───────────────────────────────
+   Levi: "I don't want to have to scroll down at all" and "my attention isn't
+   drawn to what I need to do next". The frame is viewport-height; only the two
+   inner panes scroll, and the next-step bar answers "what now" before anything
+   else on the page. ─────────────────────────────────────────────────────── */
+.ol2 #ol2Review.rvfull{display:flex;flex-direction:column;height:calc(100vh - 58px);min-height:0;overflow:hidden}
+.ol2 .rvfull .hrow{margin-bottom:10px;flex-shrink:0}
+.ol2 .rvfull .facts{flex-shrink:0;margin:0 0 12px}
+.ol2 .rvbody{display:grid;grid-template-columns:360px 1fr;gap:16px;flex:1;min-height:0}
+.ol2 .rvpane{min-height:0;overflow-y:auto;overflow-x:hidden;padding-right:6px}
+.ol2 .rvpane::-webkit-scrollbar{width:8px}
+.ol2 .rvpane::-webkit-scrollbar-thumb{background:#2a2e36;border-radius:4px}
+.ol2 .rvwork{display:flex;flex-direction:column;min-height:0;gap:10px}
+.ol2 .rvwork .draft2{flex:1;min-height:0;max-height:none}
+/* the answer to "what do I do next" */
+.ol2 .nextbar{display:flex;align-items:center;gap:14px;background:#15161b;border:1px solid #2b2f37;border-left:3px solid #4F8AD1;border-radius:12px;padding:12px 15px;margin-bottom:12px;flex-shrink:0}
+.ol2 .nextbar.wing{border-left-color:#C08428;background:rgba(192,132,40,.06)}
+.ol2 .nextbar.late{border-left-color:#E08A8A;background:rgba(224,138,138,.05)}
+.ol2 .nextbar.calm{border-left-color:#3FA276}
+.ol2 .nextbar .nb{flex:1;min-width:0}
+.ol2 .nextbar .nk{font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.18em;color:#6E717B;text-transform:uppercase}
+.ol2 .nextbar.wing .nk{color:#C08428}
+.ol2 .nextbar.late .nk{color:#E08A8A}
+.ol2 .nextbar .nt{font-size:14.5px;font-weight:600;margin-top:3px;line-height:1.35}
+.ol2 .nextbar .nw{font-size:12px;color:#8A8D97;margin-top:2px;line-height:1.45}
+.ol2 .nextbar .na{display:flex;gap:8px;flex-shrink:0}
+/* left-rail tabs keep links, files, time and activity one click away, never a scroll */
+.ol2 .rvtabs{display:flex;gap:3px;margin-bottom:10px;flex-wrap:wrap;flex-shrink:0}
+.ol2 .rvtabs a{font-size:11.5px;font-weight:600;color:#8A8D97;padding:6px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+.ol2 .rvtabs a:hover{color:#E9EAEE;background:#191B20}
+.ol2 .rvtabs a.on{color:#E9EAEE;background:#1d2129;border-color:#30353d}
+.ol2 .rvtabs a .n{font-family:'Space Mono',monospace;font-size:9.5px;color:#6E717B;margin-left:4px}
+.ol2 .rvtab{display:none}
+.ol2 .rvtab.on{display:block}
+.ol2 .rvfull .lp-sec:first-child{margin-top:0;border-top:none;padding-top:0}
+@media (max-width:900px){
+  .ol2 #ol2Review.rvfull{height:auto;overflow:visible}
+  .ol2 .rvbody{grid-template-columns:1fr}
+  .ol2 .rvpane{overflow:visible;max-height:none}
+  .ol2 .nextbar{flex-wrap:wrap}
+  .ol2 .nextbar .na{width:100%}
+  .ol2 .nextbar .na .gbtn{flex:1}
+}
+
 .ol2 .panelc{background:#15161b;border:1px solid #26272D;border-radius:14px;padding:18px}
 .ol2 .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #26272D;font-size:13px}
 .ol2 .kv:last-child{border:none}.ol2 .kv span{color:#8A8D97}
@@ -2600,7 +2653,12 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       try{ persist(); }catch(e){}
       renderColumns(); if(changed){ updateCounts(); toast('Moved to “'+col.label+'”'); }
     }
-    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs','ol2Settings','ol2Lane'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; }); }
+    function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs','ol2Settings','ol2Lane'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
+      // Every view change refreshes the sidebar counts. They used to be written only
+      // by the board render, so everywhere else the triage badge read its initial 0
+      // while work sat waiting in the inbox.
+      try{ updateCounts(); }catch(e){}
+    }
     function go(v){ if(v==='review'||v==='done'){ var bn=document.querySelector('#ol2Nav a[data-v="board"]'); if(bn){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===bn); }); } showBoard(v); return; } var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); }
     function stColor(s){ return s==='done'?'#3FA276':s==='review'?'#C08428':(s==='active'||s==='today')?'#4F8AD1':s==='waiting'?'#C08428':'#8A8D97'; }
     function seg(label,n,c){ return '<div class="gseg"><div class="gn" style="color:'+c+'">'+n+'</div><div class="gl">'+esc(label)+'</div></div>'; }
@@ -4033,6 +4091,84 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         lpReviewLane();
       });
     }
+    // ── What moves this task forward? ────────────────────────────────────────
+    // Levi's complaint was that nothing on the detail screen told him what to do
+    // next. This computes exactly one answer, in priority order, and the bar at
+    // the top of the screen renders it. `tone` picks the accent: amber only when
+    // Wingman is the actor, red when the task is late, green when it is clear.
+    function lpNextStep(card){
+      var me=meName(), own=owner(card), sts=(card.subtasks||[]);
+      var openSubs=sts.filter(function(x){ return !x.done; });
+      var hasDraft=!!(card.aiArtifact&&card.aiArtifact.content);
+      var today=new Date().toISOString().slice(0,10);
+      var late=card.dueDate && card.dueDate<today && card.status!=='done';
+      var daysLate=0; if(late){ try{ daysLate=Math.round((new Date(today)-new Date(card.dueDate))/86400000); }catch(e){} }
+
+      if(card.status==='done')
+        return {tone:'calm',key:'Complete',title:'This one is done.',why:'Reopen it if something came back.',acts:[{t:'↩ Reopen',id:'nsReopen'}]};
+
+      if(card.requireProof && !(card.proof&&card.proof.url))
+        return {tone:'',key:'Next',title:'Attach the proof, then it can be closed.',
+          why:'You asked for a proof link on this one before it counts as done.',acts:[{t:'Add proof',id:'nsProof',amber:true}]};
+
+      if(card.status==='review' && hasDraft)
+        return {tone:'wing',key:'Waiting on you',title:'Wingman drafted this — it needs your call.',
+          why:'Approve it, or say what to change and it will redo it.',
+          acts:[{t:'✓ Approve',id:'nsApprove',amber:true},{t:'↩ Request changes',id:'nsReject'}]};
+
+      if(lpIsTravel(card) && !hasDraft)
+        return {tone:'wing',key:'Next',title:'This is a trip — Wingman can plan it.',
+          why:'Flights, lodging and ground against your travel profile, then a booking list.',
+          acts:[{t:'▸ Plan this trip',id:'nsTrip',amber:true}]};
+
+      if(!card.deliverable)
+        return {tone:'',key:'Next',title:'Set the end result.',
+          why:'Wingman cannot help until it knows what this is supposed to produce.',acts:[{t:'Pick a deliverable',id:'nsDeliv',amber:true}]};
+
+      if(card.execMode==='do-it' && !hasDraft)
+        return {tone:'wing',key:'Next',title:'Wingman is set to draft this.',
+          why:'It has everything it needs — run it and review what comes back.',acts:[{t:'▸ Run with Wingman',id:'nsRun',amber:true}]};
+
+      if(card.status==='waiting')
+        return {tone:'',key:'Blocked',title:'Waiting on '+esc(card.waitingFrom||card.waitingOn||'someone else')+'.',
+          why:'Nothing moves here until that comes back.',acts:[{t:'Nudge them',id:'nsNudge'},{t:'Unblock it',id:'nsUnblock'}]};
+
+      if(openSubs.length)
+        return {tone:'',key:'Next step',title:esc(openSubs[0].title||'Finish the next subtask'),
+          why:openSubs.length+' of '+sts.length+' steps left.',acts:[{t:'✓ Mark this step done',id:'nsSub',amber:true}]};
+
+      if(late)
+        return {tone:'late',key:'Overdue',title:'Past due by '+daysLate+' day'+(daysLate===1?'':'s')+'.',
+          why:'Reset the date to something real, or hand it to someone who can move it.',
+          acts:[{t:'Reset the date',id:'nsDate',amber:true},{t:'Hand it off',id:'nsHand'}]};
+
+      if(!card.dueDate)
+        return {tone:'',key:'Next',title:'No due date.',
+          why:'Without one it will not surface on Today and it cannot go overdue.',acts:[{t:'Set a date',id:'nsDate',amber:true}]};
+
+      if(own && own!==me)
+        return {tone:'',key:'With the crew',title:esc(own)+' owns this.',
+          why:'Due '+esc(lpDueFull(card.dueDate))+'. Check in if it has gone quiet.',acts:[{t:'Check in',id:'nsNudge'}]};
+
+      return {tone:'calm',key:'Clear',title:'Nothing is blocking this.',
+        why:'Due '+esc(lpDueFull(card.dueDate))+'. Finish it and mark it done.',acts:[{t:'✓ Mark done',id:'nsDone',amber:true}]};
+    }
+    function lpNextBarHtml(card){
+      var n=lpNextStep(card);
+      // Overdue colours whatever the step is, rather than replacing it — the action
+      // is still the action, you just need to see that it is late while you read it.
+      try{
+        var t0=new Date().toISOString().slice(0,10);
+        if(card.status!=='done' && card.dueDate && card.dueDate<t0 && n.key!=='Overdue'){
+          var dl=Math.round((new Date(t0)-new Date(card.dueDate))/86400000);
+          n.tone='late';
+          n.why=(n.why?n.why+' · ':'')+dl+' day'+(dl===1?'':'s')+' past due';
+        }
+      }catch(e){}
+      return '<div class="nextbar'+(n.tone?' '+n.tone:'')+'">'
+        +'<div class="nb"><div class="nk">'+esc(n.key)+'</div><div class="nt">'+n.title+'</div><div class="nw">'+n.why+'</div></div>'
+        +'<div class="na">'+n.acts.map(function(a){ return '<button class="gbtn'+(a.amber?' amber':'')+'" id="'+a.id+'">'+esc(a.t)+'</button>'; }).join('')+'</div></div>';
+    }
     function openReview(card){
       var parts=assemble(card);
       var rev=document.getElementById('ol2Review');
@@ -4042,9 +4178,11 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var OWNERS=(function(){ var a=[]; try{ a=(typeof getAllAssignees==='function'?(getAllAssignees()||[]):[]); }catch(e){} var o=owner(card); if(o&&a.indexOf(o)<0) a=[o].concat(a); if(!a.length) a=[o||'Levi']; return a; })();
       var CATS=(function(){ var a=[]; try{ a=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(card.category&&a.indexOf(card.category)<0) a=[card.category].concat(a); if(!a.length) a=['Personal']; return a; })();
       function opts(list,cur){ return list.map(function(o){ var v=(o instanceof Array)?o[0]:o, lab=(o instanceof Array)?o[1]:o; return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(lab)+'</option>'; }).join(''); }
+      rev.classList.add('rvfull');
       rev.innerHTML=
         '<div class="hrow" style="align-items:center"><div style="flex:1;min-width:0"><input class="tin" id="edTitle" value="'+esc(card.title||'')+'" placeholder="Task title"/></div>'+
           '<button class="gbtn" id="ol2Back">← Back</button></div>'+
+        lpNextBarHtml(card)+
         '<div class="facts">'+
           '<div class="fact"><label class="erl">Status</label><select class="esel" id="edStatus">'+opts(STATUSES,card.status)+'</select></div>'+
           '<div class="fact"><label class="erl">Owner</label><select class="esel" id="edOwner">'+opts(OWNERS,owner(card))+'</select></div>'+
@@ -4053,8 +4191,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<div class="fact"><label class="erl">Deliverable</label><select class="esel" id="edDeliv">'+DELIV_TYPES.map(function(d){ return '<option value="'+esc(d)+'"'+((card.deliverable||'')===d?' selected':'')+'>'+(d||'— end result —')+'</option>'; }).join('')+'</select></div>'+
           '<div class="fact"><label class="erl">Mode</label><div class="emode"><button type="button" class="emodeb" id="edDo" title="Wingman drafts this">✦ Do-it</button><button type="button" class="emodeb" id="edTrack" title="Just track it">◷ Track</button><button type="button" class="emodeb" id="edTop3" title="Pin to this week&#39;s Top 3">☆ Top 3</button></div></div>'+
         '</div>'+
-        '<div class="rev">'+
-          '<div><div class="panelc">'+
+        '<div class="rev rvbody">'+
+          '<div class="rvpane"><div class="panelc">'+
+            '<div class="rvtabs" id="edTabs"></div><div class="rvtab on" data-tab="detail">'+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
             (lpIsTravel(card)?'<div class="travhint"><b>This looks like a trip.</b> Wingman can research flights, hotels and ground transport against your travel profile, then hand you a booking list.<button type="button" class="gbtn amber" id="edTripGo">▸ Plan this trip</button></div>':'')+
             '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
@@ -4066,9 +4205,10 @@ dots + 'Levi&#39;s Projects</td></tr>' +
               '<span class="chip'+(parts.ctx?'':' miss')+'">❖ '+(parts.ctx?esc(parts.ctx.name):'no context')+'</span>'+
               '<span class="chip">◷ '+parts.prefs.length+' preference'+(parts.prefs.length===1?'':'s')+'</span>'+
             '</div>'+
+            '</div>'+
             '<div style="margin-top:14px;border-top:1px solid #26272D;padding-top:13px"><button type="button" id="ol2Del" style="background:none;border:1px solid #5a2b2b;color:#E08A8A;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter">Delete task</button></div>'+
           '</div></div>'+
-          '<div>'+
+          '<div class="rvwork">'+
             '<div class="draft2'+((card.aiArtifact&&card.aiArtifact.content)?'':' run')+'" id="ol2Draft">'+((card.aiArtifact&&card.aiArtifact.content)?mdLite(card.aiArtifact.content):'No draft yet — run Wingman, or type any instruction below.')+'</div>'+
             '<div class="refine"><input id="ol2RefIn" placeholder="Tell Wingman anything — refine this draft, or ask for something different"/><button class="gbtn amber" id="ol2RefBtn">▸ Go</button></div>'+
             '<div class="actions" id="ol2Acts"></div>'+
@@ -4076,6 +4216,82 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '</div>'+
         '</div>';
       document.getElementById('ol2Back').onclick=function(){ showBoard(); };
+
+      // ── Distribute the detail sections into tabs ────────────────────────────
+      // Everything that used to force a scroll — links, files, time, proof,
+      // comments, the audit trail — moves one click away instead of one scroll.
+      (function(){
+        var host=rev.querySelector('.rvtab[data-tab="detail"]'); if(!host) return;
+        var MAP={ 'links':'links', 'files':'files', 'time':'time', 'completion proof':'time',
+                  'comments & updates':'activity', 'activity / audit trail':'activity' };
+        var TABS=[{k:'detail',l:'Detail'},{k:'links',l:'Links'},{k:'files',l:'Files'},{k:'time',l:'Time'},{k:'activity',l:'Activity'}];
+        var panes={};
+        TABS.forEach(function(t){
+          if(t.k==='detail'){ panes.detail=host; return; }
+          var d=document.createElement('div'); d.className='rvtab'; d.setAttribute('data-tab',t.k);
+          host.parentNode.insertBefore(d, host.nextSibling); panes[t.k]=d;
+        });
+        [].forEach.call(host.querySelectorAll('.lp-sec'),function(sec){
+          var head=(sec.querySelector('.lp-sech span')||{}).textContent||'';
+          var dest=MAP[head.trim().toLowerCase()];
+          if(dest && panes[dest]) panes[dest].appendChild(sec);
+        });
+        // Counts on the tab labels, so you can see there is something in there
+        // without opening it.
+        function countIn(k){
+          var p=panes[k]; if(!p) return '';
+          if(k==='links'){ var n=(lpLinks(card)||[]).length; return n?n:''; }
+          if(k==='files'){ var f=(card.documents||[]).length; return f?f:''; }
+          if(k==='activity'){ var c=(card.comments||[]).length; return c?c:''; }
+          if(k==='time'){ var tl=(card.timeLog||[]); return tl.length?'●':''; }
+          return '';
+        }
+        var strip=rev.querySelector('#edTabs');
+        strip.innerHTML=TABS.map(function(t){
+          var n=countIn(t.k);
+          return '<a data-rt="'+t.k+'"'+(t.k==='detail'?' class="on"':'')+'>'+t.l+(n?'<span class="n">'+n+'</span>':'')+'</a>';
+        }).join('');
+        [].forEach.call(strip.querySelectorAll('[data-rt]'),function(a){
+          a.onclick=function(){
+            var k=a.getAttribute('data-rt');
+            [].forEach.call(strip.querySelectorAll('[data-rt]'),function(x){ x.classList.toggle('on', x===a); });
+            Object.keys(panes).forEach(function(pk){ panes[pk].classList.toggle('on', pk===k); });
+          };
+        });
+      })();
+
+      // ── Next-step bar actions ───────────────────────────────────────────────
+      (function(){
+        function bind(id,fn){ var b=document.getElementById(id); if(b) b.onclick=fn; }
+        function focusField(id){ var e=document.getElementById(id); if(e){ try{ e.focus(); e.scrollIntoView({block:'center'}); }catch(x){} } }
+        bind('nsApprove',function(){
+          if(card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)) return; }
+          card.status='done'; card.columnEnteredAt=Date.now(); card.updatedAt=Date.now();
+          lpAudit(card,'Approved from the next-step bar'); try{ persist(); }catch(e){} updateCounts(); toast('Approved'); showBoard('review');
+        });
+        bind('nsReject',function(){ card.status='active'; card.columnEnteredAt=Date.now(); card.updatedAt=Date.now();
+          lpAudit(card,'Returned for changes'); try{ persist(); }catch(e){} updateCounts(); toast('Returned to In progress'); openReview(card); });
+        bind('nsReopen',function(){ card.status='active'; card.columnEnteredAt=Date.now(); card.updatedAt=Date.now();
+          lpAudit(card,'Reopened'); try{ persist(); }catch(e){} updateCounts(); openReview(card); });
+        bind('nsTrip',function(){ lpTripPlanner(lpTripSeedFromCard(card)); });
+        bind('nsDeliv',function(){ focusField('edDeliv'); });
+        bind('nsRun',function(){ var r=document.getElementById('ol2Run'); if(r) r.click(); else focusField('edInstr'); });
+        bind('nsDate',function(){ focusField('edDue'); });
+        bind('nsDone',function(){
+          if(card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)) return; }
+          card.status='done'; card.columnEnteredAt=Date.now(); card.updatedAt=Date.now();
+          lpAudit(card,'Marked done from the next-step bar'); try{ persist(); }catch(e){} updateCounts(); toast('Done'); showBoard();
+        });
+        bind('nsProof',function(){ lpProof(card); });
+        bind('nsHand',function(){ focusField('edOwner'); });
+        bind('nsUnblock',function(){ card.status='active'; card.waitingOn=''; card.waitingFrom='';
+          card.updatedAt=Date.now(); lpAudit(card,'Unblocked'); try{ persist(); }catch(e){} updateCounts(); openReview(card); });
+        bind('nsNudge',function(){ var t=rev.querySelector('#cmT'); if(t){ [].forEach.call(rev.querySelectorAll('#edTabs [data-rt="activity"]'),function(a){ a.click(); }); try{ t.focus(); }catch(x){} } else toast('Add a comment to check in'); });
+        bind('nsSub',function(){
+          var sts=(card.subtasks||[]); for(var i=0;i<sts.length;i++){ if(!sts[i].done){ sts[i].done=true; sts[i].doneAt=Date.now(); break; } }
+          card.updatedAt=Date.now(); try{ persist(); }catch(e){} openReview(card);
+        });
+      })();
       (function(){
         function setModeBtns(){ var d=document.getElementById('edDo'), t=document.getElementById('edTrack'); if(d) d.classList.toggle('sel',card.execMode==='do-it'); if(t) t.classList.toggle('sel',card.execMode==='track-it'); }
         setModeBtns();
@@ -4104,8 +4320,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var acts=document.getElementById('ol2Acts'); acts.innerHTML='';
         if(card.status==='review'){
           if(card.submittedBy){ var sn=document.createElement('span'); sn.style.cssText='color:#9EA1AB;font-size:12px;align-self:center'; sn.textContent='Submitted by '+card.submittedBy; acts.appendChild(sn); }
-          var ap=document.createElement('button'); ap.className='gbtn amber'; ap.textContent='✓ Approve (Done)'; ap.onclick=function(){ if(card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)) return; } card.status='done'; card.columnEnteredAt=Date.now(); lpAudit(card,'Approved & marked done'); persist(); updateCounts(); toast('Approved'); showBoard('review'); }; acts.appendChild(ap);
-          var rt=document.createElement('button'); rt.className='gbtn'; rt.textContent='↩ Return for changes'; rt.onclick=function(){ card.status='active'; card.columnEnteredAt=Date.now(); lpAudit(card,'Returned for changes'); persist(); updateCounts(); toast('Returned to In progress'); openReview(card); }; acts.appendChild(rt);
+          // Approve / Return live in the next-step bar at the top now. Repeating them
+          // here split attention between two identical pairs of buttons, which is the
+          // opposite of what the bar is for. Only the extras stay down here.
         }
         var hasDraft=!!(card.aiArtifact&&card.aiArtifact.content);
         if(!hasDraft){
