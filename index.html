@@ -1776,6 +1776,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .memempty{font-size:12.5px;color:#6E717B;border:1px dashed #26272D;border-radius:11px;padding:16px;line-height:1.6}
 .lp-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#C7C9D1;cursor:pointer}
 .ulbl{color:#8A8D97;font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 0}
+.ol2 .travhint{background:rgba(192,132,40,.07);border:1px dashed #3a3320;border-radius:11px;padding:11px 13px;margin-top:12px;font-size:12.5px;color:#9EA1AB;line-height:1.55}
+.ol2 .travhint b{color:#E0B871;display:block;margin-bottom:3px}
+.ol2 .travhint .gbtn{width:100%;margin-top:9px}
 /* ── Phase 4: Travel ── */
 .ol2 .travcard{background:#15161A;border:1px solid #26272D;border-radius:12px;padding:13px 16px;margin-top:18px}
 .ol2 .travcard .tvh{display:flex;align-items:center;gap:10px;font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.16em;color:#6E717B}
@@ -2010,8 +2013,26 @@ dots + 'Levi&#39;s Projects</td></tr>' +
   function dueLabel(d){ if(!d) return ''; try{ var dt=new Date(d+'T00:00:00'); if(isNaN(dt)) return d; var now=new Date(); var t=new Date(now.getFullYear(),now.getMonth(),now.getDate()); var diff=Math.round((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-t)/86400000); if(diff===0) return 'today'; if(diff===1) return 'tmrw'; if(diff===-1) return 'yest'; if(diff>1&&diff<7) return dt.toLocaleDateString(undefined,{weekday:'short'}); return dt.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){ return d; } }
   // library matching (mirrors the execution engine)
   function findByName(arr,name){ if(!name) return null; for(var i=0;i<(arr||[]).length;i++){ if(arr[i].name===name) return arr[i]; } return null; }
-  function matchSkill(card){ var sk=(L().skills||[]); if(!sk.length) return null; var t=((card.title||'')+' '+(card.notes||'')).toLowerCase(); var best=null,bs=-1; sk.forEach(function(s){ var score=0; if(s.category&&card.category&&(s.category===card.category||s.category==='All')) score+=2; (String(s.tags||'').toLowerCase().split(/[,\s]+/).filter(Boolean)).forEach(function(tag){ if(t.indexOf(tag)>=0) score+=2; }); if(s.name&&t.indexOf(String(s.name).toLowerCase())>=0) score+=1; if(score>bs){bs=score;best=s;} }); return best||sk[0]; }
-  function deriveContext(card,skill){ var ctx=(L().context||[]); if(skill&&skill.defaultContext){ var c=findByName(ctx,skill.defaultContext); if(c) return c; } var t=(card.title||'').toLowerCase(); for(var i=0;i<ctx.length;i++){ if(ctx[i].name&&t.indexOf(String(ctx[i].name).toLowerCase())>=0) return ctx[i]; } return null; }
+  // Relevance matching. The old version fell back to sk[0] when nothing scored, which is how
+  // "Draft client proposal" ended up attached to a trip-booking task. An unrelated skill is
+  // worse than none — it drags the whole draft off course — so below threshold we attach nothing.
+  function lpWords(x){ return String(x||'').toLowerCase().match(/[a-z0-9]{4,}/g)||[]; }
+  function lpSkillScore(s, cardText, cardWords, cardCat){
+    var score=0;
+    String(s.tags||'').toLowerCase().split(/[,\s]+/).filter(Boolean).forEach(function(tag){ if(tag.length>2 && cardText.indexOf(tag)>=0) score+=3; });
+    lpWords(s.name).forEach(function(w){ if(cardWords.indexOf(w)>=0) score+=2; });
+    lpWords(s.whenToUse||s.description||'').slice(0,40).forEach(function(w){ if(cardWords.indexOf(w)>=0) score+=1; });
+    if(s.category && cardCat && s.category===cardCat && s.category!=='All') score+=1;
+    return score;
+  }
+  function matchSkill(card){
+    var sk=(L().skills||[]); if(!sk.length) return null;
+    var t=((card.title||'')+' '+(card.notes||'')+' '+(card.deliverable||'')).toLowerCase();
+    var tw=lpWords(t); var best=null,bs=0;
+    sk.forEach(function(s){ var sc=lpSkillScore(s,t,tw,card.category); if(sc>bs){ bs=sc; best=s; } });
+    return bs>=3 ? best : null;
+  }
+  function deriveContext(card,skill){ var ctx=(L().context||[]); if(skill&&skill.defaultContext){ var c=findByName(ctx,skill.defaultContext); if(c) return c; } var t=((card.title||'')+' '+(card.notes||'')).toLowerCase(); for(var i=0;i<ctx.length;i++){ var n=String(ctx[i].name||'').toLowerCase(); if(n.length>=3 && t.indexOf(n)>=0) return ctx[i]; } return null; }
   function derivePrefs(ctx){ return (L().preferences||[]).filter(function(p){ return (!p.scope||p.scope==='global'||p.scope==='category') || (ctx&&p.appliesTo&&p.appliesTo===ctx.name); }); }
   function assemble(card){ var skill=matchSkill(card); var tmpl=skill?findByName(L().templates||[],skill.linkedTemplate):null; var ctx=deriveContext(card,skill); var prefs=derivePrefs(ctx); return {skill:skill,tmpl:tmpl,ctx:ctx,prefs:prefs}; }
   var DELIV_TYPES=['','Email','Document','Deck','Spreadsheet','Research brief','Plan','Design / asset','Code','Message','Decision'];
@@ -2698,6 +2719,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     // ══════════════════════════════════════════════════════════════════
     // Phase 4 — Travel. Wingman researches and preps; a human books and pays.
     // ══════════════════════════════════════════════════════════════════
+    function lpIsTravel(card){
+      var t=((card.title||'')+' '+(card.notes||'')).toLowerCase();
+      return /\b(flights?|airfare|airline|hotel|lodging|itinerary|rental car|car service|trip|travel|conference|offsite|fly|flying|book (?:a )?(?:trip|travel))\b/.test(t);
+    }
+    // Pull what we can off the card so the planner opens half-filled.
+    function lpTripSeedFromCard(card){
+      var seed={ purpose:(card.title||'').trim(), notes:(card.notes||'').trim(), card:card };
+      var src=(card.title||'')+' '+(card.notes||'');
+      var m=src.match(/\b(?:in|to|at)\s+([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2})/);
+      if(m) seed.destination=m[1].replace(/[,.]$/,'').trim();
+      var d=src.match(/\b(\d{4}-\d{2}-\d{2})\b/); if(d) seed.depart=d[1];
+      return seed;
+    }
     function lpTravel(){ var Lo=L(); if(!Lo.travel) Lo.travel={}; return Lo.travel; }
     var TRAV_FIELDS=[
       {k:'homeAirport',l:'Home airport(s)',ph:'e.g. RDM, PDX'},
@@ -2796,6 +2830,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     var _tripPlan=null;
     function lpTripPlanner(seed){
       seed=seed||{};
+      var _card=seed.card||null;
       var ov=document.createElement('div'); ov.id='lpTripOv'; ov.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(4,5,8,.86);display:flex;align-items:flex-start;justify-content:center;padding:5vh 16px 40px;overflow-y:auto;font-family:Inter,-apple-system,system-ui,sans-serif';
       document.body.appendChild(ov);
       ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
@@ -2850,13 +2885,21 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if((P.questions||[]).length){ h+='<div class="triph">Wingman needs</div>'+P.questions.map(function(q){ return '<div class="tripq">'+esc(q)+'</div>'; }).join(''); }
         if((P.sources||[]).length){ h+='<div style="margin-top:14px;font-size:11px;color:#6E717B">Researched from '+P.sources.length+' source'+(P.sources.length===1?'':'s')+': '+P.sources.slice(0,4).map(function(u){ return '<a href="'+esc(u)+'" target="_blank" rel="noopener" style="color:#6E717B;text-decoration:underline">'+esc(lpHost(u))+'</a>'; }).join(' · ')+'</div>'; }
         h+='<div style="font-size:11px;color:#6E717B;margin-top:10px;border-top:1px solid #26272D;padding-top:10px">Researched, not reserved — confirm fares and schedules when booking. Wingman never books or pays.</div>';
-        h+='<div class="tripacts"><button class="gbtn amber" id="trMission">Create the mission</button><button class="gbtn" id="trIcs">Calendar file</button><button class="gbtn" id="trCopy">Copy booking brief</button><button class="gbtn" id="trRedo">Re-research</button></div>';
+        h+='<div class="tripacts">'+(_card?'<button class="gbtn amber" id="trAttach">Attach plan to this task</button><button class="gbtn" id="trMission">Create a mission instead</button>':'<button class="gbtn amber" id="trMission">Create the mission</button>')+'<button class="gbtn" id="trIcs">Calendar file</button><button class="gbtn" id="trCopy">Copy booking brief</button><button class="gbtn" id="trRedo">Re-research</button></div>';
         shell(h);
         document.getElementById('trClose').onclick=function(){ ov.remove(); };
         document.getElementById('trIcs').onclick=function(){ lpTripIcs(P); };
         document.getElementById('trCopy').onclick=function(){ try{ navigator.clipboard.writeText(lpTripBrief(P)); toast('Booking brief copied'); }catch(e){ toast('Copy failed'); } };
         document.getElementById('trRedo').onclick=function(){ seed=t; form(); };
         document.getElementById('trMission').onclick=function(){ lpTripMission(P); ov.remove(); };
+        var at=document.getElementById('trAttach');
+        if(at) at.onclick=function(){
+          _card.aiArtifact={kind:'draft',content:lpTripBrief(P),model:'trip-planner',createdAt:Date.now()};
+          _card.aiStatus='ready'; if(_card.status!=='review'){ _card.status='review'; _card.columnEnteredAt=Date.now(); }
+          _card.updatedAt=Date.now(); if(!_card.deliverable) _card.deliverable='Plan';
+          try{ lpAudit(_card,'Trip plan attached from the planner'); persist(); updateCounts(); }catch(e){}
+          ov.remove(); toast('Plan attached — it&#39;s the draft on this task now'); openReview(_card);
+        };
       }
       form();
     }
@@ -3759,6 +3802,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         '<div class="rev">'+
           '<div><div class="panelc">'+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
+            (lpIsTravel(card)?'<div class="travhint"><b>This looks like a trip.</b> Wingman can research flights, hotels and ground transport against your travel profile, then hand you a booking list.<button type="button" class="gbtn amber" id="edTripGo">▸ Plan this trip</button></div>':'')+
             '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
             lpExtrasHtml(card)+
             '<div class="ulbl">Wingman uses</div>'+
@@ -3796,6 +3840,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var db=document.getElementById('ol2Del');
         if(db){ var armed=false, dtm=null; db.onclick=function(){ if(!armed){ armed=true; db.textContent='Click again to delete'; db.style.background='#3a1414'; db.style.borderColor='#7a2b2b'; dtm=setTimeout(function(){ armed=false; db.textContent='Delete task'; db.style.background='none'; db.style.borderColor='#5a2b2b'; },3000); return; } clearTimeout(dtm); deleteCard(card); }; }
       })();
+      (function(){ var tg=document.getElementById('edTripGo'); if(tg) tg.onclick=function(){ lpTripPlanner(lpTripSeedFromCard(card)); }; })();
       lpWireExtras(card);
       var msg=document.getElementById('ol2RevMsg');
       function showMsg(t,kind){ msg.style.display='block'; msg.style.color=kind==='err'?'#E08A8A':'#E0B871'; msg.innerHTML=t; }
