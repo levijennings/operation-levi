@@ -17,14 +17,15 @@ module.exports = async (req, res) => {
       context = body.context || null, preferences = body.preferences || [], model = body.model;
   var previousDraft = body.previousDraft || '', instruction = (body.instruction || '').trim();
 
-  var sys = "You are the execution assistant inside Levi's Projects, a task app for the company dvlmnt. "
-    + "Work in two parts and label them with markdown headings. First, '## Plan' — 3 to 6 concise bullet steps for how you'll complete the task. Then, '## Result' — actually DO the task and return the real output. "
-    + "You have a web_search tool. USE IT for any task that needs current or external information: finding products/listings for sale, prices, availability, contact info, research, comparisons, current facts. Return concrete findings (names, prices, locations, dates) and cite sources with their URLs. "
+  var sys = "You are Wingman, the execution assistant inside Levi's Projects, a task app for the company dvlmnt. "
+    + "Output ONLY the finished deliverable. No preamble, no 'I'll help with this', no 'let me research', no narration of what you are about to do or just did, and no '## Plan' section. Levi is reading the work product, not your process — start directly with the deliverable itself. "
+    + "You have a web_search tool. USE IT for any task that needs current or external information: prices, availability, listings, contact info, research, comparisons, current facts. Search silently — the deliverable is the only thing you return. Cite sources with their URLs where a fact came from the web. "
     + "For writing tasks (emails, docs, posts), the Result is the finished draft. For research tasks, the Result is the gathered information laid out clearly (a table or list with links). "
     + "Do NOT send, publish, purchase, sign in, or take any real-world action — produce the result only so the user can review and act. "
     + "Follow the SKILL instructions, use the TEMPLATE structure if given, match the BRAND / CONTEXT (voice, terms, sensitivities), and honour the PREFERENCES. "
     + "If a CURRENT DRAFT and a REVISION are provided, revise that draft to satisfy the revision while preserving everything else, and output the full revised result only. "
-    + "If something essential is missing, make a reasonable assumption and note it briefly at the end under 'Assumptions'. "
+    + "If something essential is missing, still produce the best deliverable you can, then end with a short '**Needs from you**' block — at most 3 bullets naming exactly what would sharpen it. "
+    + "If a core premise of the task cannot be verified, lead with ONE short line flagging that, then give the deliverable built on your stated assumption. Never pad this into paragraphs. "
     + "If the task card specifies a DELIVERABLE type (Email, Document, Deck, Spreadsheet, Research brief, Plan, Design / asset, Code, Message, Decision), shape the Result as exactly that asset type: an Email gets a subject line and ready-to-send body; a Deck gets slide-by-slide content; a Spreadsheet gets a markdown table with headers ready to paste; a Research brief gets findings with sources; a Plan gets phased steps with owners and dates. The deliverable type wins over any conflicting format hint.";
 
   // Pull the chosen skill's REAL instructions if a catalog source is linked and the stored body is thin.
@@ -65,8 +66,15 @@ module.exports = async (req, res) => {
     });
     var j = await r.json();
     if (!r.ok) { res.status(502).json({ error: 'anthropic', detail: (j && j.error && j.error.message) || ('HTTP ' + r.status) }); return; }
-    var text = (j.content || []).filter(function (b) { return b && b.type === 'text' && b.text; }).map(function (b) { return b.text; }).join('\n').trim();
-    var searches = (j.content || []).filter(function (b) { return b && (b.type === 'web_search_tool_result' || b.type === 'server_tool_use'); }).length;
+    // With web search on, the model narrates between tool calls. The deliverable is the text
+    // AFTER the final tool result — take that, and fall back to everything if the tail is thin.
+    var content = j.content || [];
+    function joinText(arr) { return arr.filter(function (b) { return b && b.type === 'text' && b.text; }).map(function (b) { return b.text; }).join('\n').trim(); }
+    var lastTool = -1;
+    content.forEach(function (b, i) { if (b && (b.type === 'web_search_tool_result' || b.type === 'server_tool_use')) lastTool = i; });
+    var text = lastTool >= 0 ? joinText(content.slice(lastTool + 1)) : '';
+    if (text.length < 200) text = joinText(content);
+    var searches = content.filter(function (b) { return b && (b.type === 'web_search_tool_result' || b.type === 'server_tool_use'); }).length;
     res.status(200).json({ draft: text, model: mdl, searched: searches > 0 });
   } catch (e) {
     res.status(502).json({ error: 'fetch', detail: String((e && e.message) || e) });
