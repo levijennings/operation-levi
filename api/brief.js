@@ -83,12 +83,75 @@ function assemble(rows, blob) {
   return {
     date: today,
     counts: { open: open.length, overdue: overdue.length, dueToday: dueToday.length, needsReview: review.length },
-    urgent: top,
-    awaitingApproval: review.slice(0, 8).map(function (c) { return { title: c.title, deliverable: c.deliverable || '' }; }),
+    urgent: { total: overdue.length + dueToday.length, showing: top.length, items: top },
+    awaitingApproval: { total: review.length, showing: Math.min(review.length, 8), items: review.slice(0, 8).map(function (c) { return { title: c.title, deliverable: c.deliverable || '' }; }) },
     crew: byPerson,
     goals: goals,
     alerts: alerts.slice(0, 4)
   };
+}
+
+// Every figure Levi is allowed to read in the narrative, pre-written. The model may
+// only state a count by copying one of these verbatim — it never does its own arithmetic,
+// which is how the brief came to claim "four overdue" and "eight drafts" against a real
+// 7 and 2 (and contradicted itself in the same paragraph).
+function figurePhrases(c) {
+  return {
+    overdue: c.overdue + (c.overdue === 1 ? ' overdue task' : ' overdue tasks'),
+    dueToday: c.dueToday + ' due today',
+    needsReview: c.needsReview + (c.needsReview === 1 ? ' draft awaiting your approval' : ' drafts awaiting your approval'),
+    open: c.open + ' open'
+  };
+}
+// Pulls every number out of the prose, in digits or words, so we can prove each one was allowed.
+var NUMWORDS = { one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10,
+  eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17,
+  eighteen:18, nineteen:19, twenty:20, thirty:30, forty:40, fifty:50 };
+// Dates are legitimate prose ("since June 26th", "by Q4") and must not be read as claims.
+var MONTHS = 'january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec';
+function stripDates(text) {
+  return String(text || '')
+    .replace(/\d{4}-\d{2}-\d{2}/g, ' ')
+    .replace(new RegExp('(' + MONTHS + ')\\.?\\s+\\d{1,2}(st|nd|rd|th)?', 'gi'), ' ')
+    .replace(new RegExp('\\d{1,2}(st|nd|rd|th)?\\s+(' + MONTHS + ')', 'gi'), ' ')
+    .replace(/\bq[1-4]\b/gi, ' ')
+    .replace(/\b(19|20)\d{2}\b/g, ' ')
+    .replace(/\b\d{1,2}:\d{2}\s*(am|pm)?/gi, ' ');
+}
+function numbersIn(text) {
+  var t = stripDates(text), out = [];
+  t.replace(/\d+(?:\.\d+)?%?/g, function (m) { out.push(m.replace('%','')); return m; });
+  t.toLowerCase().replace(/[a-z]+/g, function (w) { if (NUMWORDS[w] != null) out.push(String(NUMWORDS[w])); return w; });
+  return out.map(Number).filter(function (n) { return !isNaN(n); });
+}
+// Anything that legitimately appears in the data the model was handed.
+function allowedNumbers(data) {
+  var set = {};
+  (function walk(v, key) {
+    if (v == null) return;
+    // The brief's own date must not license its digits as claimable figures — this is
+    // how "2026-08-18" quietly made 8 and 18 look like supported counts.
+    if (key === 'date' || key === 'due' || key === 'dueDate' || key === 'targetDate') return;
+    if (typeof v === 'number') { set[v] = 1; return; }
+    if (typeof v === 'string') { (stripDates(v).match(/\d+/g) || []).forEach(function (d) { set[Number(d)] = 1; }); return; }
+    if (Array.isArray(v)) { v.forEach(function (x) { walk(x, key); }); return; }
+    if (typeof v === 'object') { Object.keys(v).forEach(function (k) { walk(v[k], k); }); }
+  })(data, '');
+  return set;
+}
+function unsupportedNumbers(text, data) {
+  var allowed = allowedNumbers(data);
+  return numbersIn(text).filter(function (n) { return !allowed[n]; });
+}
+// If the model cannot be trusted with prose, Levi still gets a correct brief.
+function deterministicNarrative(data) {
+  var f = figurePhrases(data.counts), bits = [];
+  if (data.counts.overdue) bits.push('You are carrying ' + f.overdue + '.');
+  if (data.counts.needsReview) bits.push(f.needsReview.charAt(0).toUpperCase() + f.needsReview.slice(1) + '.');
+  if (data.counts.dueToday) bits.push(f.dueToday.charAt(0).toUpperCase() + f.dueToday.slice(1) + '.');
+  if (!bits.length) bits.push('Nothing overdue and nothing waiting on your approval.');
+  if (data.alerts && data.alerts.length) bits.push(data.alerts[0] + '.');
+  return bits.join(' ');
 }
 
 async function writeNarrative(data, key) {
@@ -97,19 +160,40 @@ async function writeNarrative(data, key) {
     + "Voice: clipped, confident, zero filler — a trusted first officer, not a chatbot. Second person. "
     + "Structure: one headline sentence naming the single most needle-moving thing today; then 2-4 short sentences covering what you flag from overdue/due items, drafts awaiting approval, and crew load; close with one sentence on goal pace if goal data exists. "
     + "ALERTS in the data are pre-computed warnings from the analytics — if any are present, weave the most important one in plainly; they exist so nobody quietly falls behind. "
-    + "Never invent tasks or numbers — use only the data given. Under 120 words. No markdown headers, no bullet lists, no emoji.";
-  var r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model: mdl, max_tokens: 350, system: sys, messages: [{ role: 'user', content: 'BRIEF DATA\n' + JSON.stringify(data, null, 1) + '\n\nWrite the brief now.' }] })
-  });
-  var j = await r.json();
-  if (!r.ok) throw new Error('anthropic: ' + ((j && j.error && j.error.message) || r.status));
-  return (j.content && j.content[0] && j.content[0].text) ? j.content[0].text.trim() : '';
+    + "NUMBERS: you may not count, add, estimate or infer any figure. A FIGURES block is supplied with every count already written out. "
+    + "If you want to state a quantity, copy the matching phrase from FIGURES exactly. Any number not in FIGURES is forbidden — including counting the entries of a list yourself, which are truncated samples and carry their real size in the 'total' field. "
+    + "You may always refer to quantities qualitatively instead ('a few', 'most of the crew') or name the specific items. "
+    + "Never invent tasks. Under 120 words. No markdown headers, no bullet lists, no emoji.";
+  var figures = figurePhrases(data.counts);
+  var baseUser = 'FIGURES — the only counts you may state, copied exactly:\n' + JSON.stringify(figures, null, 1)
+    + '\n\nBRIEF DATA\n' + JSON.stringify(data, null, 1) + '\n\nWrite the brief now.';
+
+  async function ask(user) {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model: mdl, max_tokens: 350, system: sys, messages: [{ role: 'user', content: user }] })
+    });
+    var j = await r.json();
+    if (!r.ok) throw new Error('anthropic: ' + ((j && j.error && j.error.message) || r.status));
+    return (j.content && j.content[0] && j.content[0].text) ? j.content[0].text.trim() : '';
+  }
+
+  // Trust, then verify. Any number in the prose that appears nowhere in the data is a
+  // fabrication; give it one corrective pass, then fall back to figures we computed ourselves.
+  var text = await ask(baseUser);
+  var badly = unsupportedNumbers(text, data);
+  if (badly.length) {
+    text = await ask(baseUser + '\n\nYour previous attempt stated ' + badly.join(', ')
+      + ', which appear nowhere in the data. Rewrite it. State a count only by copying a FIGURES phrase verbatim, or describe the quantity in words instead.');
+    badly = unsupportedNumbers(text, data);
+  }
+  if (badly.length) return deterministicNarrative(data);
+  return text;
 }
 
 function briefEmailHtml(narrative, data) {
-  var rows = (data.urgent || []).map(function (t) {
+  var rows = ((data.urgent && data.urgent.items) || []).map(function (t) {
     return '<tr><td style="padding:7px 0;border-bottom:1px solid #ECECE8;font-size:13px">' + esc(t.title)
       + (t.deliverable ? (' <span style="color:#9CA0A8;font-size:11px">· ' + esc(t.deliverable) + '</span>') : '')
       + '</td><td align="right" style="padding:7px 0;border-bottom:1px solid #ECECE8;color:#5A5A5A;font-size:12px;white-space:nowrap">' + esc(t.owner || '') + (t.due ? (' · ' + esc(t.due)) : '') + '</td></tr>';
@@ -248,7 +332,7 @@ module.exports = async (req, res) => {
     if (isCron) pushed = await pushTo(serviceKey, null);
     else if (String(req.query && req.query.send) === '1' && userId) pushed = await pushTo(serviceKey, userId);
 
-    res.status(200).json({ date: data.date, narrative: narrative, counts: data.counts, urgent: data.urgent, awaitingApproval: data.awaitingApproval, crew: data.crew, emailed: sends.map(function (s) { return { to: s.to, ok: !s.result.error, detail: s.result.error || undefined }; }), pushed: pushed || undefined });
+    res.status(200).json({ date: data.date, narrative: narrative, counts: data.counts, urgent: (data.urgent && data.urgent.items) || [], awaitingApproval: (data.awaitingApproval && data.awaitingApproval.items) || [], crew: data.crew, emailed: sends.map(function (s) { return { to: s.to, ok: !s.result.error, detail: s.result.error || undefined }; }), pushed: pushed || undefined });
   } catch (e) {
     res.status(502).json({ error: 'brief_failed', detail: String((e && e.message) || e) });
   }

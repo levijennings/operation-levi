@@ -2541,12 +2541,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var t3ids=top3Ids();
         var cards;
         if(c.top3){
-          cards=t3ids.map(function(id){ return all.filter(function(x){ return String(x.id)===String(id); })[0]; }).filter(function(x){ return x && x.status!=='done' && matchesFilter(x); });
+          var pinned=t3ids.map(function(id){ return all.filter(function(x){ return String(x.id)===String(id); })[0]; }).filter(Boolean);
+          cards=pinned.filter(function(x){ return x.status!=='done' && x.status!=='review' && matchesFilter(x); });
+          // Pinned work that lives in another column stays there. Say so, or the
+          // star looks broken when the card is nowhere to be seen.
+          var elsewhere=pinned.filter(function(x){ return x.status==='review'||x.status==='done'; }).length;
+          c._elsewhere=elsewhere;
         } else {
           cards=all.filter(function(i){ return c.st.indexOf(i.status)>=0 && matchesFilter(i) && (c.set==='review'||c.set==='done'||t3ids.indexOf(String(i.id))<0); });
+          c._elsewhere=0;
           cards.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); });
         }
-        col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#8A8D97':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span>'+(c.set==='done'?' <a style="font-size:10px;color:#6E717B;cursor:pointer;float:right;font-weight:400" data-dcol="1">collapse</a>':'')+'</h3><div class="bar" style="background:'+c.color+'"></div>';
+        col.innerHTML='<h3 style="color:'+(c.color==='#3a3f48'?'#8A8D97':c.color)+'">'+c.label+' <span class="cnt">'+cards.length+'</span>'+(c.set==='done'?' <a style="font-size:10px;color:#6E717B;cursor:pointer;float:right;font-weight:400" data-dcol="1">collapse</a>':'')+'</h3><div class="bar" style="background:'+c.color+'"></div>'
+          +(c._elsewhere?('<div style="font-size:11px;color:#8A8D97;padding:2px 2px 8px;line-height:1.5">★ '+c._elsewhere+' pinned item'+(c._elsewhere===1?' is':'s are')+' in <span style="color:#C08428">Needs review</span></div>'):'');
         if(c.set==='done'){ var dc=col.querySelector('[data-dcol]'); if(dc) dc.onclick=function(){ boardDoneCollapsed=true; renderColumns(); }; }
         col.ondragover=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drop'); };
         col.ondragleave=function(){ col.classList.remove('drop'); };
@@ -3891,7 +3898,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       names.forEach(function(nm){
         var mine=open.filter(function(i){ return owner(i)===nm; });
         var st=lpPersonStats(nm);
-        if(!mine.length && nm!==me && !profiles[nm]) return;
+        // Everyone on a roster gets a card, whether or not they have open work.
+        // Hiding idle people made "Add crew member" look broken: you added someone
+        // and they disappeared until you gave them a task.
         var inprog=mine.filter(function(i){ return ['active','today'].indexOf(i.status)>=0; }).length;
         var waiting=mine.filter(function(i){ return i.status==='waiting'; }).length;
         var rev=mine.filter(function(i){ return i.status==='review'; }).length;
@@ -3902,7 +3911,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<div class="phead"><div class="pav'+(isMe?' me':'')+'">'+esc(initials(nm).toUpperCase())+'</div><div style="flex:1"><div class="pname">'+esc(isMe?(nm+' (you)'):nm)+(prof.isEA?' <span style="font-size:9px;font-weight:700;color:#9573C9;border:1px solid #9573C9;border-radius:4px;padding:0 4px;vertical-align:middle">EA</span>':'')+'</div><div class="prole">'+esc(role||'—')+'</div></div><button class="lp-mini lp-crewedit" data-person="'+esc(nm)+'" title="Edit member">✎</button><button class="lp-mini lp-profbtn" data-person="'+esc(nm)+'">Profile →</button></div>'+
           '<div class="pstats"><div class="pstat"><b>'+mine.length+'</b>open</div><div class="pstat"><b>'+inprog+'</b>in progress</div><div class="pstat"><b>'+waiting+'</b>waiting</div>'+(rev?('<div class="pstat"><b>'+rev+'</b>review</div>'):'')+'<div class="pstat"><b>'+st.estH+'</b>est h</div><div class="pstat"><b>'+(Math.round(st.spentH*10)/10)+'</b>spent h</div><div class="pstat"><b>'+(Math.round(st.remH*10)/10)+'</b>left h</div></div>'+
           (waitOn?('<div style="font-size:11.5px;color:#C08428;margin-bottom:8px">⏳ '+waitOn+' item'+(waitOn===1?'':'s')+' waiting on '+esc(isMe?'you':nm)+'</div>'):'')+
-          '<div class="plist">'+(list.length?list.map(function(it){ return '<div class="pli" data-open="'+esc(it.id)+'"><span class="pdot" style="background:'+stColor(it.status)+'"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.title||'Untitled')+'</span><span style="color:#8A8D97;font-size:11px;flex-shrink:0">'+esc(it.dueDate?dueLabel(it.dueDate):it.status)+'</span></div>'; }).join(''):'<div style="color:#8A8D97;font-size:12px;padding-top:6px">No open items.</div>')+'</div>'+
+          '<div class="plist">'+(list.length?list.map(function(it){ return '<div class="pli" data-open="'+esc(it.id)+'"><span class="pdot" style="background:'+stColor(it.status)+'"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(it.title||'Untitled')+'</span><span style="color:#8A8D97;font-size:11px;flex-shrink:0">'+esc(it.dueDate?dueLabel(it.dueDate):it.status)+'</span></div>'; }).join(''):('<div style="color:#8A8D97;font-size:12px;padding-top:6px">'+(st.done?'Nothing open right now.':'No work assigned yet — open a task to delegate one.')+'</div>'))+'</div>'+
           (mine.length>5?('<div style="color:#8A8D97;font-size:11.5px;margin-top:8px">+'+(mine.length-5)+' more</div>'):'')+
           '</div>';
       });
