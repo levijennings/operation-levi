@@ -32,7 +32,14 @@ function assemble(rows, blob) {
   var open = items.filter(function (c) { return c.status !== 'done' && c.type !== 'habit'; });
   var overdue = open.filter(function (c) { return c.dueDate && c.dueDate < today; });
   var dueToday = open.filter(function (c) { return c.dueDate === today; });
-  var review = items.filter(function (c) { return c.status === 'review' || (c.aiArtifact && c.aiArtifact.content && c.aiStatus === 'drafted'); });
+  // "Awaiting your approval" has to mean exactly what the Today tile and the review
+  // lane mean, or the brief contradicts the app on Levi's own screen. This previously
+  // also swept in anything carrying a drafted artifact — including tasks already marked
+  // done — which is how it reported 8 drafts against a real 3.
+  var review = items.filter(function (c) { return c.status === 'review'; });
+  // Drafted but never filed into review. Still worth surfacing, but it is a different
+  // thing from work waiting on a decision, so it gets its own figure.
+  var draftedNotFiled = open.filter(function (c) { return c.status !== 'review' && c.aiArtifact && c.aiArtifact.content && c.aiStatus === 'drafted'; });
   var byPerson = {};
   open.forEach(function (c) {
     (c.assignees && c.assignees.length ? c.assignees : [c.responsible || '—']).forEach(function (p) {
@@ -82,7 +89,7 @@ function assemble(rows, blob) {
   });
   return {
     date: today,
-    counts: { open: open.length, overdue: overdue.length, dueToday: dueToday.length, needsReview: review.length },
+    counts: { open: open.length, overdue: overdue.length, dueToday: dueToday.length, needsReview: review.length, draftedNotFiled: draftedNotFiled.length },
     urgent: { total: overdue.length + dueToday.length, showing: top.length, items: top },
     awaitingApproval: { total: review.length, showing: Math.min(review.length, 8), items: review.slice(0, 8).map(function (c) { return { title: c.title, deliverable: c.deliverable || '' }; }) },
     crew: byPerson,
@@ -100,6 +107,7 @@ function figurePhrases(c) {
     overdue: c.overdue + (c.overdue === 1 ? ' overdue task' : ' overdue tasks'),
     dueToday: c.dueToday + ' due today',
     needsReview: c.needsReview + (c.needsReview === 1 ? ' draft awaiting your approval' : ' drafts awaiting your approval'),
+    draftedNotFiled: c.draftedNotFiled + (c.draftedNotFiled === 1 ? ' draft not yet filed for review' : ' drafts not yet filed for review'),
     open: c.open + ' open'
   };
 }
