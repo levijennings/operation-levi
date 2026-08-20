@@ -3739,7 +3739,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       // ── The brief leads the view ──
       h+='<div class="td-brief" id="ol2BriefCard">'+(window._lpBrief
         ? ('<span class="wm">▸</span> '+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')
-           +(window._lpBrief.emailedNote?(' <span style="color:#6E717B">· '+esc(window._lpBrief.emailedNote)+'</span>'):'')
+           +(window._lpBrief.emailedNote?(' <span style="color:'+(window._lpBrief.emailFailed?'#E08A8A':'#6E717B')+'">· '+(window._lpBrief.emailFailed?'⚠ ':'')+esc(window._lpBrief.emailedNote)+'</span>'):'')
            +'<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="gbtn" id="ol2BriefRefresh">Regenerate</button><button class="gbtn" id="ol2BriefEmail">Email it to me</button><button class="gbtn" id="ol2BriefPush">Phone alerts</button></div>')
         : ('<span class="wm">▸</span> <span id="ol2BriefWait">'+(window._lpBriefFailed?'Wingman couldn&#39;t write the brief. ':'Wingman is writing your brief…')+'</span>'
            +(window._lpBriefFailed?'<button class="gbtn amber" id="ol2BriefGen" style="margin-left:8px">Try again</button>':'')))
@@ -3777,7 +3777,13 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           .then(function(res){
             if(res.ok&&res.j&&res.j.narrative){
               window._lpBriefFailed=false;
-              window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:(send&&res.j.emailed&&res.j.emailed.length&&res.j.emailed[0].ok)?('Emailed to '+res.j.emailed[0].to):''};
+              var _mn='', _mf=false;
+              if(send && res.j.emailed && res.j.emailed.length){
+                var _e=res.j.emailed[0];
+                if(_e.ok){ _mn='Emailed to '+_e.to; }
+                else { _mf=true; _mn='Could not email '+_e.to+(_e.detail?(' — '+_e.detail):''); }
+              } else if(send){ _mf=true; _mn='Could not email — the server sent nothing back.'; }
+              window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:_mn,emailFailed:_mf};
             } else { window._lpBriefFailed=true; }
             showHome();
           }).catch(function(e){ window._lpBriefFailed=true; showHome(); });
