@@ -47,7 +47,25 @@ function assemble(rows, blob) {
     });
   });
   var goals = ((blob && blob.goals) || []).slice(0, 6).map(function (g) {
-    return { title: g.title, forecast: g.forecastDate || '', updates: (g.updates || []).length };
+    var linked = items.filter(function (c) { return (c.goalIds || []).indexOf(g.id) >= 0; });
+    var doneL = linked.filter(function (c) { return c.status === 'done'; });
+    var pct = linked.length ? Math.round(doneL.length / linked.length * 100) : 0;
+    // Where the calendar says you should be, so "behind" is measured, not guessed.
+    var expected = null;
+    if (g.targetDate) {
+      try {
+        var yr = (g.targetDate || '').slice(0, 4);
+        var st = new Date(yr + '-01-01T00:00:00').getTime(), tg = new Date(g.targetDate + 'T00:00:00').getTime();
+        if (tg > st) expected = Math.max(0, Math.min(100, Math.round((Date.now() - st) / (tg - st) * 100)));
+      } catch (e) {}
+    }
+    return {
+      title: g.title, targetDate: g.targetDate || '', updates: (g.updates || []).length,
+      linkedTasks: linked.length, linkedDone: doneL.length, percentFulfilled: pct,
+      percentExpectedByNow: expected,
+      evidence: linked.length ? 'measured from linked work'
+        : 'NO WORK IS LINKED TO THIS GOAL — there is no evidence of progress either way'
+    };
   });
   var top = overdue.concat(dueToday).slice(0, 12).map(function (c) {
     return { title: c.title, due: c.dueDate, cat: c.category, deliverable: c.deliverable || '', owner: (c.assignees && c.assignees[0]) || c.responsible || '' };
@@ -171,6 +189,8 @@ async function writeNarrative(data, key) {
     + "NUMBERS: you may not count, add, estimate or infer any figure. A FIGURES block is supplied with every count already written out. "
     + "If you want to state a quantity, copy the matching phrase from FIGURES exactly. Any number not in FIGURES is forbidden — including counting the entries of a list yourself, which are truncated samples and carry their real size in the 'total' field. "
     + "You may always refer to quantities qualitatively instead ('a few', 'most of the crew') or name the specific items. "
+    + "GOALS: state only the measured position. A goal whose evidence field says no work is linked has no progress data at all — say that plainly ('nothing is linked to Orbital yet, so it cannot track itself') rather than implying it is on course. Never say a goal is 'on track', 'tracking to', or 'on pace' unless percentFulfilled is at or above percentExpectedByNow. "
+    + "Open with the single action Levi should take first today, not a summary of the pile. "
     + "Never invent tasks. Under 120 words. No markdown headers, no bullet lists, no emoji.";
   var figures = figurePhrases(data.counts);
   var baseUser = 'FIGURES — the only counts you may state, copied exactly:\n' + JSON.stringify(figures, null, 1)

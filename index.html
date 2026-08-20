@@ -3512,6 +3512,65 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       if(goal.targetDate){ var wk=(new Date(goal.targetDate+'T00:00:00')-new Date())/(7*86400000); if(wk>0&&wk<8&&s.pct<60) return true; }
       return false;
     }
+    // The goal card says "link tasks so this goal can track itself". This is how you
+    // actually do it — previously there was no control anywhere for it, so the
+    // instruction was unfollowable and every goal sat at 0% forever.
+    function lpGoalLink(goal){
+      var all=ITEMS().filter(function(i){ return i.type!=='habit'; });
+      var linkedIds={}; all.forEach(function(i){ if((i.goalIds||[]).indexOf(goal.id)>=0) linkedIds[String(i.id)]=1; });
+      var open=all.filter(function(i){ return i.status!=='done'; });
+      var done=all.filter(function(i){ return i.status==='done'; });
+      var q='', showDone=false;
+      function rows(){
+        // Completed work has to be linkable, or a goal set up after the fact can never
+        // leave 0% — which is the whole reason this control exists. Hidden by default
+        // only because there is far more finished work than open work.
+        var list=open.concat(showDone?done:done.filter(function(i){ return linkedIds[String(i.id)]; }));
+        var f=list.filter(function(i){ return !q || (i.title||'').toLowerCase().indexOf(q.toLowerCase())>=0; });
+        if(!f.length) return '<div class="memempty">Nothing matches.</div>';
+        return f.map(function(i){
+          var on=linkedIds[String(i.id)];
+          return '<label class="lpck" style="margin-bottom:6px"><input type="checkbox" data-lk="'+esc(i.id)+'"'+(on?' checked':'')+'/>'
+            +'<span><span class="ct">'+esc(i.title||'Untitled')+'</span>'
+            +'<span class="cd">'+esc(i.category||'—')+' · '+esc(i.status==='done'?'done':(i.dueDate?('due '+lpDueFull(i.dueDate)):i.status))
+            +(owner(i)?(' · '+esc(owner(i))):'')+'</span></span></label>';
+        }).join('');
+      }
+      var body=lpFld({label:'Find a task',id:'glQ',ph:'Type to filter…',hint:'Tick everything that fulfils this goal. Progress is the share of linked work that is done.'})
+        +lpCheck('glDone','Include work already finished','Link past wins so a goal you set up today reflects what is already done.',false)
+        +'<div id="glList" style="max-height:40vh;overflow-y:auto;padding-right:4px">'+rows()+'</div>';
+      var ov=lpModal({title:'Link work to “'+(goal.title||'goal')+'”',
+        sub:'A goal moves only when the work under it moves. Nothing linked means it can never leave 0%.',
+        body:body,
+        footer:'<span class="note" id="glN"></span><button id="glSave" class="gbtn amber">Save links</button>'});
+      lpOpen(ov);
+      function tally(){
+        var n=Object.keys(linkedIds).length;
+        var el=document.getElementById('glN'); if(el) el.textContent=n+' task'+(n===1?'':'s')+' linked';
+      }
+      function bindRows(){
+        [].forEach.call(ov.querySelectorAll('[data-lk]'),function(cb){
+          cb.onchange=function(){ var id=String(cb.getAttribute('data-lk')); if(cb.checked) linkedIds[id]=1; else delete linkedIds[id]; tally(); };
+        });
+      }
+      bindRows(); tally();
+      function redraw(){ document.getElementById('glList').innerHTML=rows(); bindRows(); }
+      var qi=document.getElementById('glQ');
+      if(qi) qi.oninput=function(){ q=this.value; redraw(); };
+      var dq=document.getElementById('glDone');
+      if(dq) dq.onchange=function(){ showDone=this.checked; redraw(); };
+      document.getElementById('glSave').onclick=function(){
+        // Walk every task, not just the visible rows, so filtering or hiding completed
+        // work never silently unlinks something you could not see.
+        all.forEach(function(i){
+          var ids=(i.goalIds||[]).filter(function(x){ return String(x)!==String(goal.id); });
+          if(linkedIds[String(i.id)]) ids.push(goal.id);
+          i.goalIds=ids;
+        });
+        try{ persist(); }catch(e){}
+        ov.remove(); showGoals(); toast(Object.keys(linkedIds).length+' task'+(Object.keys(linkedIds).length===1?'':'s')+' linked');
+      };
+    }
     function lpGoalEdit(g){
       var isNew=!g; g=g||{id:'goal'+Date.now().toString(36),title:'',description:'',category:'DVLMNT',targetDate:'',updates:[]};
       var cats=[]; try{ cats=(typeof teams!=='undefined'&&teams)?Object.keys(teams):[]; }catch(e){} if(!cats.length) cats=['ACST','DVLMNT','Personal'];
@@ -3580,12 +3639,13 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(pplA.length){ h+='<div style="display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap"><span style="font-size:9.5px;color:#6E717B;font-family:\'Space Mono\',monospace;letter-spacing:.12em">CREW</span>'+pplA.slice(0,7).map(function(p){ return (typeof getAvatarHTML==='function')?getAvatarHTML(p,22):('<span style="font-size:11px;color:#9EA1AB">'+esc(p)+'</span>'); }).join('')+'</div>'; }
         var ups=(g.updates||[]).slice(-2).reverse();
         if(ups.length){ h+='<div style="margin-top:9px;border-top:1px solid #1d1f24;padding-top:8px">'+ups.map(function(u2){ return '<div style="font-size:11.5px;color:#9EA1AB;margin-bottom:3px"><span style="color:#6E717B">'+(u2.ts?new Date(u2.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'')+(u2.by?(' · '+esc(u2.by)):'')+'</span> — '+esc(u2.text||u2.note||'')+'</div>'; }).join('')+'</div>'; }
-        h+='<div style="display:flex;gap:6px;margin-top:10px"><button class="lp-mini" data-gupd="'+esc(g.id)+'">＋ Update</button><button class="lp-mini" data-gedit="'+esc(g.id)+'">Edit</button></div>';
+        h+='<div style="display:flex;gap:6px;margin-top:10px"><button class="lp-mini" data-glink="'+esc(g.id)+'">🔗 Link work</button><button class="lp-mini" data-gupd="'+esc(g.id)+'">＋ Update</button><button class="lp-mini" data-gedit="'+esc(g.id)+'">Edit</button></div>';
         h+='</div>';
       });
       view.innerHTML=h;
       var nb=document.getElementById('ol2GoalNew'); if(nb) nb.onclick=function(){ lpGoalEdit(null); };
       [].forEach.call(view.querySelectorAll('[data-gedit]'),function(b){ b.onclick=function(){ var g2=gs.filter(function(x){ return String(x.id)===String(b.getAttribute('data-gedit')); })[0]; if(g2) lpGoalEdit(g2); }; });
+      [].forEach.call(view.querySelectorAll('[data-glink]'),function(b){ b.onclick=function(){ var g2=gs.filter(function(x){ return String(x.id)===String(b.getAttribute('data-glink')); })[0]; if(g2) lpGoalLink(g2); }; });
       [].forEach.call(view.querySelectorAll('[data-gupd]'),function(b){ b.onclick=function(){ var g2=gs.filter(function(x){ return String(x.id)===String(b.getAttribute('data-gupd')); })[0]; if(!g2) return; var t=window.prompt('Update for “'+(g2.title||'')+'”:'); if(t===null||!t.trim()) return; if(!g2.updates) g2.updates=[]; g2.updates.push({ts:Date.now(),by:meName(),text:t.trim()}); try{ persist(); }catch(e){} showGoals(); }; });
       [].forEach.call(view.querySelectorAll('.ol2-goaltask[data-open]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-open')); })[0]; if(it) openReview(it); }; });
       // Upgrade each goal's computed status line to a Wingman-written one (falls back silently).
