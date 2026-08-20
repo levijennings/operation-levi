@@ -2048,8 +2048,12 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .lpck{display:flex;gap:11px;align-items:flex-start;padding:12px 13px;border:1px solid #2E323A;border-radius:10px;background:#0E0F13;cursor:pointer;margin-bottom:10px}
 .lpck:hover{border-color:#3a3f49}
 .lpck input{margin:1px 0 0;width:16px;height:16px;flex-shrink:0;accent-color:#4F8AD1;cursor:pointer}
-.lpck .ct{font-size:13.5px;color:#E9EAEE;font-weight:500}
-.lpck .cd{font-size:11.5px;color:#7C7F89;margin-top:3px;line-height:1.5}
+/* Both must be block: margin-top on an inline span does nothing, so the title
+   and its meta ran together as one line ("…Sales DeckDVLMNT · due Fri, May 15").
+   Same root cause as the .lp-lbl inline-label bug. */
+.lpck>span{flex:1;min-width:0}
+.lpck .ct{display:block;font-size:13.5px;color:#E9EAEE;font-weight:500;line-height:1.4}
+.lpck .cd{display:block;font-size:11.5px;color:#7C7F89;margin-top:3px;line-height:1.5}
 .lpdanger{background:none;border:1px solid #4a2727;color:#E08A8A;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .lpdanger:hover{background:rgba(224,138,138,.07);border-color:#5f3232}
 .lpfile{font-size:12px;color:#9EA1AB;font-family:inherit;max-width:100%}
