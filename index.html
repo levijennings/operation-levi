@@ -350,6 +350,7 @@ html,body{margin:0;padding:0;background:#0E0F12;color:#E9EAEE;font-family:'Inter
             }
 
             _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            window._lpSb = _sb;
 
             // Check for existing session
             const { data: { session } } = await _sb.auth.getSession();
@@ -3737,6 +3738,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var h='<div class="hrow"><div><h1 class="syne">'+esc(dstr)+'</h1><p>'+greet+', '+esc(meName())+' · '+esc(summary)+'</p></div>'+
         '<div style="display:flex;gap:8px"><button class="gbtn amber" id="ol2HomeNew">＋ New task</button></div></div>';
       // ── The brief leads the view ──
+      h+=(window._lpCronFail?('<div class="nextbar late" style="margin-bottom:12px"><div class="nb"><div class="nk">Scheduled brief</div><div class="nt">Your 6:30am brief did not reach your inbox.</div><div class="nw">'+esc(window._lpCronFail)+'</div></div></div>'):'');
       h+='<div class="td-brief" id="ol2BriefCard">'+(window._lpBrief
         ? ('<span class="wm">▸</span> '+esc(window._lpBrief.narrative||'').replace(/\n+/g,'<br><br>')
            +(window._lpBrief.emailedNote?(' <span style="color:'+(window._lpBrief.emailFailed?'#E08A8A':'#6E717B')+'">· '+(window._lpBrief.emailFailed?'⚠ ':'')+esc(window._lpBrief.emailedNote)+'</span>'):'')
@@ -3787,6 +3789,25 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             } else { window._lpBriefFailed=true; }
             showHome();
           }).catch(function(e){ window._lpBriefFailed=true; showHome(); });
+      }
+      // Read the scheduled-send log once per session. A failed cron send is invisible
+      // otherwise — nobody is watching at 6:30am and the function returns 200 either way.
+      if(!window._lpCronChecked){
+        window._lpCronChecked=true;
+        try{
+          if(window._lpSb){
+            window._lpSb.from('brief_sends').select('sent_at,ok,error').order('sent_at',{ascending:false}).limit(1)
+              .then(function(r){
+                var row=(r&&r.data&&r.data[0])||null;
+                if(row && row.ok===false){
+                  var when=''; try{ when=new Date(row.sent_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){}
+                  window._lpCronFail=(when?(when+': '):'')+(row.error||'the send was rejected')
+                    +' — nothing was delivered. Verify your sending domain, then it will resume on its own.';
+                  showHome();
+                }
+              }).catch(function(){});
+          }
+        }catch(e){}
       }
       // Brief-led: write it automatically the first time Today opens this session.
       if(!window._lpBrief && !window._lpBriefFailed && !window._lpBriefAuto){ window._lpBriefAuto=true; runBrief(false); }
