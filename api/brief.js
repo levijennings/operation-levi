@@ -356,6 +356,27 @@ module.exports = async (req, res) => {
       sends.push({ to: userEmail, result: await sendEmail(userEmail, subject, html) });
     }
 
+    // Record the scheduled send so a failure has somewhere to surface. The cron
+    // has no user watching it: Resend can reject every message, the function still
+    // returns 200, and without this row nothing anywhere would ever say so.
+    if (isCron) {
+      try {
+        var okAll = sends.length > 0 && sends.every(function (x) { return !x.result.error; });
+        var firstErr = (sends.filter(function (x) { return x.result.error; })[0] || {}).result;
+        await fetch(SUPABASE_URL + '/rest/v1/brief_sends', {
+          method: 'POST',
+          headers: { apikey: serviceKey, authorization: 'Bearer ' + serviceKey, 'content-type': 'application/json', prefer: 'return=minimal' },
+          body: JSON.stringify({
+            workspace_id: wsId,
+            ok: okAll,
+            recipients: sends.map(function (x) { return { to: x.to, ok: !x.result.error }; }),
+            error: okAll ? null : String((firstErr && firstErr.error) || (sends.length ? 'unknown' : 'no recipients resolved')).slice(0, 500),
+            source: 'cron'
+          })
+        });
+      } catch (e) { /* logging must never take the brief down */ }
+    }
+
     var pushed = null;
     if (isCron) pushed = await pushTo(serviceKey, null);
     else if (String(req.query && req.query.send) === '1' && userId) pushed = await pushTo(serviceKey, userId);
