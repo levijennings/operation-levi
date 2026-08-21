@@ -1478,6 +1478,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .nav a:hover{background:#181a20;color:#E9EAEE}
 .ol2 .nav a.on{background:#1d2129;color:#E9EAEE;border-color:#30353d}
 .ol2 .nav a .tag{margin-left:auto;font-size:10.5px;color:#8A8D97;border:1px solid #30353d;border-radius:6px;padding:1px 7px;font-weight:600}
+    .ol2 .nav a .tag.amber{color:#141005;background:#C08428;border-color:#C08428}
 .ol2 .newt{margin-top:auto;background:#1d2129;color:#E9EAEE;border:1px solid #30353d;border-radius:11px;padding:12px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Inter'}
 .ol2 .newt:hover{background:#23262d}
 .ol2 .spk{margin-top:10px;background:#C08428;color:#1c1304;border:none;border-radius:11px;padding:13px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Inter'}
@@ -1988,7 +1989,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
   .ol2 .side{grid-area:side;flex-direction:row;align-items:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid #26272D;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#121317}
   .ol2 .side::-webkit-scrollbar{display:none}
   .ol2 .brand{display:none}
-  .ol2 .nav{flex-direction:row;gap:6px}
+  .ol2 .nav{flex-direction:row;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+      .ol2 .nav::-webkit-scrollbar{display:none}
+      .ol2 .nav a{flex:0 0 auto}
   .ol2 .nav a{padding:0 12px;min-height:44px;align-items:center;white-space:nowrap;font-size:12.5px;border:1px solid #26272D;border-radius:11px}
   .ol2 .nav a .tag{margin-left:6px}
   .ol2 .newt{margin:0 0 0 auto;min-height:44px;padding:0 13px;white-space:nowrap;font-size:12.5px;flex-shrink:0}
@@ -2412,8 +2415,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<a data-v="board">'+NI.missions+'Missions</a>'+
           '<a data-v="goals">'+NI.goals+'Goals</a>'+
           '<a data-v="people">'+NI.crew+'Crew</a>'+
-          '<span id="ol2RevN" style="display:none">0</span>'+
           '<a data-v="triage"><span class="wmark">▸</span>Wingman <span class="tag" id="ol2TriN">0</span></a>'+
+          '<a data-v="lane" id="ol2RevNav" style="display:none"><span class="wmark">▸</span>Needs review <span class="tag amber" id="ol2RevN">0</span></a>'+
           '<div class="navsep"></div>'+
           '<a data-v="settings">'+NI.gear+'Settings</a>'+
           '<a data-v="docs">'+NI.help+'Docs &amp; help</a>'+
@@ -2464,7 +2467,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
-      if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='docs'){ showDocs(); } else if(v==='settings'){ showSettings(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
+      if(v==='lane'){ _laneIdx=0; lpReviewLane(); }
+            else if(v==='home'){ showHome(); } else if(v==='myday'){ showMyDay(); } else if(v==='week'){ showWeek(); } else if(v==='triage'){ showTriage(); } else if(v==='goals'){ showGoals(); } else if(v==='pulse'){ showPulse(); } else if(v==='timeline'){ boardView2='gantt'; showBoard(); } else if(v==='people'){ showPeople(); } else if(v==='done'){ showDone(); } else if(v==='libraries'){ showLibraries(); } else if(v==='docs'){ showDocs(); } else if(v==='settings'){ showSettings(); } else if(v==='review'){ showBoard('review'); } else { showBoard('board'); }
     });
 
     // ── The Overhaul 5a: keyboard layer + ⌘K command palette ──
@@ -2673,7 +2677,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       if(focus==='review') boardView2='review'; else if(focus==='done') boardView2='done'; else if(focus==='board') boardView2=(boardView2==='review'||boardView2==='done')?'cols':boardView2;
       if(!boardView2) boardView2='cols';
       var all=ITEMS();
-      var _rvn=document.getElementById('ol2RevN'); if(_rvn) _rvn.textContent=all.filter(function(i){ return i.status==='review'; }).length;
+      lpSetRevNav(all.filter(function(i){ return i.status==='review'; }).length);
       document.getElementById('ol2TriN').textContent=all.filter(function(i){ return i.status==='backlog'; }).length;
       var titles={cols:'Missions',cal:'Missions',gantt:'Missions',review:'Needs review',done:'Done'};
       var subs={cols:'Drag cards across stages, or switch view for timeline, review and done.',cal:'Calendar view — pick a range up top.',gantt:'Gantt view — pick a range up top.',review:'Wingman drafted these. Open one to review, refine, and send.',done:'Completed work, grouped by workspace — pin deliverables for quick reference.'};
@@ -2693,7 +2697,15 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     var DOIT=/\b(draft|write|writeup|summari[sz]e|research|generate|create|compose|prepare|email|reply|respond|outline|update|recap|brainstorm|plan)\b/;
     function suggestsWingman(it){ var t=((it.title||'')+' '+(it.notes||'')).toLowerCase(); return it.execMode==='do-it' || DOIT.test(t); }
     function triIcon(it){ var id=String(it.id||''); if(id.charAt(0)==='v') return '🎤'; if(it.type==='phone-call') return '☎'; if(it.type==='book-meeting') return '📅'; return '▦'; }
-    function updateCounts(){ var all=ITEMS(); var t=document.getElementById('ol2TriN'); if(t) t.textContent=all.filter(function(i){ return i.status==='backlog'; }).length; var rv=document.getElementById('ol2RevN'); if(rv) rv.textContent=all.filter(function(i){ return i.status==='review'; }).length; }
+    function lpSetRevNav(n){
+      // This count used to be written into a span hard-coded display:none, so routing
+      // work to Wingman made the queue badge count DOWN and nothing anywhere count up —
+      // which is why a task could feel like it had disappeared. One place decides both
+      // the number and whether the row is on screen.
+      var e=document.getElementById('ol2RevN'); if(e) e.textContent=n;
+      var a=document.getElementById('ol2RevNav'); if(a) a.style.display=(n>0?'':'none');
+    }
+    function updateCounts(){ var all=ITEMS(); var t=document.getElementById('ol2TriN'); if(t) t.textContent=all.filter(function(i){ return i.status==='backlog'; }).length; lpSetRevNav(all.filter(function(i){ return i.status==='review'; }).length); }
     // ── Libraries (native browse) ──
     var LIBTABS=[{k:'skills',label:'Skills',dot:'#4F8AD1'},{k:'templates',label:'Templates',dot:'#C08428'},{k:'preferences',label:'Tone & Voice',dot:'#3FA276'},{k:'context',label:'Context',dot:'#9573C9'}];
     var curLib='skills';
@@ -3358,10 +3370,25 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       [].forEach.call(tr.querySelectorAll('[data-scopen]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-scopen')); })[0]; if(it) openReview(it); }; });
       lpWireWingTabs(tr);
     }
-    function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){ if(res.ok&&res.j&&res.j.draft){ it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; it.aiStatus='ready'; it.status='review'; it.columnEnteredAt=Date.now(); persist(); updateCounts(); } }); }
+    function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){
+      if(res.ok&&res.j&&res.j.draft){
+        it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()};
+        it.aiStatus='ready'; it.aiError=''; it.status='review'; it.columnEnteredAt=Date.now();
+        persist(); updateCounts();
+        toast('▸ Draft ready — "'+(it.title||'Untitled')+'" is in Needs review');
+      } else {
+        // A draft that never came back used to leave the task sitting in Backlog with no
+        // draft, no error and no way to know. Say so, and leave a way to retry.
+        it.aiStatus='failed';
+        it.aiError=String((res&&res.j&&(res.j.detail||res.j.error))||('HTTP '+((res&&res.status)||0))).slice(0,240);
+        it.aiFailedAt=Date.now();
+        persist(); updateCounts();
+        toast('▸ Wingman could not draft "'+(it.title||'Untitled')+'" — open it to try again');
+      }
+    }); }
     function assignTri(it, who, row){
       if(row) row.classList.add('gone');
-      if(who==='Wingman'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('▸ Assigned to Wingman — drafting…'); draftFor(it); }
+      if(who==='Wingman'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('▸ Assigned to Wingman — drafting, lands in Needs review'); draftFor(it); }
       else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Assigned to '+(who===meName()?'you':who)); if(who) lpNotifyAssign(who, it); }
       setTimeout(showTriage, 280);
     }
@@ -4215,6 +4242,11 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       if(!card.deliverable)
         return {tone:'',key:'Next',title:'Set the end result.',
           why:'Wingman cannot help until it knows what this is supposed to produce.',acts:[{t:'Pick a deliverable',id:'nsDeliv',amber:true}]};
+
+      if(card.aiStatus==='failed' && !hasDraft)
+        return {tone:'late',key:'Wingman stalled',title:'Wingman could not draft this.',
+          why:(card.aiError?('It reported: '+esc(card.aiError)):'The draft never came back.'),
+          acts:[{t:'▸ Try again',id:'nsRun',amber:true},{t:'Take it myself',id:'nsHand'}]};
 
       if(card.execMode==='do-it' && !hasDraft)
         return {tone:'wing',key:'Next',title:'Wingman is set to draft this.',
