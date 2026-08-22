@@ -1,0 +1,239 @@
+{
+  "summary": {
+    "ranAt": "2026-08-22T17:54:37.978Z",
+    "finishedAt": "2026-08-22T17:55:28.252Z",
+    "total": 32,
+    "pass": 29,
+    "fail": 3,
+    "error": 0
+  },
+  "results": [
+    {
+      "id": "N1",
+      "category": "navigation",
+      "proves": "The Today panel is #ol2Home — the id the app actually uses",
+      "status": "pass",
+      "ms": 1234
+    },
+    {
+      "id": "N2",
+      "category": "navigation",
+      "proves": "All five destinations are present in the nav",
+      "status": "pass",
+      "ms": 1124
+    },
+    {
+      "id": "N3",
+      "category": "navigation",
+      "proves": "G+M reaches the mission board",
+      "status": "pass",
+      "ms": 1782
+    },
+    {
+      "id": "N4",
+      "category": "navigation",
+      "proves": "The Needs review nav row is a real element with its own count (X36 fix)",
+      "status": "pass",
+      "ms": 1155
+    },
+    {
+      "id": "N5",
+      "category": "navigation",
+      "proves": "Docs & help is reachable from the nav",
+      "status": "pass",
+      "ms": 1207
+    },
+    {
+      "id": "B1",
+      "category": "board",
+      "proves": "The board runs Backlog · In progress · Top 3 · Needs review · Done, in that order",
+      "status": "pass",
+      "ms": 1563
+    },
+    {
+      "id": "B2",
+      "category": "board",
+      "proves": "Cards render as .tcard",
+      "status": "pass",
+      "ms": 1706
+    },
+    {
+      "id": "B3",
+      "category": "board",
+      "proves": "Card complete/delete are .tact .tadone/.tadel — not a data attribute",
+      "status": "pass",
+      "ms": 1572
+    },
+    {
+      "id": "B4",
+      "category": "board",
+      "proves": "Column collapse is the .colc class, not an inferred width",
+      "status": "pass",
+      "ms": 1602
+    },
+    {
+      "id": "B6",
+      "category": "board",
+      "proves": "The column counts reconcile with the cards actually rendered",
+      "status": "pass",
+      "ms": 1577
+    },
+    {
+      "id": "B8",
+      "category": "board",
+      "proves": "Cards carry their dates on the face",
+      "status": "pass",
+      "ms": 1595
+    },
+    {
+      "id": "W1",
+      "category": "wingman",
+      "proves": "The Wingman hub opens and carries Queue, Memory and Plays",
+      "status": "pass",
+      "ms": 2020
+    },
+    {
+      "id": "W2",
+      "category": "wingman",
+      "proves": "The five shipped plays are present by name",
+      "status": "pass",
+      "ms": 2765
+    },
+    {
+      "id": "W3",
+      "category": "wingman",
+      "proves": "The review lane mounts and defines approve / edit / redo / skip — live behaviour on real drafts is manual step X20",
+      "status": "pass",
+      "ms": 1117
+    },
+    {
+      "id": "W10",
+      "category": "wingman",
+      "proves": "The brief reports its own failure rather than failing silently (W11 lineage)",
+      "status": "pass",
+      "ms": 1123
+    },
+    {
+      "id": "W20",
+      "category": "wingman",
+      "proves": "Skill matching has a relevance threshold instead of falling back to the first skill",
+      "status": "pass",
+      "ms": 1062
+    },
+    {
+      "id": "F1",
+      "category": "forms",
+      "proves": "Field labels are block-level, so they sit above their control and not beside it",
+      "status": "pass",
+      "ms": 1647
+    },
+    {
+      "id": "F2",
+      "category": "forms",
+      "proves": "The modal keeps its footer on screen: bounded flex column, scrolling body, non-shrinking footer",
+      "status": "pass",
+      "ms": 1151
+    },
+    {
+      "id": "F3",
+      "category": "forms",
+      "proves": "The form kit exists and every editor is built on it",
+      "status": "pass",
+      "ms": 1136
+    },
+    {
+      "id": "F4",
+      "category": "forms",
+      "proves": "Controls are dark-styled, not raw browser defaults",
+      "status": "pass",
+      "ms": 1097
+    },
+    {
+      "id": "M1",
+      "category": "mobile",
+      "proves": "At 390px the page does not scroll sideways",
+      "status": "pass",
+      "ms": 2138
+    },
+    {
+      "id": "M2",
+      "category": "mobile",
+      "proves": "Every bottom-bar destination is reachable on a phone",
+      "status": "pass",
+      "ms": 2105
+    },
+    {
+      "id": "M3",
+      "category": "mobile",
+      "proves": "Form controls are ≥16px on a phone so iOS does not zoom the viewport on focus",
+      "status": "pass",
+      "ms": 1602
+    },
+    {
+      "id": "M4",
+      "category": "mobile",
+      "proves": "Today paints on a phone with no page errors",
+      "status": "pass",
+      "ms": 3278
+    },
+    {
+      "id": "X34A",
+      "category": "docs",
+      "proves": "The in-app docs name every destination the nav actually has",
+      "status": "fail",
+      "ms": 1102,
+      "error": "docs.json (updated 2026-08-17) never mentions: Today — Wingman answers app questions from these pages, so it misdirects — expected 0, got 1"
+    },
+    {
+      "id": "X34B",
+      "category": "docs",
+      "proves": "The in-app docs do not describe surfaces that were retired",
+      "status": "fail",
+      "ms": 1086,
+      "error": "docs.json still describes retired surfaces: My Day, My Week, Libraries — expected 0, got 3"
+    },
+    {
+      "id": "S1",
+      "category": "security",
+      "proves": "No API key literal is shipped in the client bundle",
+      "status": "pass",
+      "ms": 1061
+    },
+    {
+      "id": "S2",
+      "category": "access",
+      "proves": "Every API endpoint goes through the shared guard",
+      "status": "pass",
+      "ms": 1065
+    },
+    {
+      "id": "S3",
+      "category": "foundation",
+      "proves": "The service worker the manifest registers actually exists",
+      "status": "pass",
+      "ms": 1117
+    },
+    {
+      "id": "S4",
+      "category": "foundation",
+      "proves": "The brief cron is declared",
+      "status": "fail",
+      "ms": 1417,
+      "error": "X35 open: cron \"30 13 * * *\" is a fixed UTC hour, so the 6:30am brief becomes 5:30am in November"
+    },
+    {
+      "id": "P1",
+      "category": "performance",
+      "proves": "The single-file bundle stays under 600KB",
+      "status": "pass",
+      "ms": 1157
+    },
+    {
+      "id": "P2",
+      "category": "performance",
+      "proves": "Today paints within 4s, best of three — waits on #ol2Home, which Today actually renders",
+      "status": "pass",
+      "ms": 3131
+    }
+  ]
+}

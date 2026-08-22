@@ -1,0 +1,11 @@
+{
+  "note": "Manual audit log recovered from the project knowledge base on 2026-08-22. The scripts behind M001–M010 were lost; the outcomes are kept because the findings they produced are real and several are still open.",
+  "runs": [
+    { "run": "M001", "ranAt": "2026-08-19T04:30:00Z", "build": "ff7c634", "attempted": "16/25", "pass": 8, "fail": 4, "blocked": 2, "pending": 9 },
+    { "run": "M002-M006", "ranAt": "2026-08-19/20", "build": "various", "attempted": "not recorded in the knowledge base", "pass": null, "fail": null, "blocked": null, "pending": null },
+    { "run": "M007", "ranAt": "2026-08-21T00:22:00Z", "build": "d9fadad", "attempted": "25/33", "pass": 22, "fail": 1, "blocked": 2, "pending": 8 },
+    { "run": "M008", "ranAt": "2026-08-21T01:05:00Z", "build": "d9fadad", "attempted": "27/35", "pass": 22, "fail": 3, "blocked": 2, "pending": 8 },
+    { "run": "M009", "ranAt": "2026-08-21T01:45:00Z", "build": "d9fadad", "attempted": "29/37", "pass": 22, "fail": 5, "blocked": 2, "pending": 8 },
+    { "run": "M010", "ranAt": "2026-08-21T02:35:00Z", "build": "bff0466", "attempted": "29/37", "pass": 24, "fail": 3, "blocked": 2, "pending": 8 }
+  ]
+}
