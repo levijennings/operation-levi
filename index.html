@@ -2872,7 +2872,20 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     function wingTabs(active){
       return '<div class="wtabs">'+[['queue','Queue'],['memory','Memory'],['plays','Plays']].map(function(t){ return '<a data-wt="'+t[0]+'"'+(active===t[0]?' class="on"':'')+'>'+t[1]+'</a>'; }).join('')+'</div>';
     }
-    function lpWingNavOn(){ var a=document.querySelector('#ol2Nav a[data-v="triage"]'); if(a){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); }); } }
+    function lpNavOn(v){
+      // Whatever put a view on screen — a nav click, a keyboard shortcut or an async
+      // callback — the highlighted row has to be the view you are actually looking at.
+      var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]');
+      if(a){ [].forEach.call(document.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); }); }
+    }
+    function lpWingNavOn(){ lpNavOn('triage'); }
+    // An async result must never yank you off the page you navigated to. The brief takes
+    // seconds to write and the send-log read lands whenever it lands; both used to call
+    // showHome() unconditionally, so clicking Goals mid-flight left the sidebar reading
+    // Goals with Today rendered underneath it.
+    function lpHomeRefresh(){
+      try{ var h=document.getElementById('ol2Home'); if(h && h.style.display!=='none') showHome(); }catch(e){}
+    }
     function lpWireWingTabs(root){
       [].forEach.call(root.querySelectorAll('.wtabs a[data-wt]'),function(a){ a.onclick=function(){ var t=a.getAttribute('data-wt'); if(t==='queue') showTriage(); else if(t==='memory') showMemory(); else showPlays(); }; });
     }
@@ -3743,6 +3756,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     }
     function showHome(){
       hideAllPanels();
+      lpNavOn('home');
       var home=document.getElementById('ol2Home'); home.style.display='';
       var all=ITEMS();
       var review=all.filter(function(i){ return i.status==='review'; });
@@ -3814,8 +3828,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
               } else if(send){ _mf=true; _mn='Could not email — the server sent nothing back.'; }
               window._lpBrief={date:res.j.date,narrative:res.j.narrative,emailedNote:_mn,emailFailed:_mf};
             } else { window._lpBriefFailed=true; }
-            showHome();
-          }).catch(function(e){ window._lpBriefFailed=true; showHome(); });
+            lpHomeRefresh();
+          }).catch(function(e){ window._lpBriefFailed=true; lpHomeRefresh(); });
       }
       // Read the scheduled-send log once per session. A failed cron send is invisible
       // otherwise — nobody is watching at 6:30am and the function returns 200 either way.
@@ -3830,7 +3844,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
                   var when=''; try{ when=new Date(row.sent_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}); }catch(e){}
                   window._lpCronFail=(when?(when+': '):'')+(row.error||'the send was rejected')
                     +' — nothing was delivered. Verify your sending domain, then it will resume on its own.';
-                  showHome();
+                  lpHomeRefresh();
                 }
               }).catch(function(){});
           }
@@ -4174,6 +4188,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     function lpLaneList(){ return ITEMS().filter(function(i){ return i.status==='review'; }); }
     function lpReviewLane(){
       hideAllPanels();
+      lpNavOn('lane');
       var ln=document.getElementById('ol2Lane'); ln.style.display='';
       var list=lpLaneList();
       if(!list.length){
