@@ -1,0 +1,183 @@
+{
+  "note": "PARTIAL RESTORATION. The original 37-step manual script was lost with its session workspace and had never been committed. Steps below were recovered from the project knowledge base on 2026-08-22 by their recorded IDs and outcomes. Group sizes from the last register are kept in `originalCount` so the shortfall stays visible. No step text has been invented to fill a gap — a fabricated step is worse than a missing one.",
+  "recoveredAt": "2026-08-22",
+  "build": "109cfb5",
+  "rule": "NEVER mark a step verified without actually doing it. This was violated once (email recorded as 'confirmed' on the strength of a test that only checked the notify call fired; no inbox was ever opened) and it is the single easiest way to make the whole register worthless.",
+  "groups": [
+    {
+      "key": "env",
+      "title": "Environment & access",
+      "originalCount": 4,
+      "steps": [
+        {
+          "id": "X4",
+          "step": "Sign in to production as Levi with his real password.",
+          "proves": "Real-auth behaviour, which no automated check can reach.",
+          "status": "blocked",
+          "blockedBy": "LEVI ONLY — needs his password. Cannot be delegated to a session."
+        },
+        {
+          "id": "X16",
+          "step": "Load the app at a genuine phone viewport in Levi's own browser.",
+          "proves": "The mobile layout on his real device, not an emulated one.",
+          "status": "blocked",
+          "blockedBy": "The browser bridge cannot resize his window."
+        }
+      ]
+    },
+    {
+      "key": "truth",
+      "title": "Displayed figures vs. underlying records",
+      "originalCount": 8,
+      "steps": [
+        {
+          "id": "X11",
+          "step": "Cross-check every number in the morning brief against the database.",
+          "proves": "The brief states counts that match the records, and does not contradict its own tiles.",
+          "status": "closed",
+          "history": "Failed twice. MF-1 pass 1 fixed model fabrication, which was not the cause; pass 2 found assemble() defined the approval queue over ALL items instead of open ones, sweeping in work already done. needsReview 8 → 2."
+        },
+        {
+          "id": "MF-2",
+          "step": "Pin a card in Needs review to Top 3, then reconcile the column counts.",
+          "proves": "One record renders as exactly one card, and the columns sum to the open item count.",
+          "status": "closed",
+          "history": "Fixed PR #28. Status column wins; Top 3 draws from Backlog and In progress only, and prints '★ N pinned items are in Needs review' so the star does not look broken.",
+          "automatedBy": "B6"
+        },
+        {
+          "id": "MF-6",
+          "step": "Compare the brief's open/review counts against what the browser shows.",
+          "proves": "Client-generated recurring occurrences are not silently missing from the brief.",
+          "status": "open",
+          "history": "Server reports 19 open / 2 review against the browser's 20 / 3. The extra item is a recurring occurrence the client materialises locally and never persists, so the brief structurally cannot see it. Needs its own fix: persist generated occurrences, or have the brief generate them the same way the client does."
+        }
+      ]
+    },
+    {
+      "key": "judgment",
+      "title": "Is the output any good",
+      "originalCount": 8,
+      "steps": [
+        {
+          "id": "X17",
+          "step": "Speak a task and check what Wingman structured out of it.",
+          "proves": "Voice capture produces a usable task, and capVia records voice only when speech recognition actually produced words.",
+          "status": "pending"
+        },
+        {
+          "id": "X19",
+          "step": "Route a real task to Wingman and read the draft it produces.",
+          "proves": "The draft is the deliverable itself — no plan section, no 'let me research', no inter-tool narration.",
+          "status": "pending"
+        },
+        {
+          "id": "X20",
+          "step": "Work the review lane on real drafts: approve, edit, redo with a note, skip.",
+          "proves": "Approve-then-advance works, and a redo note actually outranks the card.",
+          "status": "pending"
+        },
+        {
+          "id": "X21",
+          "step": "Run a trip end to end: plan, attach to the card, export the calendar file, create the mission.",
+          "proves": "The travel path produces a booking brief a human can act on, with no invented fares or confirmations.",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "key": "visual",
+      "title": "Read it as a person would",
+      "originalCount": 5,
+      "steps": [
+        {
+          "id": "MF-4",
+          "step": "Open Goals and try to do what the page tells you to do.",
+          "proves": "The page does not instruct an action it does not provide.",
+          "status": "closed",
+          "history": "Goals said 'link tasks so this goal can track itself' while offering only New goal / Update / Edit. Logged as X31, then fixed."
+        },
+        {
+          "id": "MF-5",
+          "step": "Load the app cold and watch the Wingman badge on first paint.",
+          "proves": "The badge does not flash a wrong number before correcting itself.",
+          "status": "open",
+          "history": "Shows 0 on first paint, corrects to 4 after navigating. Observed twice; never isolated further."
+        },
+        {
+          "id": "X22",
+          "step": "Walk the five destinations on a real iPhone.",
+          "proves": "Every destination is reachable on a phone. The bottom bar has always been wider than a phone; PR #32 made it scroll horizontally as a STOPGAP.",
+          "status": "pending",
+          "openQuestion": "Which five items belong on a phone. A horizontally-scrolling bottom bar is not an answer."
+        }
+      ]
+    },
+    {
+      "key": "sideeffect",
+      "title": "Did it actually do the thing in the world",
+      "originalCount": 8,
+      "steps": [
+        {
+          "id": "X18",
+          "step": "Send the brief to a real address and OPEN THE INBOX.",
+          "proves": "Email is actually delivered — not that the call fired.",
+          "status": "fail",
+          "severity": "critical",
+          "history": "POST /api/brief?send=1 returns HTTP 200 with ok:false and 'You can only send testing emails to your own email address'. The Resend account is in test mode. The 6:30am brief, every assignment notification and every invite have been failing silently for as long as they have existed. Three code paths affected: api/brief.js, api/notify.js, api/send.js.",
+          "fix": "LEVI ONLY — add dvlmnt.com at resend.com/domains, add the SPF/DKIM records at the registrar, wait for Verified, then set RESEND_FROM in Vercel and redeploy.",
+          "lesson": "This step sat unrun longer than any other, and it was the most consequential finding of the whole exercise. No automated test could have caught it: the code is correct and the API returns 200."
+        },
+        {
+          "id": "X23",
+          "step": "Trigger a push notification and confirm it arrives on the phone.",
+          "proves": "Phone alerts work. Requires the Home Screen install on iPhone.",
+          "status": "pending"
+        },
+        {
+          "id": "X25",
+          "step": "Wait for the 6:30am cron and check the inbox.",
+          "proves": "The scheduled brief is delivered, and brief_sends logs the outcome.",
+          "status": "pending",
+          "note": "The first real proof will report a FAILURE because of X18. That is the send-log feature working, not breaking."
+        },
+        {
+          "id": "X36",
+          "step": "Assign a task to Wingman and follow where it goes.",
+          "proves": "Routing work makes a count rise somewhere the user can see.",
+          "status": "closed",
+          "history": "'Order garage lightbulbs' appeared to vanish. It had not — Queue → Backlog → Needs review, with a good draft. Nothing told him. #ol2RevN was a span hard-coded display:none that updateCounts() wrote into on every render. Now a real ▸ Needs review row with an amber count.",
+          "automatedBy": "N4"
+        },
+        {
+          "id": "X37",
+          "step": "Make a draft call fail and see what the task does.",
+          "proves": "A failed draft is recorded and offered a retry, instead of leaving the task silently in Backlog.",
+          "status": "closed",
+          "history": "draftFor() had no else branch. Now records aiStatus:'failed' plus the error, toasts, and the next-step bar leads with 'Wingman stalled' offering ▸ Try again and Take it myself."
+        }
+      ]
+    },
+    {
+      "key": "levionly",
+      "title": "Only Levi can run these",
+      "originalCount": 4,
+      "steps": [
+        {
+          "id": "X24",
+          "step": "Sign in as Zoe and establish what a non-admin can actually see and do.",
+          "proves": "The member experience. Both current users are admin, so this has never been exercised.",
+          "status": "pending",
+          "note": "Until this runs, every statement about what a member can do is design intent, not observation."
+        },
+        {
+          "id": "X26",
+          "step": "Delete the old GitHub personal access token.",
+          "proves": "A credential that should not still exist does not.",
+          "status": "pending",
+          "blockedBy": "Needs Levi's password."
+        }
+      ]
+    }
+  ]
+}

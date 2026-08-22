@@ -1,0 +1,11 @@
+{
+  "name": "operation-levi-qa",
+  "private": true,
+  "type": "module",
+  "description": "Automated + manual QA suite for Levi's Projects. See README.md — this is a partial restoration of a suite that was lost by never being committed.",
+  "scripts": {
+    "test": "node suite.mjs",
+    "mutate": "node mutate.mjs"
+  },
+  "devDependencies": { "playwright": "^1.48.0" }
+}

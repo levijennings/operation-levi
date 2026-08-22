@@ -1,0 +1,42 @@
+[
+  {
+    "id": "N4",
+    "verdict": "KILLED",
+    "note": "guard catches it: the amber needs-review count disappears (the X36 regression)"
+  },
+  {
+    "id": "B1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the board column spec drifts"
+  },
+  {
+    "id": "B3",
+    "verdict": "KILLED",
+    "note": "guard catches it: the hover complete control is renamed out from under the guard"
+  },
+  {
+    "id": "F1",
+    "verdict": "KILLED",
+    "note": "guard catches it: labels sit beside their controls again — the app-wide form bug"
+  },
+  {
+    "id": "F2",
+    "verdict": "KILLED",
+    "note": "guard catches it: long forms push Save off the bottom of the modal"
+  },
+  {
+    "id": "S2",
+    "verdict": "KILLED",
+    "note": "guard catches it: an endpoint stops going through the shared guard"
+  },
+  {
+    "id": "W20",
+    "verdict": "KILLED",
+    "note": "guard catches it: skill scoring is removed and matching falls back to whatever is first"
+  },
+  {
+    "id": "X34A",
+    "verdict": "KILLED",
+    "note": "guard catches it: the docs stop naming a destination the nav has"
+  }
+]

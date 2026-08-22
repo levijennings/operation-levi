@@ -1,0 +1,85 @@
+{
+  "note": "Audit log recovered from the project knowledge base on 2026-08-22. Runs R001–R007 genuinely happened, but the code that produced them was lost with its session workspace and was never committed. Their totals are kept as history; they are NOT comparable to R008 onward, which runs a smaller, re-authored suite. Do not read a drop from 92 to 32 as a regression — read it as the cost of never committing the suite.",
+  "runs": [
+    {
+      "run": "R001",
+      "ranAt": "2026-08-19T04:17:00Z",
+      "trigger": "Form system pass (PR #27)",
+      "build": "ff7c634",
+      "total": 70,
+      "pass": 65,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R002",
+      "ranAt": "2026-08-19T15:52:00Z",
+      "trigger": "MF fixes verified on production",
+      "build": "6a23078",
+      "total": 78,
+      "pass": 73,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R003",
+      "ranAt": "2026-08-19T16:26:00Z",
+      "trigger": "Coverage-gap sweep",
+      "build": "6a23078",
+      "total": 78,
+      "pass": 73,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R004",
+      "ranAt": "2026-08-19T19:48:00Z",
+      "trigger": "PR #29 verified on production",
+      "build": "21845e7",
+      "total": 80,
+      "pass": 75,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R005",
+      "ranAt": "2026-08-20T20:48:00Z",
+      "trigger": "Email verification + X11/X31 fixes",
+      "build": "428c0d2",
+      "total": 86,
+      "pass": 81,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R006",
+      "ranAt": "2026-08-21T00:15:00Z",
+      "trigger": "Cron send log (PR #31)",
+      "build": "d9fadad",
+      "total": 89,
+      "pass": 84,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R007",
+      "ranAt": "2026-08-21T02:30:00Z",
+      "trigger": "Routing feedback + stalled drafts (PR #32)",
+      "build": "bff0466",
+      "total": 92,
+      "pass": 87,
+      "fail": 0,
+      "suite": "original (lost)"
+    },
+    {
+      "run": "R008",
+      "ranAt": "2026-08-22T17:54:37.978Z",
+      "trigger": "Suite re-authored after loss; committed to the repo",
+      "build": "109cfb5",
+      "total": 32,
+      "pass": 29,
+      "fail": 3,
+      "suite": "restored (this file)"
+    }
+  ]
+}
