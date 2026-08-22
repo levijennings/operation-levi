@@ -113,7 +113,7 @@ All three failures are real, known, open defects:
 | `S4` | `vercel.json` cron is `30 13 * * *`, a fixed UTC hour. The 6:30am brief becomes **5:30am** when Pacific leaves daylight time, while Settings still claims 6:30 year-round. | build |
 
 Open and **not** covered by any automated check, because they structurally cannot
-be: **X18** (email has never been delivered — needs `dvlmnt.com` verified at
+be: **X18** (email has never been delivered — needs `levisprojects.com` verified at
 resend.com/domains and `RESEND_FROM` set in Vercel), **MF-6** (the brief cannot see
 client-generated recurring occurrences), **MF-5** (Wingman badge flashes 0 on first
 paint).

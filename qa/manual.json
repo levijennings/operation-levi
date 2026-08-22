@@ -125,7 +125,7 @@
           "status": "fail",
           "severity": "critical",
           "history": "POST /api/brief?send=1 returns HTTP 200 with ok:false and 'You can only send testing emails to your own email address'. The Resend account is in test mode. The 6:30am brief, every assignment notification and every invite have been failing silently for as long as they have existed. Three code paths affected: api/brief.js, api/notify.js, api/send.js.",
-          "fix": "LEVI ONLY — add dvlmnt.com at resend.com/domains, add the SPF/DKIM records at the registrar, wait for Verified, then set RESEND_FROM in Vercel and redeploy.",
+          "fix": "LEVI ONLY — add levisprojects.com at resend.com/domains, add the SPF/DKIM records wherever that domain's DNS is managed, wait for Verified, then set RESEND_FROM in Vercel (e.g. \"Levi's Projects <levi@levisprojects.com>\") and redeploy. NOTE: earlier notes said dvlmnt.com; Levi corrected this on 2026-08-22 — the sending domain is levisprojects.com.",
           "lesson": "This step sat unrun longer than any other, and it was the most consequential finding of the whole exercise. No automated test could have caught it: the code is correct and the API returns 200."
         },
         {
