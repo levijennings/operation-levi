@@ -354,6 +354,259 @@ check('X34B', 'docs',
       `docs.json still describes retired surfaces: ${retired.join(', ')}`);
   });
 
+/* ─────────────────────── events (Preflight F6) ─────────────────────── */
+
+// The emitter is deliberately on window. A module-scoped emitter cannot be
+// reached from page.evaluate(), which is how this codebase has repeatedly
+// produced guards that pass while testing nothing.
+
+check('EV1', 'events',
+  'The event emitter exists and stays silent when there is no workspace to write to',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      if (typeof window.lpEvent !== 'function') return 'MISSING';
+      window.__rows = [];
+      window._lpSb = { from(){ return { insert(row){ window.__rows.push(row); return Promise.resolve({}); } }; } };
+      window._lpWs = null;                       // signed out / local-only
+      try { window.lpEvent('task.created', {}, 'x'); } catch (e) { return 'threw:' + e.message; }
+      return window.__rows.length === 0 ? 'silent' : 'wrote with no workspace';
+    });
+    assertEq(r, 'silent', 'emitter misbehaved without a workspace');
+  });
+
+check('EV2', 'events',
+  'An emitted event carries workspace, name, card, source and an idempotency id',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      window.__rows = [];
+      window._lpSb = { from(t){ return { insert(row){ window.__rows.push({ t, row }); return Promise.resolve({}); } }; } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window._lpUser = { id: null, name: 'Levi' };
+      window.lpEvent('task.routed', { to: 'wingman' }, 'card-9');
+      const n = window.__rows.length;
+      for (let i = 0; i < 4; i++) window.lpEvent('task.routed', { to: 'wingman' }, 'card-9');
+      const after = window.__rows.length;
+      const r0 = window.__rows[0];
+      return { n, after, tbl: r0 && r0.t, name: r0 && r0.row.name, card: r0 && r0.row.card_id,
+               ws: !!(r0 && r0.row.workspace_id), src: r0 && r0.row.source,
+               id: !!(r0 && r0.row.client_event_id) };
+    });
+    assertEq(r.tbl, 'app_events', 'wrong table');
+    assertEq(r.name, 'task.routed', 'wrong event name');
+    assertEq(r.card, 'card-9', 'card id not carried');
+    assert(r.ws && r.src === 'client' && r.id, `row shape wrong: ${JSON.stringify(r)}`);
+    assertEq(r.after, 1, 'the 2s suppression let a render loop through — counts would inflate');
+  });
+
+check('EV3', 'events',
+  'Capturing a task through the real control logs task.created',
+  async ({ page }) => {
+    // Drives C -> type -> Continue -> Confirm. Does NOT call newItemBase or
+    // capConfirm directly; both are module-scoped and calling them from
+    // evaluate() would assert nothing.
+    await page.evaluate(() => {
+      window.__rows = [];
+      window._lpSb = { from(t){ return { insert(row){ window.__rows.push({ t, row }); return Promise.resolve({}); } }; } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window._lpUser = { id: null, name: 'Levi' };
+    });
+    await page.keyboard.press('c');
+    await page.waitForSelector('#ol2capTa', { state: 'visible', timeout: 8000 });
+    await page.fill('#ol2capTa', 'QA guard: draft a one-page memo');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(1600);             // /api/structure 404s locally -> capParseLocal
+    await page.click('#ol2capConfirm');
+    await page.waitForTimeout(1400);
+    const ev = await page.evaluate(() =>
+      (window.__rows || []).map(r => r.row).find(r => r.name === 'task.created') || null);
+    assert(ev, 'capturing a task logged no task.created event');
+    assert(ev.card_id, 'task.created carries no card id');
+    assertEq(ev.props.via, 'typed', 'capture source not recorded as typed');
+  });
+
+/* ─────────────── readability & conversation (Levi, Aug 22) ─────────────── */
+
+async function openATask(page){
+  await page.keyboard.press('g'); await page.keyboard.press('m');
+  await page.waitForSelector('#ol2Board .tcard', { timeout: 8000 });
+  await page.click('#ol2Board .tcard');
+  await page.waitForSelector('#edNotes', { timeout: 8000 });
+}
+
+check('NG1', 'forms',
+  'A long note is fully visible — the notes box grows instead of clipping at three lines',
+  async ({ page }) => {
+    await openATask(page);
+    const r = await page.evaluate(() => {
+      const en = document.getElementById('edNotes');
+      en.value = Array.from({ length: 14 }, (_, i) => 'Line ' + (i + 1) + ': a sentence long enough to matter.').join('\n');
+      en.dispatchEvent(new Event('input', { bubbles: true }));
+      return { h: en.clientHeight, scroll: en.scrollHeight };
+    });
+    assert(r.scroll <= r.h + 3, `note is clipped: ${r.scroll}px of content in a ${r.h}px box`);
+    assert(r.h > 200, `box is only ${r.h}px — it did not grow past the old 88px floor`);
+  });
+
+check('NG2', 'forms',
+  'The notes box keeps growing as more is typed',
+  async ({ page }) => {
+    await openATask(page);
+    const r = await page.evaluate(() => {
+      const en = document.getElementById('edNotes');
+      en.value = 'one line';
+      en.dispatchEvent(new Event('input', { bubbles: true }));
+      const before = en.clientHeight;
+      en.value += '\n' + Array.from({ length: 10 }, (_, i) => 'added line ' + i).join('\n');
+      en.dispatchEvent(new Event('input', { bubbles: true }));
+      return { before, after: en.clientHeight, scroll: en.scrollHeight };
+    });
+    assert(r.after > r.before, `height did not change: ${r.before} -> ${r.after}`);
+    assert(r.scroll <= r.after + 3, 'content still overflows after growing');
+  });
+
+check('AK1', 'wingman',
+  'Ask Wingman keeps the conversation on screen instead of overwriting the last answer',
+  async ({ page, origin }) => {
+    await page.route('**/api/ask', route => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ answer: 'stub answer ' + Date.now() })
+    }));
+    await page.evaluate(() => { try { localStorage.removeItem('lpAskThread'); } catch (e) {} window._lpAsk = null; window._lpWs = null; });
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.fill('#ol2AskIn', 'first question about the review lane');
+    await page.click('#ol2AskBtn'); await page.waitForTimeout(700);
+    await page.fill('#ol2AskIn', 'second question about phones');
+    await page.click('#ol2AskBtn'); await page.waitForTimeout(700);
+    const seen = await page.evaluate(() => (document.getElementById('ol2AskOut') || {}).innerText || '');
+    assert(/review lane/i.test(seen), 'the first question is gone — the answer box was overwritten');
+    assert(/phones/i.test(seen), 'the second question is not on screen');
+  });
+
+check('AK2', 'wingman',
+  'A follow-up question is sent with the earlier turns as context',
+  async ({ page }) => {
+    let lastBody = null;
+    await page.route('**/api/ask', route => {
+      try { lastBody = JSON.parse(route.request().postData() || '{}'); } catch (e) { lastBody = {}; }
+      return route.fulfill({ status: 200, contentType: 'application/json',
+        body: JSON.stringify({ answer: 'stub' }) });
+    });
+    await page.evaluate(() => { try { localStorage.removeItem('lpAskThread'); } catch (e) {} window._lpAsk = null; window._lpWs = null; });
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.fill('#ol2AskIn', 'q one'); await page.click('#ol2AskBtn'); await page.waitForTimeout(700);
+    await page.fill('#ol2AskIn', 'q two'); await page.click('#ol2AskBtn'); await page.waitForTimeout(700);
+    assert(lastBody, 'no request captured');
+    assert(Array.isArray(lastBody.history), 'the follow-up sent no history at all — Ask is still stateless');
+    assertEq(lastBody.history.length, 2, 'the follow-up did not carry the previous exchange');
+    assertEq(lastBody.history[0].role, 'user', 'history does not open with the user turn');
+  });
+
+check('AK4', 'wingman',
+  'Signed in, a question is written to ask_turns so the conversation follows you to another device',
+  async ({ page }) => {
+    await page.route('**/api/ask', route => route.fulfill({ status: 200,
+      contentType: 'application/json', body: JSON.stringify({ answer: 'stub answer' }) }));
+    await page.evaluate(() => {
+      window.__ins = []; window.__del = 0;
+      window._lpSb = { from(tbl){ return {
+        select(){ const q = { rows: [],
+          eq(){ return q; }, order(){ return q; }, limit(){ return q; },
+          then(ok){ ok({ data: q.rows, error: null }); return Promise.resolve(); } };
+          return q; },
+        insert(row){ window.__ins.push({ tbl, row }); return Promise.resolve({ error: null }); },
+        delete(){ const d = { eq(){ return d; },
+          then(ok){ window.__del++; ok({ error: null }); return Promise.resolve(); } }; return d; }
+      }; } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window._lpUser = { id: '22222222-2222-2222-2222-222222222222', name: 'Levi' };
+      window._lpAsk = null;
+      try { localStorage.removeItem('lpAskThread'); } catch (e) {}
+    });
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.fill('#ol2AskIn', 'does this reach my phone');
+    await page.click('#ol2AskBtn');
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => ({
+      // Filter to ask_turns: the same client also writes a wingman.asked row to
+      // app_events, which is correct and must not be counted here.
+      ins: window.__ins.filter(x => x.tbl === 'ask_turns')
+             .map(x => ({ t: x.tbl, role: x.row.role, ws: !!x.row.workspace_id,
+                          uid: !!x.row.user_id, c: String(x.row.content).slice(0, 24) })),
+      events: window.__ins.filter(x => x.tbl === 'app_events').length,
+      badge: (document.getElementById('ol2AskOut') || {}).innerText || ''
+    }));
+    assertEq(r.ins.length, 2, `expected the question and the answer to be written, got ${JSON.stringify(r.ins)}`);
+    assertEq(r.ins[0].t, 'ask_turns', 'turns are not going to ask_turns');
+    assertEq(r.ins[0].role, 'user', 'first written turn is not the question');
+    assertEq(r.ins[1].role, 'assistant', 'second written turn is not the answer');
+    assert(r.ins[0].ws && r.ins[0].uid, 'a turn was written without a workspace or user');
+    assert(/follows you/i.test(r.badge), 'the UI does not tell the user the thread is synced');
+    assertEq(r.events, 1, 'asking Wingman did not also emit its wingman.asked event');
+  });
+
+check('AK5', 'wingman',
+  'Signed out, it says so instead of pretending to sync, and still keeps the thread locally',
+  async ({ page }) => {
+    await page.route('**/api/ask', route => route.fulfill({ status: 200,
+      contentType: 'application/json', body: JSON.stringify({ answer: 'stub answer' }) }));
+    await page.evaluate(() => {
+      window._lpSb = null; window._lpWs = null; window._lpUser = null; window._lpAsk = null;
+      try { localStorage.removeItem('lpAskThread'); } catch (e) {}
+    });
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.fill('#ol2AskIn', 'offline question');
+    await page.click('#ol2AskBtn');
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => ({
+      badge: (document.getElementById('ol2AskOut') || {}).innerText || '',
+      stored: (function(){ try { return JSON.parse(localStorage.getItem('lpAskThread') || '[]').length; }
+                           catch(e){ return -1; } })()
+    }));
+    assert(/this device only/i.test(r.badge), 'signed out, the UI claims a sync that is not happening');
+    assertEq(r.stored, 2, 'the thread was not kept locally when there was nowhere to sync it');
+  });
+
+check('AK3', 'wingman',
+  'The server sanitises conversation history into a sequence the Messages API accepts',
+  async () => {
+    // Pure node. A malformed sequence makes Anthropic reject the whole request,
+    // so a shorter valid history always beats a faithful invalid one.
+    const { createRequire } = await import('node:module');
+    const req = createRequire(import.meta.url);
+    const guardPath = req.resolve(join(REPO, 'api/_guard.js'));
+    req.cache[guardPath] = { id: guardPath, filename: guardPath, loaded: true,
+      exports: async () => ({ id: 'u1' }) };
+    const prevKey = process.env.ANTHROPIC_API_KEY;
+    process.env.ANTHROPIC_API_KEY = 'test';
+    const prevFetch = global.fetch;
+    let sent = null;
+    global.fetch = async (_u, o) => { sent = JSON.parse(o.body);
+      return { ok: true, json: async () => ({ content: [{ text: 'ok' }] }) }; };
+    const ask = req(join(REPO, 'api/ask.js'));
+    const mkRes = () => { const r = { code: 0, status(c){ r.code = c; return r; }, json(){ return r; } }; return r; };
+    const roles = () => sent.messages.map(m => m.role).join(',');
+    try {
+      await ask({ body: { question: 'q', history: [
+        { role: 'assistant', content: 'leading' },
+        { role: 'user', content: 'a' }, { role: 'user', content: 'dupe' },
+        { role: 'assistant', content: 'b' }, { role: 'user', content: 'dangling' }] } }, mkRes());
+      assertEq(roles(), 'user,assistant,user', 'history was not normalised to a valid alternating sequence');
+      await ask({ body: { question: 'q', history: 'nonsense' } }, mkRes());
+      assertEq(roles(), 'user', 'a non-array history was not ignored safely');
+      const many = Array.from({ length: 40 }, (_, i) =>
+        [{ role: 'user', content: 'u' + i }, { role: 'assistant', content: 'a' + i }]).flat();
+      await ask({ body: { question: 'q', history: many } }, mkRes());
+      assert(sent.messages.length <= 13, `history is uncapped: ${sent.messages.length} messages`);
+    } finally {
+      global.fetch = prevFetch;
+      if (prevKey === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = prevKey;
+    }
+  });
+
 /* ───────────────────────── access / security ───────────────────────── */
 
 check('S1', 'security',

@@ -80,6 +80,16 @@
       "pass": 29,
       "fail": 3,
       "suite": "restored (this file)"
+    },
+    {
+      "run": "R009",
+      "ranAt": "2026-08-22T22:03:53.509Z",
+      "trigger": "Event layer + notes auto-grow + Ask Wingman thread (cross-device)",
+      "build": "ux-pass branch",
+      "total": 42,
+      "pass": 39,
+      "fail": 3,
+      "suite": "restored (this file)"
     }
   ]
 }

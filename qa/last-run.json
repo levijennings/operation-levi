@@ -1,9 +1,9 @@
 {
   "summary": {
-    "ranAt": "2026-08-22T17:54:37.978Z",
-    "finishedAt": "2026-08-22T17:55:28.252Z",
-    "total": 32,
-    "pass": 29,
+    "ranAt": "2026-08-22T22:03:53.509Z",
+    "finishedAt": "2026-08-22T22:05:01.193Z",
+    "total": 42,
+    "pass": 39,
     "fail": 3,
     "error": 0
   },
@@ -13,175 +13,175 @@
       "category": "navigation",
       "proves": "The Today panel is #ol2Home — the id the app actually uses",
       "status": "pass",
-      "ms": 1234
+      "ms": 1248
     },
     {
       "id": "N2",
       "category": "navigation",
       "proves": "All five destinations are present in the nav",
       "status": "pass",
-      "ms": 1124
+      "ms": 1112
     },
     {
       "id": "N3",
       "category": "navigation",
       "proves": "G+M reaches the mission board",
       "status": "pass",
-      "ms": 1782
+      "ms": 1763
     },
     {
       "id": "N4",
       "category": "navigation",
       "proves": "The Needs review nav row is a real element with its own count (X36 fix)",
       "status": "pass",
-      "ms": 1155
+      "ms": 1151
     },
     {
       "id": "N5",
       "category": "navigation",
       "proves": "Docs & help is reachable from the nav",
       "status": "pass",
-      "ms": 1207
+      "ms": 1118
     },
     {
       "id": "B1",
       "category": "board",
       "proves": "The board runs Backlog · In progress · Top 3 · Needs review · Done, in that order",
       "status": "pass",
-      "ms": 1563
+      "ms": 1587
     },
     {
       "id": "B2",
       "category": "board",
       "proves": "Cards render as .tcard",
       "status": "pass",
-      "ms": 1706
+      "ms": 1593
     },
     {
       "id": "B3",
       "category": "board",
       "proves": "Card complete/delete are .tact .tadone/.tadel — not a data attribute",
       "status": "pass",
-      "ms": 1572
+      "ms": 1543
     },
     {
       "id": "B4",
       "category": "board",
       "proves": "Column collapse is the .colc class, not an inferred width",
       "status": "pass",
-      "ms": 1602
+      "ms": 1522
     },
     {
       "id": "B6",
       "category": "board",
       "proves": "The column counts reconcile with the cards actually rendered",
       "status": "pass",
-      "ms": 1577
+      "ms": 1502
     },
     {
       "id": "B8",
       "category": "board",
       "proves": "Cards carry their dates on the face",
       "status": "pass",
-      "ms": 1595
+      "ms": 1531
     },
     {
       "id": "W1",
       "category": "wingman",
       "proves": "The Wingman hub opens and carries Queue, Memory and Plays",
       "status": "pass",
-      "ms": 2020
+      "ms": 1974
     },
     {
       "id": "W2",
       "category": "wingman",
       "proves": "The five shipped plays are present by name",
       "status": "pass",
-      "ms": 2765
+      "ms": 2644
     },
     {
       "id": "W3",
       "category": "wingman",
       "proves": "The review lane mounts and defines approve / edit / redo / skip — live behaviour on real drafts is manual step X20",
       "status": "pass",
-      "ms": 1117
+      "ms": 1136
     },
     {
       "id": "W10",
       "category": "wingman",
       "proves": "The brief reports its own failure rather than failing silently (W11 lineage)",
       "status": "pass",
-      "ms": 1123
+      "ms": 1105
     },
     {
       "id": "W20",
       "category": "wingman",
       "proves": "Skill matching has a relevance threshold instead of falling back to the first skill",
       "status": "pass",
-      "ms": 1062
+      "ms": 1044
     },
     {
       "id": "F1",
       "category": "forms",
       "proves": "Field labels are block-level, so they sit above their control and not beside it",
       "status": "pass",
-      "ms": 1647
+      "ms": 1073
     },
     {
       "id": "F2",
       "category": "forms",
       "proves": "The modal keeps its footer on screen: bounded flex column, scrolling body, non-shrinking footer",
       "status": "pass",
-      "ms": 1151
+      "ms": 1042
     },
     {
       "id": "F3",
       "category": "forms",
       "proves": "The form kit exists and every editor is built on it",
       "status": "pass",
-      "ms": 1136
+      "ms": 997
     },
     {
       "id": "F4",
       "category": "forms",
       "proves": "Controls are dark-styled, not raw browser defaults",
       "status": "pass",
-      "ms": 1097
+      "ms": 1026
     },
     {
       "id": "M1",
       "category": "mobile",
       "proves": "At 390px the page does not scroll sideways",
       "status": "pass",
-      "ms": 2138
+      "ms": 2233
     },
     {
       "id": "M2",
       "category": "mobile",
       "proves": "Every bottom-bar destination is reachable on a phone",
       "status": "pass",
-      "ms": 2105
+      "ms": 2180
     },
     {
       "id": "M3",
       "category": "mobile",
       "proves": "Form controls are ≥16px on a phone so iOS does not zoom the viewport on focus",
       "status": "pass",
-      "ms": 1602
+      "ms": 1607
     },
     {
       "id": "M4",
       "category": "mobile",
       "proves": "Today paints on a phone with no page errors",
       "status": "pass",
-      "ms": 3278
+      "ms": 2803
     },
     {
       "id": "X34A",
       "category": "docs",
       "proves": "The in-app docs name every destination the nav actually has",
       "status": "fail",
-      "ms": 1102,
+      "ms": 1108,
       "error": "docs.json (updated 2026-08-17) never mentions: Today — Wingman answers app questions from these pages, so it misdirects — expected 0, got 1"
     },
     {
@@ -189,36 +189,106 @@
       "category": "docs",
       "proves": "The in-app docs do not describe surfaces that were retired",
       "status": "fail",
-      "ms": 1086,
+      "ms": 1171,
       "error": "docs.json still describes retired surfaces: My Day, My Week, Libraries — expected 0, got 3"
+    },
+    {
+      "id": "EV1",
+      "category": "events",
+      "proves": "The event emitter exists and stays silent when there is no workspace to write to",
+      "status": "pass",
+      "ms": 1122
+    },
+    {
+      "id": "EV2",
+      "category": "events",
+      "proves": "An emitted event carries workspace, name, card, source and an idempotency id",
+      "status": "pass",
+      "ms": 1139
+    },
+    {
+      "id": "EV3",
+      "category": "events",
+      "proves": "Capturing a task through the real control logs task.created",
+      "status": "pass",
+      "ms": 4290
+    },
+    {
+      "id": "NG1",
+      "category": "forms",
+      "proves": "A long note is fully visible — the notes box grows instead of clipping at three lines",
+      "status": "pass",
+      "ms": 1254
+    },
+    {
+      "id": "NG2",
+      "category": "forms",
+      "proves": "The notes box keeps growing as more is typed",
+      "status": "pass",
+      "ms": 1233
+    },
+    {
+      "id": "AK1",
+      "category": "wingman",
+      "proves": "Ask Wingman keeps the conversation on screen instead of overwriting the last answer",
+      "status": "pass",
+      "ms": 2695
+    },
+    {
+      "id": "AK2",
+      "category": "wingman",
+      "proves": "A follow-up question is sent with the earlier turns as context",
+      "status": "pass",
+      "ms": 2638
+    },
+    {
+      "id": "AK4",
+      "category": "wingman",
+      "proves": "Signed in, a question is written to ask_turns so the conversation follows you to another device",
+      "status": "pass",
+      "ms": 2078
+    },
+    {
+      "id": "AK5",
+      "category": "wingman",
+      "proves": "Signed out, it says so instead of pretending to sync, and still keeps the thread locally",
+      "status": "pass",
+      "ms": 2101
+    },
+    {
+      "id": "AK3",
+      "category": "wingman",
+      "proves": "The server sanitises conversation history into a sequence the Messages API accepts",
+      "status": "pass",
+      "ms": 1074
     },
     {
       "id": "S1",
       "category": "security",
       "proves": "No API key literal is shipped in the client bundle",
       "status": "pass",
-      "ms": 1061
+      "ms": 1169
     },
     {
       "id": "S2",
       "category": "access",
       "proves": "Every API endpoint goes through the shared guard",
       "status": "pass",
-      "ms": 1065
+      "ms": 1130
     },
     {
       "id": "S3",
       "category": "foundation",
       "proves": "The service worker the manifest registers actually exists",
       "status": "pass",
-      "ms": 1117
+      "ms": 1149
     },
     {
       "id": "S4",
       "category": "foundation",
       "proves": "The brief cron is declared",
       "status": "fail",
-      "ms": 1417,
+      "ms": 1104,
       "error": "X35 open: cron \"30 13 * * *\" is a fixed UTC hour, so the 6:30am brief becomes 5:30am in November"
     },
     {
@@ -226,14 +296,14 @@
       "category": "performance",
       "proves": "The single-file bundle stays under 600KB",
       "status": "pass",
-      "ms": 1157
+      "ms": 1111
     },
     {
       "id": "P2",
       "category": "performance",
       "proves": "Today paints within 4s, best of three — waits on #ol2Home, which Today actually renders",
       "status": "pass",
-      "ms": 3131
+      "ms": 2675
     }
   ]
 }
