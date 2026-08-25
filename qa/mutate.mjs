@@ -59,6 +59,18 @@ const MUTATIONS = [
    'the second firing stops being daily and the brief drifts again'],
   ['CR2', 'api/brief.js', "if (localNow !== want) {", "if (false) {",
    'the local-time gate stops skipping, so the brief sends twice a day'],
+  ['AT1', 'index.html', "['spreadsheet', /\\b(spreadsheet|budget", "['spreadsheet', /\\b(zzzspreadsheet|zzzbudget",
+   'the classifier stops recognising a spreadsheet task'],
+  ['F2A', 'index.html', "blocks.unshift({ type:'h1', text: card.title || 'Untitled' });", '',
+   'the document loses its title heading'],
+  ['F2B', 'index.html', "if(rows.length < 2){ toast('The draft has no table in it", "if(false){ toast('The draft has no table in it",
+   'a draft with no table produces an empty spreadsheet anyway'],
+  ['F2C', 'index.html', "card.documents.push({ name:name, size:bytes.length", "card.documents.slice().push({ name:name, size:bytes.length",
+   'the produced file never lands on the card'],
+  ['NAV1', 'index.html', '.nav a[data-v="settings"], .nav a[data-v="docs"]{display:none}', '.nav a[data-v="zz"]{display:none}',
+   'Settings and Docs take phone bar slots again'],
+  ['NAV2', 'index.html', "var mb=document.getElementById('ol2NavMore'); if(mb) mb.onclick", "var mb=null; if(mb) mb.onclick",
+   'the More button stops opening its sheet'],
 ];
 
 const out = [];

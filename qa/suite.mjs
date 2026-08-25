@@ -424,6 +424,151 @@ check('EV3', 'events',
     assertEq(ev.props.via, 'typed', 'capture source not recorded as typed');
   });
 
+/* ───────────── real deliverables (F1/F2) and the phone bar (#12) ───────────── */
+
+check('AT1', 'board',
+  'Wingman guesses what a task produces, and the guess is marked as a guess',
+  async ({ page }) => {
+    // lpInferAssetType is module-scoped, so drive capture and then read the value
+    // off the real control on the task detail.
+    await page.keyboard.press('c');
+    await page.waitForSelector('#ol2capTa', { state: 'visible', timeout: 8000 });
+    await page.fill('#ol2capTa', 'Build the 2027 budget spreadsheet with quarterly projections');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(1600);
+    await page.click('#ol2capConfirm');
+    await page.waitForTimeout(1500);
+    await page.keyboard.press('g'); await page.keyboard.press('m');
+    await page.waitForSelector('#ol2Board .tcard', { timeout: 8000 });
+    const opened = await page.evaluate(() => {
+      const el = [...document.querySelectorAll('#ol2Board .tcard')]
+        .find(e => /budget spreadsheet/i.test(e.innerText));
+      if (!el) return false; el.click(); return true;
+    });
+    assert(opened, 'the captured task is not on the board');
+    await page.waitForSelector('#edAsset', { timeout: 8000 });
+    const r = await page.evaluate(() => ({
+      value: document.getElementById('edAsset').value,
+      guessChip: /GUESS/.test(document.body.innerText)
+    }));
+    assertEq(r.value, 'spreadsheet', 'a task about a budget spreadsheet was not classified as one');
+    assert(r.guessChip, 'the inferred type is not marked as a guess');
+  });
+
+check('F2A', 'board',
+  'A markdown draft becomes a real .docx whose contents are the draft — not just a well-named empty file',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      const card = { id: 'probe-doc', title: 'Garage lighting brief', assetType: 'document',
+        documents: [], aiArtifact: { content: '# Spec\n\n- 5000K daylight\n- Dimmable\n\nSix bulbs total.' } };
+      let grabbed = null;
+      window._lpSb = { storage: { from(){ return { async upload(path, file){
+        grabbed = { path, size: file.size, type: file.type, text: await file.text() };
+        return { error: null }; } }; } } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window.lpProduceFile(card);
+      await new Promise(r => setTimeout(r, 300));
+      return grabbed;
+    });
+    assert(r, 'nothing was uploaded');
+    assert(/\.docx$/.test(r.path), `stored under the wrong name: ${r.path}`);
+    assert(r.size > 800, `file is suspiciously small: ${r.size} bytes`);
+    assertEq(r.type, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'wrong mime type');
+    // The zip is store-only, so the document XML sits verbatim in the bytes.
+    // Checking the file EXISTS is not checking it says anything — an earlier
+    // version of this guard survived a mutation that dropped the title.
+    assert(r.text.includes('word/document.xml'), 'the archive has no Word document part');
+    assert(r.text.includes('Garage lighting brief'), 'the task title is missing from the document');
+    assert(r.text.includes('5000K daylight'), "the draft's own content is missing from the document");
+    assert(r.text.includes('Six bulbs total.'), 'the draft body did not make it into the document');
+  });
+
+check('F2B', 'board',
+  'A markdown table becomes a real .xlsx, and a draft with no table is refused rather than shipped empty',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const mk = (content) => ({ id: 'p', title: 'Budget', assetType: 'spreadsheet',
+        documents: [], aiArtifact: { content } });
+      const seen = [];
+      window._lpSb = { storage: { from(){ return { upload(path, file){ seen.push({ path, size: file.size });
+        return Promise.resolve({ error: null }); } }; } } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window.lpProduceFile(mk('| Item | Qty |\n|---|---|\n| Bulbs | 6 |\n| Spares | 2 |'));
+      const withTable = seen.length;
+      const prose = mk('Just some prose with no table in it at all.');
+      window.lpProduceFile(prose);
+      return { withTable, afterProse: seen.length, proseDocs: prose.documents.length };
+    });
+    assertEq(r.withTable, 1, 'a table draft did not produce a spreadsheet');
+    assertEq(r.afterProse, 1, 'a draft with no table produced a spreadsheet anyway — it would be empty');
+    assertEq(r.proseDocs, 0, 'an empty spreadsheet was attached to the card');
+  });
+
+check('F2C', 'board',
+  'The file lands on the card so the existing download control can reach it',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      const card = { id: 'p2', title: 'Memo', assetType: 'document', documents: [],
+        aiArtifact: { content: 'Body text.' } };
+      window._lpSb = { storage: { from(){ return { upload(p, f){ return Promise.resolve({ error: null }); } }; } } };
+      window._lpWs = 'ws1';
+      window.lpProduceFile(card);
+      // The attach runs when the upload promise resolves, so wait for it rather
+      // than reading the array on the same tick.
+      await new Promise(r => setTimeout(r, 300));
+      const d = card.documents[0] || {};
+      return { n: card.documents.length, name: d.name, gen: d.generated, hasSize: d.size > 0 };
+    });
+    assertEq(r.n, 1, 'nothing attached to the card');
+    assertEq(r.name, 'memo.docx', 'attachment is not named from the task');
+    assert(r.gen === true, 'the attachment is not marked as generated');
+    assert(r.hasSize, 'the attachment has no size');
+  });
+
+check('NAV1', 'mobile',
+  'The phone bar holds five slots and never scrolls sideways',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    const r = await page.evaluate(() => {
+      const nav = document.querySelector('#ol2Nav');
+      const shown = [...nav.querySelectorAll('a')].filter(a => a.offsetParent !== null);
+      return {
+        count: shown.length,
+        labels: shown.map(a => a.textContent.trim().replace(/\s+/g, ' ')),
+        overflow: nav.scrollWidth - nav.clientWidth,
+        hasMore: !!document.getElementById('ol2NavMore')
+      };
+    });
+    await page.close();
+    assert(r.hasMore, 'no More entry on the phone bar');
+    assert(r.count <= 5, `the bar shows ${r.count} items: ${r.labels.join(' / ')}`);
+    assert(r.overflow <= 2, `the bar overflows by ${r.overflow}px — items are unreachable`);
+    const joined = r.labels.join(' ').toLowerCase();
+    for (const gone of ['goals', 'crew', 'settings'])
+      assert(!joined.includes(gone), `${gone} is still taking a bar slot — it belongs in More`);
+  });
+
+check('NAV2', 'mobile',
+  'More opens a sheet holding everything the bar cannot',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    await page.click('#ol2NavMore');
+    await page.waitForSelector('#ol2More', { timeout: 5000 });
+    const txt = await page.evaluate(() => document.getElementById('ol2More').innerText.toLowerCase());
+    for (const want of ['goals', 'crew', 'docs', 'settings', 'travel'])
+      assert(txt.includes(want), `More is missing ${want}`);
+    await page.click('#ol2More .mshc');
+    const gone = await page.evaluate(() => !document.getElementById('ol2More'));
+    await page.close();
+    assert(gone, 'the More sheet does not close');
+  });
+
 /* ──────────────── one constructor, one cron (Aug 22 decisions) ──────────────── */
 
 check('C1', 'board',

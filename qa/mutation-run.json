@@ -98,5 +98,35 @@
     "id": "CR2",
     "verdict": "KILLED",
     "note": "guard catches it: the local-time gate stops skipping, so the brief sends twice a day"
+  },
+  {
+    "id": "AT1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the classifier stops recognising a spreadsheet task"
+  },
+  {
+    "id": "F2A",
+    "verdict": "KILLED",
+    "note": "guard catches it: the document loses its title heading"
+  },
+  {
+    "id": "F2B",
+    "verdict": "KILLED",
+    "note": "guard catches it: a draft with no table produces an empty spreadsheet anyway"
+  },
+  {
+    "id": "F2C",
+    "verdict": "KILLED",
+    "note": "guard catches it: the produced file never lands on the card"
+  },
+  {
+    "id": "NAV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: Settings and Docs take phone bar slots again"
+  },
+  {
+    "id": "NAV2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the More button stops opening its sheet"
   }
 ]

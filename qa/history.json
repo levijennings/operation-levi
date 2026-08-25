@@ -100,6 +100,16 @@
       "pass": 43,
       "fail": 2,
       "suite": "restored (this file)"
+    },
+    {
+      "run": "R011",
+      "ranAt": "2026-08-25T05:20:22.084Z",
+      "trigger": "F1 typed assetType + F2 real docx/xlsx deliverables + five-slot phone bar",
+      "build": "f2-files branch",
+      "total": 51,
+      "pass": 49,
+      "fail": 2,
+      "suite": "restored (this file)"
     }
   ]
 }
