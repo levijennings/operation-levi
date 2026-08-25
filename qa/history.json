@@ -90,6 +90,16 @@
       "pass": 39,
       "fail": 3,
       "suite": "restored (this file)"
+    },
+    {
+      "run": "R010",
+      "ranAt": "2026-08-25T03:29:58.869Z",
+      "trigger": "One card constructor (C1) + non-rotting daily cron (CR1/CR2); S4 retired",
+      "build": "fixes-1 branch",
+      "total": 45,
+      "pass": 43,
+      "fail": 2,
+      "suite": "restored (this file)"
     }
   ]
 }

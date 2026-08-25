@@ -424,6 +424,101 @@ check('EV3', 'events',
     assertEq(ev.props.via, 'typed', 'capture source not recorded as typed');
   });
 
+/* ──────────────── one constructor, one cron (Aug 22 decisions) ──────────────── */
+
+check('C1', 'board',
+  'Capture builds its card through newItemBase — there is only one card constructor',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    // The inline literal that used to live in capConfirm is gone.
+    assert(!/id:'v'\+Date\.now\(\)\.toString\(36\), type:'task'/.test(src),
+      'capConfirm is building a card object inline again — two constructors will drift apart');
+    assert(/var it=newItemBase\(capDraft\.title/.test(src),
+      'capConfirm no longer calls newItemBase');
+    // And the card it produces still carries what the constructor guarantees.
+    await page.evaluate(() => {
+      window.__rows = [];
+      window._lpSb = { from(t){ return { insert(row){ window.__rows.push({ t, row }); return Promise.resolve({}); } }; } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window._lpUser = { id: null, name: 'Levi' };
+    });
+    await page.keyboard.press('c');
+    await page.waitForSelector('#ol2capTa', { state: 'visible', timeout: 8000 });
+    await page.fill('#ol2capTa', 'C1 guard: draft a one-page memo');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(1600);
+    await page.click('#ol2capConfirm');
+    await page.waitForTimeout(1400);
+    const ev = await page.evaluate(() =>
+      (window.__rows || []).map(r => r.row).filter(r => r.name === 'task.created'));
+    assertEq(ev.length, 1,
+      `capture logged ${ev.length} task.created events — one constructor should mean exactly one`);
+  });
+
+check('CR1', 'foundation',
+  'The brief fires daily at both candidate UTC hours so 06:30 Pacific holds year-round',
+  async () => {
+    const v = JSON.parse(await readFile(join(REPO, 'vercel.json'), 'utf8'));
+    const scheds = (v.crons || []).filter(c => c.path === '/api/brief').map(c => c.schedule).sort();
+    assertEq(scheds.join(' | '), '30 13 * * * | 30 14 * * *',
+      'the brief no longer fires at both candidate hours — it will drift an hour off daylight time');
+    for (const s of scheds) assert(/^\d+ \d+ \* \* \*$/.test(s), `${s} is not a daily schedule`);
+  });
+
+check('CR2', 'foundation',
+  'Exactly one of those firings gets through: at the wrong local hour the cron skips, at the right one it proceeds',
+  async () => {
+    // Behavioural, not textual. The first version of this guard only looked for
+    // the presence of CRON_SKIP_LOCAL_GATE and friends — and survived a mutation
+    // that turned the gate's condition into `if (false)`, which would send the
+    // brief twice a day. Invoke the handler for real instead.
+    const { createRequire } = await import('node:module');
+    const req = createRequire(import.meta.url);
+    const guardPath = req.resolve(join(REPO, 'api/_guard.js'));
+    req.cache[guardPath] = { id: guardPath, filename: guardPath, loaded: true,
+      exports: async () => null };
+    const saved = { ...process.env };
+    const prevFetch = global.fetch;
+    let reachedWork = false;
+    global.fetch = async () => { reachedWork = true; throw new Error('past the gate'); };
+    const mkRes = () => { const r = { code: 0, body: null,
+      setHeader(){}, status(c){ r.code = c; return r; }, json(b){ r.body = b; return r; } }; return r; };
+    try {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = 'x';
+      process.env.ANTHROPIC_API_KEY = 'x';
+      process.env.CRON_SECRET = 'secret';
+      delete process.env.CRON_SKIP_LOCAL_GATE;
+      process.env.CRON_LOCAL_TZ = 'America/Los_Angeles';
+      const brief = req(join(REPO, 'api/brief.js'));
+      const cronReq = { method: 'GET', headers: { authorization: 'Bearer secret' } };
+
+      // A time that is definitely NOT now in that zone: skip, and say why.
+      const nowLocal = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles',
+        hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      const wrong = nowLocal === '03:17' ? '04:18' : '03:17';
+      process.env.CRON_LOCAL_HHMM = wrong;
+      reachedWork = false;
+      const r1 = mkRes(); await brief(cronReq, r1);
+      assert(r1.body && r1.body.skipped === true,
+        `at the wrong local hour the cron did not skip: ${JSON.stringify(r1.body)}`);
+      assertEq(r1.body.reason, 'not_local_send_time', 'skip did not say why');
+      assertEq(reachedWork, false, 'the cron did work before the gate decided');
+
+      // The current local time: the gate must let it through.
+      process.env.CRON_LOCAL_HHMM = nowLocal;
+      reachedWork = false;
+      const r2 = mkRes(); await brief(cronReq, r2);
+      assert(!(r2.body && r2.body.skipped),
+        'at the right local hour the cron skipped anyway — the brief would never send');
+      assertEq(reachedWork, true, 'the cron did not proceed to do its work at the right hour');
+    } finally {
+      global.fetch = prevFetch;
+      for (const k of ['SUPABASE_SERVICE_ROLE_KEY','ANTHROPIC_API_KEY','CRON_SECRET','CRON_LOCAL_HHMM','CRON_LOCAL_TZ','CRON_SKIP_LOCAL_GATE']) {
+        if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k];
+      }
+    }
+  });
+
 /* ─────────────── readability & conversation (Levi, Aug 22) ─────────────── */
 
 async function openATask(page){
@@ -645,9 +740,12 @@ check('S4', 'foundation',
     const v = JSON.parse(await readFile(join(REPO, 'vercel.json'), 'utf8'));
     const crons = v.crons || [];
     assert(crons.length > 0, 'no cron declared — the morning brief will never fire');
-    // X35: a fixed UTC hour drifts an hour when Pacific leaves daylight time.
-    const fixed = crons.find(c => /^\s*\d+\s+\d+\s/.test(c.schedule || ''));
-    assert(!fixed, `X35 open: cron "${fixed && fixed.schedule}" is a fixed UTC hour, so the 6:30am brief becomes 5:30am in November`);
+    // NOTE: this guard used to fail any fixed-hour UTC cron, because a lone one
+    // drifts an hour when Pacific leaves daylight time (X35). That is now fixed
+    // the other way round: TWO fixed-hour crons fire daily and a local-time gate
+    // in api/brief.js lets exactly one through. Fixed hours are the design now,
+    // so the old assertion would be asserting a belief we no longer hold.
+    // CR1 and CR2 own the real contract.
   });
 
 /* ──────────────────────────── performance ──────────────────────────── */

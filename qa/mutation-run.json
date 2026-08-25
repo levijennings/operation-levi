@@ -52,7 +52,7 @@
   {
     "id": "EV3",
     "verdict": "KILLED",
-    "note": "guard catches it: capturing a task stops being logged"
+    "note": "guard catches it: card creation stops being logged at the single constructor"
   },
   {
     "id": "NG1",
@@ -83,5 +83,20 @@
     "id": "AK5",
     "verdict": "KILLED",
     "note": "guard catches it: the UI claims a sync it is not doing when signed out"
+  },
+  {
+    "id": "C1",
+    "verdict": "KILLED",
+    "note": "guard catches it: capture goes back to building its own card object"
+  },
+  {
+    "id": "CR1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the second firing stops being daily and the brief drifts again"
+  },
+  {
+    "id": "CR2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the local-time gate stops skipping, so the brief sends twice a day"
   }
 ]
