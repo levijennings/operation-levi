@@ -52,7 +52,7 @@
   {
     "id": "EV3",
     "verdict": "KILLED",
-    "note": "guard catches it: capturing a task stops being logged"
+    "note": "guard catches it: card creation stops being logged at the single constructor"
   },
   {
     "id": "NG1",
@@ -83,5 +83,55 @@
     "id": "AK5",
     "verdict": "KILLED",
     "note": "guard catches it: the UI claims a sync it is not doing when signed out"
+  },
+  {
+    "id": "C1",
+    "verdict": "KILLED",
+    "note": "guard catches it: capture goes back to building its own card object"
+  },
+  {
+    "id": "CR1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the second firing stops being daily and the brief drifts again"
+  },
+  {
+    "id": "CR2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the local-time gate stops skipping, so the brief sends twice a day"
+  },
+  {
+    "id": "AT1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the classifier stops recognising a spreadsheet task"
+  },
+  {
+    "id": "F2A",
+    "verdict": "KILLED",
+    "note": "guard catches it: the document loses its title heading"
+  },
+  {
+    "id": "F2B",
+    "verdict": "KILLED",
+    "note": "guard catches it: a draft with no table produces an empty spreadsheet anyway"
+  },
+  {
+    "id": "F2C",
+    "verdict": "KILLED",
+    "note": "guard catches it: the produced file never lands on the card"
+  },
+  {
+    "id": "NAV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: Settings and Docs take phone bar slots again"
+  },
+  {
+    "id": "NAV2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the More button stops opening its sheet"
+  },
+  {
+    "id": "NAV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: PR #32’s horizontally-scrolling bar comes back as a stopgap under the five slots"
   }
 ]

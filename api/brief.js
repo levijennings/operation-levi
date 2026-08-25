@@ -319,6 +319,37 @@ module.exports = async (req, res) => {
   var cronSecret = process.env.CRON_SECRET;
   if (cronSecret && auth === 'Bearer ' + cronSecret) {
     isCron = true;
+
+    // X35 — the brief must land at 06:30 Pacific every day, forever, with nothing
+    // to remember twice a year. A single fixed-UTC cron drifts an hour when the
+    // clocks change: "30 13 * * *" is 06:30 only on daylight time and becomes
+    // 05:30 in November, while Settings still promises 06:30.
+    //
+    // So vercel.json fires DAILY at both candidate hours (13:30 and 14:30 UTC)
+    // and this gate lets exactly one of them through — whichever is 06:30 in
+    // America/Los_Angeles today. One send per day, right hour year-round, no
+    // seasonal edit that someone has to remember.
+    //
+    // Set CRON_LOCAL_HHMM to move the delivery time; set CRON_SKIP_LOCAL_GATE=1
+    // to force a send regardless (useful when testing the cron path by hand).
+    if (process.env.CRON_SKIP_LOCAL_GATE !== '1') {
+      var want = String(process.env.CRON_LOCAL_HHMM || '06:30');
+      var localNow;
+      try {
+        localNow = new Intl.DateTimeFormat('en-GB', {
+          timeZone: process.env.CRON_LOCAL_TZ || 'America/Los_Angeles',
+          hour: '2-digit', minute: '2-digit', hour12: false
+        }).format(new Date());
+      } catch (e) {
+        // If the runtime cannot resolve the zone, send rather than go silent —
+        // a brief an hour early beats a brief that never arrives and says nothing.
+        localNow = want;
+      }
+      if (localNow !== want) {
+        res.status(200).json({ skipped: true, reason: 'not_local_send_time', localNow: localNow, want: want });
+        return;
+      }
+    }
   } else {
     if (req.method !== 'POST') { res.status(405).json({ error: 'method' }); return; }
     var user = await guard(req, res);

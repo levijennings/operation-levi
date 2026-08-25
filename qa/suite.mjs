@@ -424,6 +424,255 @@ check('EV3', 'events',
     assertEq(ev.props.via, 'typed', 'capture source not recorded as typed');
   });
 
+/* ───────────── real deliverables (F1/F2) and the phone bar (#12) ───────────── */
+
+check('AT1', 'board',
+  'Wingman guesses what a task produces, and the guess is marked as a guess',
+  async ({ page }) => {
+    // lpInferAssetType is module-scoped, so drive capture and then read the value
+    // off the real control on the task detail.
+    await page.keyboard.press('c');
+    await page.waitForSelector('#ol2capTa', { state: 'visible', timeout: 8000 });
+    await page.fill('#ol2capTa', 'Build the 2027 budget spreadsheet with quarterly projections');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(1600);
+    await page.click('#ol2capConfirm');
+    await page.waitForTimeout(1500);
+    await page.keyboard.press('g'); await page.keyboard.press('m');
+    await page.waitForSelector('#ol2Board .tcard', { timeout: 8000 });
+    const opened = await page.evaluate(() => {
+      const el = [...document.querySelectorAll('#ol2Board .tcard')]
+        .find(e => /budget spreadsheet/i.test(e.innerText));
+      if (!el) return false; el.click(); return true;
+    });
+    assert(opened, 'the captured task is not on the board');
+    await page.waitForSelector('#edAsset', { timeout: 8000 });
+    const r = await page.evaluate(() => ({
+      value: document.getElementById('edAsset').value,
+      guessChip: /GUESS/.test(document.body.innerText)
+    }));
+    assertEq(r.value, 'spreadsheet', 'a task about a budget spreadsheet was not classified as one');
+    assert(r.guessChip, 'the inferred type is not marked as a guess');
+  });
+
+check('F2A', 'board',
+  'A markdown draft becomes a real .docx whose contents are the draft — not just a well-named empty file',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      const card = { id: 'probe-doc', title: 'Garage lighting brief', assetType: 'document',
+        documents: [], aiArtifact: { content: '# Spec\n\n- 5000K daylight\n- Dimmable\n\nSix bulbs total.' } };
+      let grabbed = null;
+      window._lpSb = { storage: { from(){ return { async upload(path, file){
+        grabbed = { path, size: file.size, type: file.type, text: await file.text() };
+        return { error: null }; } }; } } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window.lpProduceFile(card);
+      await new Promise(r => setTimeout(r, 300));
+      return grabbed;
+    });
+    assert(r, 'nothing was uploaded');
+    assert(/\.docx$/.test(r.path), `stored under the wrong name: ${r.path}`);
+    assert(r.size > 800, `file is suspiciously small: ${r.size} bytes`);
+    assertEq(r.type, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'wrong mime type');
+    // The zip is store-only, so the document XML sits verbatim in the bytes.
+    // Checking the file EXISTS is not checking it says anything — an earlier
+    // version of this guard survived a mutation that dropped the title.
+    assert(r.text.includes('word/document.xml'), 'the archive has no Word document part');
+    assert(r.text.includes('Garage lighting brief'), 'the task title is missing from the document');
+    assert(r.text.includes('5000K daylight'), "the draft's own content is missing from the document");
+    assert(r.text.includes('Six bulbs total.'), 'the draft body did not make it into the document');
+  });
+
+check('F2B', 'board',
+  'A markdown table becomes a real .xlsx, and a draft with no table is refused rather than shipped empty',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const mk = (content) => ({ id: 'p', title: 'Budget', assetType: 'spreadsheet',
+        documents: [], aiArtifact: { content } });
+      const seen = [];
+      window._lpSb = { storage: { from(){ return { upload(path, file){ seen.push({ path, size: file.size });
+        return Promise.resolve({ error: null }); } }; } } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window.lpProduceFile(mk('| Item | Qty |\n|---|---|\n| Bulbs | 6 |\n| Spares | 2 |'));
+      const withTable = seen.length;
+      const prose = mk('Just some prose with no table in it at all.');
+      window.lpProduceFile(prose);
+      return { withTable, afterProse: seen.length, proseDocs: prose.documents.length };
+    });
+    assertEq(r.withTable, 1, 'a table draft did not produce a spreadsheet');
+    assertEq(r.afterProse, 1, 'a draft with no table produced a spreadsheet anyway — it would be empty');
+    assertEq(r.proseDocs, 0, 'an empty spreadsheet was attached to the card');
+  });
+
+check('F2C', 'board',
+  'The file lands on the card so the existing download control can reach it',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      const card = { id: 'p2', title: 'Memo', assetType: 'document', documents: [],
+        aiArtifact: { content: 'Body text.' } };
+      window._lpSb = { storage: { from(){ return { upload(p, f){ return Promise.resolve({ error: null }); } }; } } };
+      window._lpWs = 'ws1';
+      window.lpProduceFile(card);
+      // The attach runs when the upload promise resolves, so wait for it rather
+      // than reading the array on the same tick.
+      await new Promise(r => setTimeout(r, 300));
+      const d = card.documents[0] || {};
+      return { n: card.documents.length, name: d.name, gen: d.generated, hasSize: d.size > 0 };
+    });
+    assertEq(r.n, 1, 'nothing attached to the card');
+    assertEq(r.name, 'memo.docx', 'attachment is not named from the task');
+    assert(r.gen === true, 'the attachment is not marked as generated');
+    assert(r.hasSize, 'the attachment has no size');
+  });
+
+check('NAV1', 'mobile',
+  'The phone bar holds five slots and never scrolls sideways',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    const r = await page.evaluate(() => {
+      const nav = document.querySelector('#ol2Nav');
+      const side = document.querySelector('.ol2 .side');
+      const shown = [...nav.querySelectorAll('a')].filter(a => a.offsetParent !== null);
+      return {
+        count: shown.length,
+        labels: shown.map(a => a.textContent.trim().replace(/\s+/g, ' ')),
+        overflow: nav.scrollWidth - nav.clientWidth,
+        // PR #32 made the WRAPPER scrollable as a stopgap. Decision #12 replaced
+        // the stopgap with five real slots, so the wrapper must not scroll either
+        // — measuring only the nav would let the old behaviour come back unseen.
+        sideOverflow: side ? side.scrollWidth - side.clientWidth : -1,
+        sideOverflowX: side ? getComputedStyle(side).overflowX : '',
+        hasMore: !!document.getElementById('ol2NavMore')
+      };
+    });
+    await page.close();
+    assert(r.hasMore, 'no More entry on the phone bar');
+    assert(r.count <= 5, `the bar shows ${r.count} items: ${r.labels.join(' / ')}`);
+    assert(r.overflow <= 2, `the bar overflows by ${r.overflow}px — items are unreachable`);
+    assert(r.sideOverflow <= 2, `the bar wrapper overflows by ${r.sideOverflow}px`);
+    assert(r.sideOverflowX !== 'auto' && r.sideOverflowX !== 'scroll',
+      `the bar wrapper is still horizontally scrollable (overflow-x:${r.sideOverflowX}) — that is the PR #32 stopgap, not a fix`);
+    const joined = r.labels.join(' ').toLowerCase();
+    for (const gone of ['goals', 'crew', 'settings'])
+      assert(!joined.includes(gone), `${gone} is still taking a bar slot — it belongs in More`);
+  });
+
+check('NAV2', 'mobile',
+  'More opens a sheet holding everything the bar cannot',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    await page.click('#ol2NavMore');
+    await page.waitForSelector('#ol2More', { timeout: 5000 });
+    const txt = await page.evaluate(() => document.getElementById('ol2More').innerText.toLowerCase());
+    for (const want of ['goals', 'crew', 'docs', 'settings', 'travel'])
+      assert(txt.includes(want), `More is missing ${want}`);
+    await page.click('#ol2More .mshc');
+    const gone = await page.evaluate(() => !document.getElementById('ol2More'));
+    await page.close();
+    assert(gone, 'the More sheet does not close');
+  });
+
+/* ──────────────── one constructor, one cron (Aug 22 decisions) ──────────────── */
+
+check('C1', 'board',
+  'Capture builds its card through newItemBase — there is only one card constructor',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    // The inline literal that used to live in capConfirm is gone.
+    assert(!/id:'v'\+Date\.now\(\)\.toString\(36\), type:'task'/.test(src),
+      'capConfirm is building a card object inline again — two constructors will drift apart');
+    assert(/var it=newItemBase\(capDraft\.title/.test(src),
+      'capConfirm no longer calls newItemBase');
+    // And the card it produces still carries what the constructor guarantees.
+    await page.evaluate(() => {
+      window.__rows = [];
+      window._lpSb = { from(t){ return { insert(row){ window.__rows.push({ t, row }); return Promise.resolve({}); } }; } };
+      window._lpWs = '00000000-0000-0000-0000-000000000001';
+      window._lpUser = { id: null, name: 'Levi' };
+    });
+    await page.keyboard.press('c');
+    await page.waitForSelector('#ol2capTa', { state: 'visible', timeout: 8000 });
+    await page.fill('#ol2capTa', 'C1 guard: draft a one-page memo');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(1600);
+    await page.click('#ol2capConfirm');
+    await page.waitForTimeout(1400);
+    const ev = await page.evaluate(() =>
+      (window.__rows || []).map(r => r.row).filter(r => r.name === 'task.created'));
+    assertEq(ev.length, 1,
+      `capture logged ${ev.length} task.created events — one constructor should mean exactly one`);
+  });
+
+check('CR1', 'foundation',
+  'The brief fires daily at both candidate UTC hours so 06:30 Pacific holds year-round',
+  async () => {
+    const v = JSON.parse(await readFile(join(REPO, 'vercel.json'), 'utf8'));
+    const scheds = (v.crons || []).filter(c => c.path === '/api/brief').map(c => c.schedule).sort();
+    assertEq(scheds.join(' | '), '30 13 * * * | 30 14 * * *',
+      'the brief no longer fires at both candidate hours — it will drift an hour off daylight time');
+    for (const s of scheds) assert(/^\d+ \d+ \* \* \*$/.test(s), `${s} is not a daily schedule`);
+  });
+
+check('CR2', 'foundation',
+  'Exactly one of those firings gets through: at the wrong local hour the cron skips, at the right one it proceeds',
+  async () => {
+    // Behavioural, not textual. The first version of this guard only looked for
+    // the presence of CRON_SKIP_LOCAL_GATE and friends — and survived a mutation
+    // that turned the gate's condition into `if (false)`, which would send the
+    // brief twice a day. Invoke the handler for real instead.
+    const { createRequire } = await import('node:module');
+    const req = createRequire(import.meta.url);
+    const guardPath = req.resolve(join(REPO, 'api/_guard.js'));
+    req.cache[guardPath] = { id: guardPath, filename: guardPath, loaded: true,
+      exports: async () => null };
+    const saved = { ...process.env };
+    const prevFetch = global.fetch;
+    let reachedWork = false;
+    global.fetch = async () => { reachedWork = true; throw new Error('past the gate'); };
+    const mkRes = () => { const r = { code: 0, body: null,
+      setHeader(){}, status(c){ r.code = c; return r; }, json(b){ r.body = b; return r; } }; return r; };
+    try {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = 'x';
+      process.env.ANTHROPIC_API_KEY = 'x';
+      process.env.CRON_SECRET = 'secret';
+      delete process.env.CRON_SKIP_LOCAL_GATE;
+      process.env.CRON_LOCAL_TZ = 'America/Los_Angeles';
+      const brief = req(join(REPO, 'api/brief.js'));
+      const cronReq = { method: 'GET', headers: { authorization: 'Bearer secret' } };
+
+      // A time that is definitely NOT now in that zone: skip, and say why.
+      const nowLocal = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Los_Angeles',
+        hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      const wrong = nowLocal === '03:17' ? '04:18' : '03:17';
+      process.env.CRON_LOCAL_HHMM = wrong;
+      reachedWork = false;
+      const r1 = mkRes(); await brief(cronReq, r1);
+      assert(r1.body && r1.body.skipped === true,
+        `at the wrong local hour the cron did not skip: ${JSON.stringify(r1.body)}`);
+      assertEq(r1.body.reason, 'not_local_send_time', 'skip did not say why');
+      assertEq(reachedWork, false, 'the cron did work before the gate decided');
+
+      // The current local time: the gate must let it through.
+      process.env.CRON_LOCAL_HHMM = nowLocal;
+      reachedWork = false;
+      const r2 = mkRes(); await brief(cronReq, r2);
+      assert(!(r2.body && r2.body.skipped),
+        'at the right local hour the cron skipped anyway — the brief would never send');
+      assertEq(reachedWork, true, 'the cron did not proceed to do its work at the right hour');
+    } finally {
+      global.fetch = prevFetch;
+      for (const k of ['SUPABASE_SERVICE_ROLE_KEY','ANTHROPIC_API_KEY','CRON_SECRET','CRON_LOCAL_HHMM','CRON_LOCAL_TZ','CRON_SKIP_LOCAL_GATE']) {
+        if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k];
+      }
+    }
+  });
+
 /* ─────────────── readability & conversation (Levi, Aug 22) ─────────────── */
 
 async function openATask(page){
@@ -645,9 +894,12 @@ check('S4', 'foundation',
     const v = JSON.parse(await readFile(join(REPO, 'vercel.json'), 'utf8'));
     const crons = v.crons || [];
     assert(crons.length > 0, 'no cron declared — the morning brief will never fire');
-    // X35: a fixed UTC hour drifts an hour when Pacific leaves daylight time.
-    const fixed = crons.find(c => /^\s*\d+\s+\d+\s/.test(c.schedule || ''));
-    assert(!fixed, `X35 open: cron "${fixed && fixed.schedule}" is a fixed UTC hour, so the 6:30am brief becomes 5:30am in November`);
+    // NOTE: this guard used to fail any fixed-hour UTC cron, because a lone one
+    // drifts an hour when Pacific leaves daylight time (X35). That is now fixed
+    // the other way round: TWO fixed-hour crons fire daily and a local-time gate
+    // in api/brief.js lets exactly one through. Fixed hours are the design now,
+    // so the old assertion would be asserting a belief we no longer hold.
+    // CR1 and CR2 own the real contract.
   });
 
 /* ──────────────────────────── performance ──────────────────────────── */

@@ -90,6 +90,38 @@
       "pass": 39,
       "fail": 3,
       "suite": "restored (this file)"
+    },
+    {
+      "run": "R010",
+      "ranAt": "2026-08-25T03:29:58.869Z",
+      "trigger": "One card constructor (C1) + non-rotting daily cron (CR1/CR2); S4 retired",
+      "build": "fixes-1 branch",
+      "total": 45,
+      "pass": 43,
+      "fail": 2,
+      "suite": "restored (this file)"
+    },
+    {
+      "run": "R011",
+      "ranAt": "2026-08-25T05:20:22.084Z",
+      "trigger": "F1 typed assetType + F2 real docx/xlsx deliverables + five-slot phone bar",
+      "build": "f2-files branch",
+      "total": 51,
+      "pass": 49,
+      "fail": 2,
+      "suite": "restored (this file)"
+    },
+    {
+      "run": "R012",
+      "ranAt": "2026-08-25T05:40:00Z",
+      "trigger": "NAV1 strengthened: the phone bar WRAPPER must not scroll either (PR #32 stopgap removed for real)",
+      "build": "ca22cb9 + 1",
+      "total": 51,
+      "pass": 49,
+      "fail": 2,
+      "mutations": "27/27 killed",
+      "suite": "restored (this file)",
+      "note": "R011 claimed the horizontal-scroll stopgap was gone. It was gone from .nav but still on the .side wrapper, and NAV1 only measured .nav — so the claim was true of the guard and false of the app. Wrapper rule removed; NAV1 now asserts both the wrapper's scrollWidth and its computed overflow-x, and a new NAV1 mutation restores the stopgap to prove the guard sees it."
     }
   ]
 }

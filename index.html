@@ -1478,6 +1478,15 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .brand{font-family:'Space Grotesk';font-weight:800;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;margin:4px 6px 22px}
 .ol2 .brand .star{color:#C08428}
 .ol2 .nav{display:flex;flex-direction:column;gap:2px}
+    .nav a.navmore{display:none}
+    .moresheet{position:fixed;inset:0;z-index:100004;background:rgba(4,5,8,.7);display:flex;align-items:flex-end;justify-content:center}
+    .mshbox{width:100%;max-width:520px;background:#15161A;border-top:1px solid #30323A;border-radius:16px 16px 0 0;padding:16px 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;max-height:80vh;overflow-y:auto}
+    .mshh{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A8D97;padding:2px 6px 8px}
+    .mshi{display:flex;flex-direction:column;gap:2px;text-align:left;background:#1A1B20;border:1px solid #2A2C33;border-radius:10px;padding:12px 14px;color:#E9EAEE;cursor:pointer;font:inherit}
+    .mshi:hover{border-color:#3A3D45}
+    .mshi b{font-size:15px;font-weight:600}
+    .mshi span{font-size:12.5px;color:#8A8D97}
+    .mshc{margin-top:6px;background:transparent;border:1px solid #2A2C33;border-radius:10px;padding:11px;color:#9EA1AB;cursor:pointer;font:inherit;font-size:14px}
 .ol2 .nav a{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;color:#aab2c0;cursor:pointer;font-weight:500;font-size:13.5px;border:1px solid transparent}
 .ol2 .nav a:hover{background:#181a20;color:#E9EAEE}
 .ol2 .nav a.on{background:#1d2129;color:#E9EAEE;border-color:#30353d}
@@ -1995,10 +2004,22 @@ dots + 'Levi&#39;s Projects</td></tr>' +
   /* Phone-first: sidebar becomes a fixed bottom tab bar (Command spec) */
   .ol2.on{grid-template-columns:1fr;grid-template-rows:1fr auto;grid-template-areas:"main" "side"}
   .ol2 .main{grid-area:main}
-  .ol2 .side{grid-area:side;flex-direction:row;align-items:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid #26272D;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#121317}
+  .ol2 .side{grid-area:side;flex-direction:row;align-items:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid #26272D;background:#121317}
   .ol2 .side::-webkit-scrollbar{display:none}
   .ol2 .brand{display:none}
-  .ol2 .nav{flex-direction:row;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .ol2 .nav{flex-direction:row;gap:2px;overflow-x:visible}
+      /* Five slots, and the bar must never scroll sideways — a destination you
+         have to swipe to find is a destination you do not use. Bar slots go by
+         DAILY frequency, not importance: Goals is a monthly surface in the
+         cadence and Crew is weekly, so both sit behind More. Needs review takes
+         a slot only when it has something in it, which is also the surface that
+         failed on the lightbulb task. */
+      .nav a{flex:1 1 0;min-width:0;justify-content:center;text-align:center;font-size:11px;padding:7px 2px}
+      .nav a[data-v="home"]{order:1} .nav a[data-v="lane"]{order:2}
+      .nav a[data-v="board"]{order:3} .nav a[data-v="triage"]{order:4}
+      .nav a.navmore{order:5;display:flex}
+      .nav a[data-v="goals"], .nav a[data-v="people"],
+      .nav a[data-v="settings"], .nav a[data-v="docs"]{display:none}
       .ol2 .nav::-webkit-scrollbar{display:none}
       .ol2 .nav a{flex:0 0 auto}
   .ol2 .nav a{padding:0 12px;min-height:44px;align-items:center;white-space:nowrap;font-size:12.5px;border:1px solid #26272D;border-radius:11px}
@@ -2429,6 +2450,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<div class="navsep"></div>'+
           '<a data-v="settings">'+NI.gear+'Settings</a>'+
           '<a data-v="docs">'+NI.help+'Docs &amp; help</a>'+
+          // Phone only. The bar holds five slots; everything monthly or weekly
+          // lives behind this. Hidden on desktop, where the sidebar has room.
+          '<a class="navmore" id="ol2NavMore">☰ More</a>'+
         '</nav>'+
         '<div class="keys">⌘K commands<br>C new · A review · G+key go</div>'+
         '<button class="newt" id="ol2New">＋ New task</button>'+
@@ -2474,6 +2498,32 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       })();
     })();
     document.getElementById('ol2Spk').onclick=function(){ openCapture(); };
+    // The More sheet. Everything the five-slot phone bar cannot hold — all of it
+    // weekly or monthly in the cadence, none of it daily.
+    function lpMoreSheet(){
+      var prev=document.getElementById('ol2More'); if(prev) prev.remove();
+      var items=[
+        {v:'goals',   t:'Goals',        d:'Monthly — link work, update pace'},
+        {v:'people',  t:'Crew',         d:'Weekly — who is keeping up'},
+        {v:'docs',    t:'Docs & help',  d:'How the app works'},
+        {v:'settings',t:'Settings',     d:'Crew, alerts, sign out'},
+        {v:'travel',  t:'Travel profile', d:'Airports, loyalty, standing rules'}
+      ];
+      var ov=document.createElement('div'); ov.id='ol2More'; ov.className='moresheet';
+      ov.innerHTML='<div class="mshbox"><div class="mshh">More</div>'+
+        items.map(function(i){ return '<button class="mshi" data-go="'+i.v+'"><b>'+esc(i.t)+'</b><span>'+esc(i.d)+'</span></button>'; }).join('')+
+        '<button class="mshc">Close</button></div>';
+      ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+      document.body.appendChild(ov);
+      [].forEach.call(ov.querySelectorAll('[data-go]'),function(b){
+        b.onclick=function(){ var v=b.getAttribute('data-go'); ov.remove();
+          if(v==='travel'){ try{ lpTravelEdit(); }catch(e){} return; }
+          var a=document.querySelector('#ol2Nav a[data-v="'+v+'"]'); if(a) a.click(); };
+      });
+      ov.querySelector('.mshc').onclick=function(){ ov.remove(); };
+    }
+    (function(){ var mb=document.getElementById('ol2NavMore'); if(mb) mb.onclick=function(e){ e.preventDefault(); lpMoreSheet(); }; })();
+
     document.getElementById('ol2Nav').addEventListener('click',function(e){ var a=e.target.closest('a[data-v]'); if(!a) return; var v=a.getAttribute('data-v');
       [].forEach.call(shell.querySelectorAll('#ol2Nav a'),function(x){ x.classList.toggle('on', x===a); });
       if(v==='lane'){ _laneIdx=0; lpReviewLane(); }
@@ -2673,7 +2723,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     }
     function hideAllPanels(){ ['ol2BoardView','ol2Review','ol2Triage','ol2Lib','ol2MyDay','ol2Home','ol2Week','ol2People','ol2Done','ol2Goals','ol2Pulse','ol2Docs','ol2Settings','ol2Lane'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
       // Origins are backfilled once per session, after data has landed.
-      if(!window._lpOriginsDone){ window._lpOriginsDone=true; try{ lpBackfillOrigins(); }catch(e){} }
+      if(!window._lpOriginsDone){ window._lpOriginsDone=true; try{ lpBackfillOrigins(); }catch(e){}
+      try{ lpBackfillAssetTypes(); }catch(e){} }
       // Every view change refreshes the sidebar counts. They used to be written only
       // by the board render, so everywhere else the triage badge read its initial 0
       // while work sat waiting in the inbox.
@@ -4578,6 +4629,16 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         '<div class="rev rvbody">'+
           '<div class="rvpane"><div class="panelc">'+
             '<div class="rvtabs" id="edTabs"></div><div class="rvtab on" data-tab="detail">'+
+            '<label class="erl">Produces</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">'+
+              '<select class="ein" id="edAsset" style="max-width:190px">'+
+                '<option value="">— not set —</option>'+
+                LP_ASSET_TYPES.map(function(t){ return '<option value="'+t+'"'+(card.assetType===t?' selected':'')+'>'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>'; }).join('')+
+              '</select>'+
+              (card.assetTypeInferred&&card.assetType?'<span class="tag" style="font-size:9px">GUESS</span>':'')+
+              (LP_FILE_TYPES[card.assetType]&&card.aiArtifact&&card.aiArtifact.content
+                ? '<button class="gbtn amber" id="edMake">▸ Build the '+LP_FILE_TYPES[card.assetType]+'</button>'
+                : '')+
+            '</div>'+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical;overflow-y:hidden">'+esc(card.notes||'')+'</textarea>'+
             (lpIsTravel(card)?'<div class="travhint"><b>This looks like a trip.</b> Wingman can research flights, hotels and ground transport against your travel profile, then hand you a booking list.<button type="button" class="gbtn amber" id="edTripGo">▸ Plan this trip</button></div>':'')+
             '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
@@ -4687,6 +4748,12 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; lpAudit(card,'Due → '+(this.value||'cleared')); persist(); };
         document.getElementById('edCat').onchange=function(){ card.category=this.value; lpAudit(card,'Category → '+this.value); persist(); };
         document.getElementById('edDeliv').onchange=function(){ card.deliverable=this.value; lpAudit(card,'Deliverable → '+(this.value||'cleared')); persist(); };
+        (function(){ var as=document.getElementById('edAsset');
+          if(as) as.onchange=function(){ card.assetType=this.value; card.assetTypeInferred=false; try{ persist(); }catch(e){} try{ openReview(card); }catch(e){} };
+          var mk=document.getElementById('edMake');
+          if(mk) mk.onclick=function(){ mk.disabled=true; mk.textContent='▸ Building…';
+            lpProduceFile(card, function(){ try{ openReview(card); }catch(e){} }); };
+        })();
         (function(){ var en=document.getElementById('edNotes');
           if(en){ en.onchange=function(){ card.notes=this.value; persist(); }; lpGrow(en); } })();
         lpGrowAll(document);
@@ -4957,6 +5024,213 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(q && q.then) q.then(function(){}, function(){});
       }catch(e){ /* telemetry never breaks the app */ }
     }
+    // ── F1: what does this task actually produce? ────────────────────────────
+    // The old `deliverable` field is free text — good definitions of done, but
+    // nothing can route on prose. This is the typed half. Wingman infers it, the
+    // person confirms it, and F2 below reads it to decide which file to build.
+    var LP_ASSET_TYPES = ['document','spreadsheet','deck','image','email','research',
+                          'plan','decision','call','purchase','other'];
+    // Types Wingman can produce as a real file today. Kept deliberately short:
+    // a mediocre generated deck is worse than no deck, so deck/image wait.
+    var LP_FILE_TYPES = { document:'docx', spreadsheet:'xlsx' };
+
+    function lpInferAssetType(title, deliverable){
+      var t = ((title||'') + ' ' + (deliverable||'')).toLowerCase();
+      var probe = [
+        ['spreadsheet', /\b(spreadsheet|budget|projection|forecast|model|xlsx|excel|csv|line item|pricing table|roster)\b/],
+        ['deck',        /\b(deck|slide|presentation|pitch|keynote|pptx)\b/],
+        ['image',       /\b(image|photo|graphic|logo|thumbnail|content image|banner|creative)\b/],
+        ['email',       /\b(email|e-mail|reply|follow[- ]?up note|outreach message)\b/],
+        ['call',        /\b(call|phone|dial|ring|talk to|meet with|meeting with)\b/],
+        ['purchase',    /\b(order|buy|purchase|book|pay|invoice|reimburse|subscribe|cancel .*subscription)\b/],
+        ['decision',    /\b(decide|decision|choose|approve|sign|signature|pick)\b/],
+        ['research',    /\b(research|compare|options|find out|look into|investigate|shortlist)\b/],
+        ['plan',        /\b(plan|roadmap|strategy|outline|scope|schedule|checklist)\b/],
+        ['document',    /\b(doc|document|memo|one[- ]?pager|brief|report|proposal|write[- ]?up|agreement|summary|copy|draft)\b/]
+      ];
+      for(var i=0;i<probe.length;i++){ if(probe[i][1].test(t)) return probe[i][0]; }
+      return '';
+    }
+
+    // Backfill runs once per session, the same shape as the card-origin backfill:
+    // a guess is marked as a guess and never presented as fact.
+    function lpBackfillAssetTypes(){
+      if(window._lpAssetsDone) return; window._lpAssetsDone = true;
+      try{
+        var list = ITEMS(), n = 0;
+        list.forEach(function(c){
+          if(c.assetType) return;
+          var g = lpInferAssetType(c.title, c.deliverable);
+          if(!g) return;
+          c.assetType = g; c.assetTypeInferred = true; n++;
+        });
+        if(n){ try{ persist(); }catch(e){} }
+      }catch(e){}
+    }
+
+    // ── F2: Wingman hands over a real file ───────────────────────────────────
+    // .docx and .xlsx are ZIP archives of XML, so the only machinery needed is a
+    // store-only ZIP writer. No libraries — this repo has never had a
+    // package.json and adding a dependency tree to ship two file types would be
+    // a poor trade. Verified by opening the output in real Office parsers.
+    function lpCrc32(buf){
+      var c, t = lpCrc32.t;
+      if(!t){ t = lpCrc32.t = new Int32Array(256);
+        for(var n=0;n<256;n++){ c=n; for(var k=0;k<8;k++) c = c&1 ? 0xEDB88320 ^ (c>>>1) : c>>>1; t[n]=c; } }
+      var crc = -1;
+      for(var i=0;i<buf.length;i++) crc = (crc>>>8) ^ t[(crc ^ buf[i]) & 0xFF];
+      return (crc ^ -1) >>> 0;
+    }
+    function lpZip(files){
+      var enc = new TextEncoder(), parts = [], central = [], offset = 0;
+      var u16 = function(n){ return [n&255,(n>>>8)&255]; };
+      var u32 = function(n){ return [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]; };
+      files.forEach(function(f){
+        var nb = enc.encode(f.name), crc = lpCrc32(f.data);
+        var local = [].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),
+          u32(crc),u32(f.data.length),u32(f.data.length),u16(nb.length),u16(0));
+        parts.push(new Uint8Array(local), nb, f.data);
+        central.push({ name:nb, crc:crc, size:f.data.length, offset:offset });
+        offset += local.length + nb.length + f.data.length;
+      });
+      var dir = [];
+      central.forEach(function(c){
+        dir = dir.concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),
+          u32(c.crc),u32(c.size),u32(c.size),u16(c.name.length),u16(0),u16(0),u16(0),u16(0),
+          u32(0),u32(c.offset));
+        for(var i=0;i<c.name.length;i++) dir.push(c.name[i]);
+      });
+      var dirBytes = new Uint8Array(dir);
+      var end = new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),
+        u16(central.length),u16(central.length),u32(dirBytes.length),u32(offset),u16(0)));
+      var total = 0; parts.forEach(function(p){ total += p.length; });
+      var out = new Uint8Array(total + dirBytes.length + end.length), o = 0;
+      parts.forEach(function(p){ out.set(p,o); o += p.length; });
+      out.set(dirBytes,o); o += dirBytes.length; out.set(end,o);
+      return out;
+    }
+    function lpXmlEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;'); }
+    function lpPart(name, str){ return { name:name, data:new TextEncoder().encode(str) }; }
+
+    function lpDocx(blocks){
+      var body = blocks.map(function(b){
+        var t = lpXmlEsc(b.text);
+        if(b.type==='h1') return '<w:p><w:r><w:rPr><w:b/><w:sz w:val="36"/></w:rPr><w:t xml:space="preserve">'+t+'</w:t></w:r></w:p>';
+        if(b.type==='h2') return '<w:p><w:r><w:rPr><w:b/><w:sz w:val="28"/></w:rPr><w:t xml:space="preserve">'+t+'</w:t></w:r></w:p>';
+        if(b.type==='bullet') return '<w:p><w:pPr><w:ind w:left="360"/></w:pPr><w:r><w:t xml:space="preserve">• '+t+'</w:t></w:r></w:p>';
+        return '<w:p><w:r><w:t xml:space="preserve">'+t+'</w:t></w:r></w:p>';
+      }).join('');
+      return lpZip([
+        lpPart('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'),
+        lpPart('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'),
+        lpPart('word/document.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+'<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>')
+      ]);
+    }
+    function lpColName(n){ var s=''; n++; while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26; } return s; }
+    function lpXlsx(rows, sheetName){
+      var sr = rows.map(function(row,r){
+        var cells = row.map(function(v,c){
+          var ref = lpColName(c)+(r+1);
+          var num = v!=='' && v!=null && String(v).trim()!=='' && !isNaN(Number(v));
+          return num ? '<c r="'+ref+'"><v>'+lpXmlEsc(Number(v))+'</v></c>'
+                     : '<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+lpXmlEsc(v)+'</t></is></c>';
+        }).join('');
+        return '<row r="'+(r+1)+'">'+cells+'</row>';
+      }).join('');
+      return lpZip([
+        lpPart('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'),
+        lpPart('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'),
+        lpPart('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="'+lpXmlEsc((sheetName||'Sheet1').slice(0,31))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'),
+        lpPart('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'),
+        lpPart('xl/worksheets/sheet1.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+sr+'</sheetData></worksheet>')
+      ]);
+    }
+
+    // Wingman writes markdown. These turn it into document structure or a grid —
+    // no API change needed, and the draft stays readable on screen either way.
+    function lpMdBlocks(md){
+      return String(md||'').split(/\r?\n/).map(function(line){
+        var t = line.trim();
+        if(!t) return null;
+        if(/^#{3,}\s+/.test(t)) return { type:'h2', text:t.replace(/^#+\s+/,'') };
+        if(/^##\s+/.test(t))    return { type:'h2', text:t.replace(/^#+\s+/,'') };
+        if(/^#\s+/.test(t))     return { type:'h1', text:t.replace(/^#+\s+/,'') };
+        if(/^[-*•]\s+/.test(t)) return { type:'bullet', text:t.replace(/^[-*•]\s+/,'') };
+        if(/^\d+\.\s+/.test(t)) return { type:'bullet', text:t.replace(/^\d+\.\s+/,'') };
+        return { type:'p', text:t.replace(/\*\*/g,'') };
+      }).filter(Boolean);
+    }
+    function lpMdRows(md){
+      var lines = String(md||'').split(/\r?\n/).filter(function(l){ return l.indexOf('|') > -1; });
+      var rows = lines.map(function(l){
+        return l.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(function(c){ return c.trim().replace(/\*\*/g,''); });
+      }).filter(function(r){
+        // Drop the |---|---| separator row: it is formatting, not data.
+        return r.length && !r.every(function(c){ return /^:?-{2,}:?$/.test(c); });
+      });
+      return rows;
+    }
+
+    /** Turn the approved draft on a card into a real file the person can open. */
+    function lpProduceFile(card, cb){
+      var kind = LP_FILE_TYPES[card && card.assetType];
+      if(!kind){ toast('Set the asset type to document or spreadsheet first'); return; }
+      var md = (card.aiArtifact && card.aiArtifact.content) || '';
+      if(!String(md).trim()){ toast('No draft to build from yet'); return; }
+      var bytes, mime, ext;
+      try{
+        if(kind === 'xlsx'){
+          var rows = lpMdRows(md);
+          if(rows.length < 2){ toast('The draft has no table in it — nothing to put in a spreadsheet'); return; }
+          bytes = lpXlsx(rows, (card.title||'Sheet').slice(0,31));
+          mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; ext = 'xlsx';
+        } else {
+          var blocks = lpMdBlocks(md);
+          if(!blocks.length){ toast('The draft is empty'); return; }
+          blocks.unshift({ type:'h1', text: card.title || 'Untitled' });
+          bytes = lpDocx(blocks);
+          mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; ext = 'docx';
+        }
+      }catch(e){ toast('Could not build the file: '+e.message); return; }
+
+      var safe = String(card.title||'untitled').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60) || 'untitled';
+      var name = safe + '.' + ext;
+      var sb = window._lpSb, ws = window._lpWs;
+      var file = new Blob([bytes], { type: mime });
+
+      function attach(storagePath){
+        card.documents = card.documents || [];
+        card.documents.push({ name:name, size:bytes.length, type:mime,
+          storagePath:storagePath||'', generated:true, uploadedAt:new Date().toISOString() });
+        card.updatedAt = Date.now();
+        try{ lpAudit(card, 'Wingman produced ' + name); }catch(e){}
+        try{ persist(); }catch(e){}
+        lpEvent('deliverable.produced', { kind:ext, bytes:bytes.length, stored:!!storagePath }, card.id);
+        toast('▸ ' + name + ' is on this task');
+        if(cb) cb(name);
+      }
+
+      if(!sb || !ws){
+        // Local-only: hand it straight to the browser rather than pretending it
+        // was filed somewhere.
+        try{
+          var url = URL.createObjectURL(file), a = document.createElement('a');
+          a.href = url; a.download = name; a.click();
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+        }catch(e){}
+        attach('');
+        return;
+      }
+      var path = 'ws/' + ws + '/' + card.id + '/' + Date.now().toString(36) + '-' + name;
+      var q = sb.storage.from('documents').upload(path, file, { contentType: mime, upsert:false });
+      q.then(function(r){
+        if(r && r.error){ toast('Built the file but could not store it: ' + (r.error.message||'upload failed')); attach(''); }
+        else attach(path);
+      }, function(){ toast('Built the file but could not store it'); attach(''); });
+    }
+    window.lpProduceFile = lpProduceFile;   // testable; see qa/ on module scoping
+
     // Deliberately exposed. The services block is a separate <script> and will
     // want to emit too, and a module-scoped emitter cannot be tested from
     // page.evaluate() — which is exactly how this codebase has produced vacuous
@@ -4970,6 +5244,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         raci:{R:[],A:'',C:[],I:[]}, assignees:ownerName?[ownerName]:[], responsible:ownerName||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
         waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
         columnEnteredAt:Date.now(), createdAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
+        assetType:'', assetTypeInferred:false,
         execMode:'track-it', aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:[], parentItemId:'' };
     }
     // Every card in the app is built by newItemBase, so wrapping it is the only
@@ -4978,6 +5253,10 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     var _lpNewItemBase = newItemBase;
     newItemBase = function(title, cat, due, deliverable, ownerName, src){
       var it = _lpNewItemBase(title, cat, due, deliverable, ownerName, src);
+      // F1: guess what this produces so Wingman can route on it. Marked as a
+      // guess — the person confirms it on the task, and nothing treats it as fact.
+      var _at = lpInferAssetType(it.title, it.deliverable);
+      if(_at){ it.assetType = _at; it.assetTypeInferred = true; }
       lpEvent('task.created', {
         via: it.source || 'unknown',
         category: it.category || '',
@@ -5017,28 +5296,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(p0.confidence&&!capDraft.assess) capDraft.assess={confidence:p0.confidence,reason:p0.reason||'',questions:[],suggest:{}};
       }
       var own=capDraft.owner||meName();
-      var it={ source:capVia, sourceId:'', sourceInferred:false, createdBy:meName(),
-        id:'v'+Date.now().toString(36), type:'task', title:capDraft.title||'Untitled', category:capDraft.cat||'Personal', status:'thisweek',
-        startDate:'', dueDate:capDraft.due||'', deliverable:capDraft.deliverable||'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
-        raci:{R:[],A:'',C:[],I:[]}, assignees:own?[own]:[], responsible:own||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
-        waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
-        columnEnteredAt:Date.now(), createdAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
-        execMode:capMode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:capDraft.ctx?[capDraft.ctx.name]:[] };
+      // ONE constructor. capConfirm used to build this object inline, duplicating
+      // the entire card shape — which meant a field added to newItemBase was
+      // silently missing here, on the app's most-used creation path.
+      // parentItemId had already gone missing that way. Everything below is only
+      // what capture knows and the constructor cannot: the execution mode and the
+      // linked context. task.created is emitted by newItemBase itself now, so it
+      // is no longer duplicated here.
+      var it=newItemBase(capDraft.title, capDraft.cat, capDraft.due, capDraft.deliverable, own, {source:capVia, sourceId:''});
+      it.execMode=capMode;
+      it.linkedContext=capDraft.ctx?[capDraft.ctx.name]:[];
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       if(capDraft.notes) it.notes=capDraft.notes;
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
-      // NOTE: capConfirm builds its card inline instead of calling newItemBase,
-      // so the wrapper on newItemBase does NOT cover this path — and this is the
-      // most-used creation path in the app. Two divergent card constructors is a
-      // real hazard (a field added to one is silently missing from the other);
-      // logged as debt, emitted explicitly here so the event log is not wrong.
-      lpEvent('task.created', {
-        via: it.source || 'unknown',
-        category: it.category || '',
-        has_deliverable: !!(it.deliverable && String(it.deliverable).trim()),
-        owner: it.responsible || '',
-        mode: capMode || ''
-      }, it.id);
       if(capMode==='do-it') lpEvent('task.routed', { to:'wingman', has_deliverable:!!(it.deliverable&&String(it.deliverable).trim()), from:'capture' }, it.id);
       persist(); closeCapture(); showBoard();
       if(own && own!==meName()) lpNotifyAssign(own, it);
