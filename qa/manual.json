@@ -108,9 +108,10 @@
           "id": "X22",
           "step": "Walk the five destinations on a real iPhone.",
           "proves": "Every destination is reachable on a phone. The bottom bar has always been wider than a phone; PR #32 made it scroll horizontally as a STOPGAP.",
-          "status": "closed",
-          "history": "Levi confirmed the phone bar on 2026-08-25 after decision #12 shipped in PR #37. Five slots: Today / Needs review / Missions / Wingman / More, chosen by DAILY frequency not importance. PR #32's horizontal scroll is gone from both .nav and the .side wrapper. Scope of the confirmation is the BAR — walking all five destinations end to end on the device was not separately reported.",
-          "automatedBy": "NAV1, NAV2 (390x844 emulated viewport)"
+          "status": "pending",
+          "history": "REOPENED 2026-08-25. Closed earlier the same day on Levi's confirmation; his phone screenshot minutes later showed body text clipped mid-sentence and the bar cut off at the right. Three faults, none visible to any guard: (1) `.ol2.on{grid-template-columns:1fr}` — 1fr is minmax(auto,1fr), whose auto minimum is min-content, so the column resolved to ~590px inside a 390px viewport and .ol2's position:fixed;inset:0 clipped the overflow rather than scrolling it; (2) the mobile bar rules were `.nav a` (0,1,1) against a base `.ol2 .nav a` (0,2,1) and LOST on specificity, so the five slots never applied; (3) PR #32's real stopgap was a later equal-specificity block (flex:0 0 auto + white-space:nowrap) — removing only overflow-x turned a swipeable bar into an unreachable one. All three fixed in fa1c4a9. NAV1 now measures each slot against the viewport and MOB1 checks the whole page; both mutation-proven. STAYS PENDING until Levi looks at his own phone again — the last close was taken on a confirmation that a screenshot then contradicted.",
+          "automatedBy": "NAV1, MOB1, NAV2 (375/390/402 emulated viewports)",
+          "lesson": "A user saying 'confirmed' is evidence, not proof, and it is worth exactly as much as what they actually looked at. Ask what was checked before closing a step on someone's word."
         }
       ]
     },
