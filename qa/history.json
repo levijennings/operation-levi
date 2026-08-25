@@ -122,6 +122,18 @@
       "mutations": "27/27 killed",
       "suite": "restored (this file)",
       "note": "R011 claimed the horizontal-scroll stopgap was gone. It was gone from .nav but still on the .side wrapper, and NAV1 only measured .nav — so the claim was true of the guard and false of the app. Wrapper rule removed; NAV1 now asserts both the wrapper's scrollWidth and its computed overflow-x, and a new NAV1 mutation restores the stopgap to prove the guard sees it."
+    },
+    {
+      "run": "R013",
+      "ranAt": "2026-08-25T07:20:00Z",
+      "trigger": "Levi's phone screenshot: body text clipped mid-sentence and the bar cut off — the five-slot bar had NEVER applied",
+      "build": "590e1b3 + mobile fix",
+      "total": 52,
+      "pass": 50,
+      "fail": 2,
+      "mutations": "29/29 killed",
+      "suite": "restored (this file)",
+      "note": "R012 was WRONG about the phone. Three separate faults, none of which any guard could see. (1) `.ol2.on{grid-template-columns:1fr}` — 1fr is minmax(auto,1fr) and its auto minimum is min-content, so the single column resolved to ~590px inside a 390px viewport and .ol2's position:fixed;inset:0 CLIPPED the overflow, which is why body text was cut mid-sentence while documentElement.scrollWidth stayed clean. (2) The mobile bar rules were written as `.nav a` (0,1,1) against a base rule of `.ol2 .nav a` (0,2,1) — they LOST on specificity, so flex:1 1 0 never applied and the five slots never existed. (3) PR #32's real stopgap was a LATER equal-specificity block (flex:0 0 auto + white-space:nowrap) that I never found; in R012 I removed only overflow-x:auto, which turned a swipeable bar into an unreachable one. NAV1 measured nav.scrollWidth-nav.clientWidth — the bar against ITSELF — which reports zero for an oversized bar hanging off the screen. It now measures every slot's rect against the viewport, forces the 5th slot visible (the fixture has 0 needs-review so it never rendered), and fails on clipped labels. MOB1 is new and checks the WHOLE page for elements past the right edge."
     }
   ]
 }

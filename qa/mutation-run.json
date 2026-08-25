@@ -130,8 +130,18 @@
     "note": "guard catches it: the More button stops opening its sheet"
   },
   {
+    "id": "MOB1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the phone grid track goes back to min-content and the main column renders ~590px wide inside a 390px phone, clipping body text mid-sentence"
+  },
+  {
     "id": "NAV1",
     "verdict": "KILLED",
-    "note": "guard catches it: PR #32’s horizontally-scrolling bar comes back as a stopgap under the five slots"
+    "note": "guard catches it: the mobile bar rules drop below `.ol2 .nav a` on specificity and the five slots silently never apply"
+  },
+  {
+    "id": "NAV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the duplicate New task button returns to the bar and squeezes every slot label into unreadability"
   }
 ]

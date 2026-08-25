@@ -67,12 +67,20 @@ const MUTATIONS = [
    'a draft with no table produces an empty spreadsheet anyway'],
   ['F2C', 'index.html', "card.documents.push({ name:name, size:bytes.length", "card.documents.slice().push({ name:name, size:bytes.length",
    'the produced file never lands on the card'],
-  ['NAV1', 'index.html', '.nav a[data-v="settings"], .nav a[data-v="docs"]{display:none}', '.nav a[data-v="zz"]{display:none}',
+  ['NAV1', 'index.html', '.ol2 .nav a[data-v="settings"], .ol2 .nav a[data-v="docs"]{display:none}', '.ol2 .nav a[data-v="zz"]{display:none}',
    'Settings and Docs take phone bar slots again'],
   ['NAV2', 'index.html', "var mb=document.getElementById('ol2NavMore'); if(mb) mb.onclick", "var mb=null; if(mb) mb.onclick",
    'the More button stops opening its sheet'],
-  ['NAV1', 'index.html', 'border-top:1px solid #26272D;background:#121317}', 'border-top:1px solid #26272D;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#121317}',
-   'PR #32’s horizontally-scrolling bar comes back as a stopgap under the five slots'],
+  // The old ".side gets overflow-x:auto" mutation was RETIRED here. Once NAV1
+  // measures every slot's rect against the viewport, whether the wrapper happens
+  // to be scrollable proves nothing — an overflowing bar is caught either way.
+  // A mutation that cannot fail is as useless as a guard that cannot fail.
+  ['MOB1', 'index.html', 'grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto', 'grid-template-columns:1fr;grid-template-rows:1fr auto',
+   'the phone grid track goes back to min-content and the main column renders ~590px wide inside a 390px phone, clipping body text mid-sentence'],
+  ['NAV1', 'index.html', '.ol2 .nav a{flex:1 1 0;min-width:0;gap:4px', '.nav a{flex:1 1 0;min-width:0;gap:4px',
+   'the mobile bar rules drop below `.ol2 .nav a` on specificity and the five slots silently never apply'],
+  ['NAV1', 'index.html', '.ol2 .newt{display:none}', '.ol2 .newt{margin:0 0 0 auto;min-height:44px;padding:0 13px;white-space:nowrap;font-size:12.5px;flex-shrink:0}',
+   'the duplicate New task button returns to the bar and squeezes every slot label into unreadability'],
 ];
 
 const out = [];

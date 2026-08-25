@@ -526,38 +526,86 @@ check('F2C', 'board',
   });
 
 check('NAV1', 'mobile',
-  'The phone bar holds five slots and never scrolls sideways',
+  'Every phone bar slot sits inside the viewport — measured against the SCREEN, not the bar\'s own box',
   async ({ browser, origin }) => {
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('#ol2Home', { timeout: 15000 });
     await page.waitForTimeout(700);
+    // The fixture has 0 needs-review, so the 5th slot is hidden and the bar is
+    // never tested at full width. Force the real worst case.
+    await page.evaluate(() => {
+      const r = document.getElementById('ol2RevNav'); if (r) r.style.display = '';
+      const n = document.getElementById('ol2RevN'); if (n) n.textContent = '6';
+    });
+    await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
       const nav = document.querySelector('#ol2Nav');
-      const side = document.querySelector('.ol2 .side');
+      const vw = document.documentElement.clientWidth;
       const shown = [...nav.querySelectorAll('a')].filter(a => a.offsetParent !== null);
+      // THE measurement that matters. nav.scrollWidth - nav.clientWidth compares
+      // the bar to ITSELF: an oversized bar whose contents fit it reports zero
+      // overflow while hanging off the screen. That is exactly how a 422px bar
+      // passed inside a 390px phone. Compare to the VIEWPORT instead.
+      const past = shown
+        .map(a => ({ label: a.textContent.trim().replace(/\s+/g, ' '), right: Math.round(a.getBoundingClientRect().right) }))
+        .filter(x => x.right > vw + 1);
       return {
-        count: shown.length,
+        vw, count: shown.length,
         labels: shown.map(a => a.textContent.trim().replace(/\s+/g, ' ')),
-        overflow: nav.scrollWidth - nav.clientWidth,
-        // PR #32 made the WRAPPER scrollable as a stopgap. Decision #12 replaced
-        // the stopgap with five real slots, so the wrapper must not scroll either
-        // — measuring only the nav would let the old behaviour come back unseen.
-        sideOverflow: side ? side.scrollWidth - side.clientWidth : -1,
-        sideOverflowX: side ? getComputedStyle(side).overflowX : '',
+        navWidth: Math.round(nav.getBoundingClientRect().width),
+        past,
+        // A slot whose text is clipped is unreadable even when it fits.
+        clipped: shown.filter(a => a.scrollWidth > a.clientWidth + 1)
+                      .map(a => a.textContent.trim().replace(/\s+/g, ' ')),
         hasMore: !!document.getElementById('ol2NavMore')
       };
     });
     await page.close();
     assert(r.hasMore, 'no More entry on the phone bar');
     assert(r.count <= 5, `the bar shows ${r.count} items: ${r.labels.join(' / ')}`);
-    assert(r.overflow <= 2, `the bar overflows by ${r.overflow}px — items are unreachable`);
-    assert(r.sideOverflow <= 2, `the bar wrapper overflows by ${r.sideOverflow}px`);
-    assert(r.sideOverflowX !== 'auto' && r.sideOverflowX !== 'scroll',
-      `the bar wrapper is still horizontally scrollable (overflow-x:${r.sideOverflowX}) — that is the PR #32 stopgap, not a fix`);
+    assert(r.count === 5, `only ${r.count} slots rendered with needs-review forced on: ${r.labels.join(' / ')}`);
+    assert(r.navWidth <= r.vw + 1, `the bar is ${r.navWidth}px wide inside a ${r.vw}px viewport`);
+    assert(r.past.length === 0,
+      `off the right edge of a ${r.vw}px screen: ` + r.past.map(x => `${x.label} (ends ${x.right}px)`).join(', '));
+    assert(r.clipped.length === 0, `slot labels are clipped: ${r.clipped.join(' / ')}`);
     const joined = r.labels.join(' ').toLowerCase();
     for (const gone of ['goals', 'crew', 'settings'])
       assert(!joined.includes(gone), `${gone} is still taking a bar slot — it belongs in More`);
+  });
+
+check('MOB1', 'mobile',
+  'Nothing on the phone runs off the right edge — the whole page, not just the bar',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+      const de = document.documentElement;
+      const vw = de.clientWidth;
+      const wide = [];
+      document.querySelectorAll('*').forEach(el => {
+        if (el.offsetParent === null && el !== document.body) return;
+        const b = el.getBoundingClientRect();
+        if (b.width === 0 && b.height === 0) return;
+        if (b.right > vw + 1) wide.push({
+          tag: el.tagName.toLowerCase(),
+          id: el.id || '',
+          cls: (typeof el.className === 'string' ? el.className : '').slice(0, 40),
+          w: Math.round(b.width), right: Math.round(b.right)
+        });
+      });
+      return { vw, docOverflow: de.scrollWidth - de.clientWidth, wide: wide.slice(0, 8), total: wide.length };
+    });
+    await page.close();
+    // `.ol2` is position:fixed;inset:0 so it CLIPS overflow — the document never
+    // scrolls and a scrollWidth check alone reports a clean page while the text
+    // is being cut off mid-sentence. Measure the elements themselves.
+    assert(r.docOverflow <= 1, `the page scrolls sideways by ${r.docOverflow}px`);
+    assert(r.total === 0,
+      `${r.total} element(s) run past the ${r.vw}px viewport: ` +
+      r.wide.map(x => `<${x.tag}${x.id ? '#' + x.id : ''}${x.cls ? '.' + x.cls.split(' ')[0] : ''}> ${x.w}px wide, ends ${x.right}px`).join(' | '));
   });
 
 check('NAV2', 'mobile',
