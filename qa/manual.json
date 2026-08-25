@@ -108,8 +108,9 @@
           "id": "X22",
           "step": "Walk the five destinations on a real iPhone.",
           "proves": "Every destination is reachable on a phone. The bottom bar has always been wider than a phone; PR #32 made it scroll horizontally as a STOPGAP.",
-          "status": "pending",
-          "openQuestion": "Which five items belong on a phone. A horizontally-scrolling bottom bar is not an answer."
+          "status": "closed",
+          "history": "Levi confirmed the phone bar on 2026-08-25 after decision #12 shipped in PR #37. Five slots: Today / Needs review / Missions / Wingman / More, chosen by DAILY frequency not importance. PR #32's horizontal scroll is gone from both .nav and the .side wrapper. Scope of the confirmation is the BAR — walking all five destinations end to end on the device was not separately reported.",
+          "automatedBy": "NAV1, NAV2 (390x844 emulated viewport)"
         }
       ]
     },
