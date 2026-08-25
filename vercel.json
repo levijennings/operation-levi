@@ -1,5 +1,12 @@
 {
   "crons": [
-    { "path": "/api/brief", "schedule": "30 13 * * *" }
+    {
+      "path": "/api/brief",
+      "schedule": "30 13 * * *"
+    },
+    {
+      "path": "/api/brief",
+      "schedule": "30 14 * * *"
+    }
   ]
 }

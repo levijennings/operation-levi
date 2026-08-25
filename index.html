@@ -5017,28 +5017,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(p0.confidence&&!capDraft.assess) capDraft.assess={confidence:p0.confidence,reason:p0.reason||'',questions:[],suggest:{}};
       }
       var own=capDraft.owner||meName();
-      var it={ source:capVia, sourceId:'', sourceInferred:false, createdBy:meName(),
-        id:'v'+Date.now().toString(36), type:'task', title:capDraft.title||'Untitled', category:capDraft.cat||'Personal', status:'thisweek',
-        startDate:'', dueDate:capDraft.due||'', deliverable:capDraft.deliverable||'', notes:'', priority:0, timeEstimate:0, tshirtSize:'XS',
-        raci:{R:[],A:'',C:[],I:[]}, assignees:own?[own]:[], responsible:own||'', responsible2:'', informed:[], involved:[], approver:'', informedWhenComplete:[],
-        waitingOn:'', waitingFrom:'', waitingExpected:'', goalIds:[], approvers:[], meetings:[], subtasks:[], timeline:[], urls:[], documents:[], habitCompletions:[], recurring:false, recurringFrequency:'',
-        columnEnteredAt:Date.now(), createdAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
-        execMode:capMode, aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:capDraft.ctx?[capDraft.ctx.name]:[] };
+      // ONE constructor. capConfirm used to build this object inline, duplicating
+      // the entire card shape — which meant a field added to newItemBase was
+      // silently missing here, on the app's most-used creation path.
+      // parentItemId had already gone missing that way. Everything below is only
+      // what capture knows and the constructor cannot: the execution mode and the
+      // linked context. task.created is emitted by newItemBase itself now, so it
+      // is no longer duplicated here.
+      var it=newItemBase(capDraft.title, capDraft.cat, capDraft.due, capDraft.deliverable, own, {source:capVia, sourceId:''});
+      it.execMode=capMode;
+      it.linkedContext=capDraft.ctx?[capDraft.ctx.name]:[];
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       if(capDraft.notes) it.notes=capDraft.notes;
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
-      // NOTE: capConfirm builds its card inline instead of calling newItemBase,
-      // so the wrapper on newItemBase does NOT cover this path — and this is the
-      // most-used creation path in the app. Two divergent card constructors is a
-      // real hazard (a field added to one is silently missing from the other);
-      // logged as debt, emitted explicitly here so the event log is not wrong.
-      lpEvent('task.created', {
-        via: it.source || 'unknown',
-        category: it.category || '',
-        has_deliverable: !!(it.deliverable && String(it.deliverable).trim()),
-        owner: it.responsible || '',
-        mode: capMode || ''
-      }, it.id);
       if(capMode==='do-it') lpEvent('task.routed', { to:'wingman', has_deliverable:!!(it.deliverable&&String(it.deliverable).trim()), from:'capture' }, it.id);
       persist(); closeCapture(); showBoard();
       if(own && own!==meName()) lpNotifyAssign(own, it);
