@@ -5237,6 +5237,16 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     // guards before. See qa/README.md, "the trap that keeps recurring".
     window.lpEvent = lpEvent;
 
+    // DECISION D2, settled by Levi 2026-08-25: KEEP `subtasks`.
+    // It is a complete working feature (add #stT, tick .lp-stck, approve .lp-stapp,
+    // delete .lp-stdel, weighted progress, lpNextStep reads it) and it does not
+    // conflict with sibling cards — a subtask is a checklist line INSIDE one task,
+    // a sibling card with parentItemId is separately assignable work. Two levels.
+    //
+    // THE RULE, so F4 cannot generate into two shapes:
+    //   Wingman-generated decomposition ALWAYS creates sibling cards.
+    //   `subtasks` stays a MANUAL, in-card checklist that Wingman never writes.
+    // Whoever builds F4 writes the guard that enforces this alongside it.
     function newItemBase(title, cat, due, deliverable, ownerName, src){
       return { source:(src&&src.source)||'unknown', sourceId:(src&&src.sourceId)||'', sourceInferred:false, createdBy:meName(),
         id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), type:'task', title:title||'Untitled', category:cat||'Personal', status:'thisweek',
