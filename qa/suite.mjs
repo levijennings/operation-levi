@@ -534,11 +534,17 @@ check('NAV1', 'mobile',
     await page.waitForTimeout(700);
     const r = await page.evaluate(() => {
       const nav = document.querySelector('#ol2Nav');
+      const side = document.querySelector('.ol2 .side');
       const shown = [...nav.querySelectorAll('a')].filter(a => a.offsetParent !== null);
       return {
         count: shown.length,
         labels: shown.map(a => a.textContent.trim().replace(/\s+/g, ' ')),
         overflow: nav.scrollWidth - nav.clientWidth,
+        // PR #32 made the WRAPPER scrollable as a stopgap. Decision #12 replaced
+        // the stopgap with five real slots, so the wrapper must not scroll either
+        // — measuring only the nav would let the old behaviour come back unseen.
+        sideOverflow: side ? side.scrollWidth - side.clientWidth : -1,
+        sideOverflowX: side ? getComputedStyle(side).overflowX : '',
         hasMore: !!document.getElementById('ol2NavMore')
       };
     });
@@ -546,6 +552,9 @@ check('NAV1', 'mobile',
     assert(r.hasMore, 'no More entry on the phone bar');
     assert(r.count <= 5, `the bar shows ${r.count} items: ${r.labels.join(' / ')}`);
     assert(r.overflow <= 2, `the bar overflows by ${r.overflow}px — items are unreachable`);
+    assert(r.sideOverflow <= 2, `the bar wrapper overflows by ${r.sideOverflow}px`);
+    assert(r.sideOverflowX !== 'auto' && r.sideOverflowX !== 'scroll',
+      `the bar wrapper is still horizontally scrollable (overflow-x:${r.sideOverflowX}) — that is the PR #32 stopgap, not a fix`);
     const joined = r.labels.join(' ').toLowerCase();
     for (const gone of ['goals', 'crew', 'settings'])
       assert(!joined.includes(gone), `${gone} is still taking a bar slot — it belongs in More`);

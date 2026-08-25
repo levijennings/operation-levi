@@ -128,5 +128,10 @@
     "id": "NAV2",
     "verdict": "KILLED",
     "note": "guard catches it: the More button stops opening its sheet"
+  },
+  {
+    "id": "NAV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: PR #32’s horizontally-scrolling bar comes back as a stopgap under the five slots"
   }
 ]

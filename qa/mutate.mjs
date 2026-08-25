@@ -71,6 +71,8 @@ const MUTATIONS = [
    'Settings and Docs take phone bar slots again'],
   ['NAV2', 'index.html', "var mb=document.getElementById('ol2NavMore'); if(mb) mb.onclick", "var mb=null; if(mb) mb.onclick",
    'the More button stops opening its sheet'],
+  ['NAV1', 'index.html', 'border-top:1px solid #26272D;background:#121317}', 'border-top:1px solid #26272D;overflow-x:auto;-webkit-overflow-scrolling:touch;background:#121317}',
+   'PR #32’s horizontally-scrolling bar comes back as a stopgap under the five slots'],
 ];
 
 const out = [];
