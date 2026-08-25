@@ -1470,11 +1470,11 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 <!-- ═══ Operation Levi 2.0 — Phase 5: AI-native shell + board + Review/Refine (parallel mode) ═══ -->
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-.ol2{position:fixed;inset:0;z-index:8500;background:#0E0F12;color:#E9EAEE;font-family:'Inter',system-ui,sans-serif;font-size:14px;display:none;grid-template-columns:232px 1fr}
+.ol2{position:fixed;inset:0;z-index:8500;background:#0E0F12;color:#E9EAEE;font-family:'Inter',system-ui,sans-serif;font-size:14px;display:none;grid-template-columns:232px minmax(0,1fr)}
 .ol2.on{display:grid}
 .ol2 *{box-sizing:border-box}
 .ol2 .syne{font-family:'Space Grotesk',sans-serif}
-.ol2 .side{background:#121317;border-right:1px solid #26272D;display:flex;flex-direction:column;padding:18px 14px}
+.ol2 .side{background:#121317;border-right:1px solid #26272D;display:flex;flex-direction:column;min-width:0;padding:18px 14px}
 .ol2 .brand{font-family:'Space Grotesk';font-weight:800;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;margin:4px 6px 22px}
 .ol2 .brand .star{color:#C08428}
 .ol2 .nav{display:flex;flex-direction:column;gap:2px}
@@ -1496,7 +1496,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .newt:hover{background:#23262d}
 .ol2 .spk{margin-top:10px;background:#C08428;color:#1c1304;border:none;border-radius:11px;padding:13px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;font-family:'Inter'}
 .ol2 .spk:hover{filter:brightness(1.06)}
-.ol2 .main{overflow-y:auto;padding:24px 28px 60px}
+.ol2 .main{overflow-y:auto;min-width:0;padding:24px 28px 60px}
 .ol2 .main::-webkit-scrollbar{width:9px}.ol2 .main::-webkit-scrollbar-thumb{background:#23262d;border-radius:6px}
 .ol2 .hrow{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;gap:14px}
 .ol2 .hrow h1{font-family:'Space Grotesk';font-weight:700;font-size:23px;letter-spacing:-.02em}
@@ -2002,29 +2002,47 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 /* responsive / mobile */
 @media (max-width:720px){
   /* Phone-first: sidebar becomes a fixed bottom tab bar (Command spec) */
-  .ol2.on{grid-template-columns:1fr;grid-template-rows:1fr auto;grid-template-areas:"main" "side"}
+  .ol2.on{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"main" "side"}
   .ol2 .main{grid-area:main}
   .ol2 .side{grid-area:side;flex-direction:row;align-items:center;gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid #26272D;background:#121317}
   .ol2 .side::-webkit-scrollbar{display:none}
   .ol2 .brand{display:none}
-  .ol2 .nav{flex-direction:row;gap:2px;overflow-x:visible}
+  .ol2 .nav{flex-direction:row;gap:2px;overflow-x:visible;flex:1 1 0;min-width:0}
       /* Five slots, and the bar must never scroll sideways — a destination you
          have to swipe to find is a destination you do not use. Bar slots go by
          DAILY frequency, not importance: Goals is a monthly surface in the
          cadence and Crew is weekly, so both sit behind More. Needs review takes
          a slot only when it has something in it, which is also the surface that
          failed on the lightbulb task. */
-      .nav a{flex:1 1 0;min-width:0;justify-content:center;text-align:center;font-size:11px;padding:7px 2px}
-      .nav a[data-v="home"]{order:1} .nav a[data-v="lane"]{order:2}
-      .nav a[data-v="board"]{order:3} .nav a[data-v="triage"]{order:4}
-      .nav a.navmore{order:5;display:flex}
-      .nav a[data-v="goals"], .nav a[data-v="people"],
-      .nav a[data-v="settings"], .nav a[data-v="docs"]{display:none}
+      /* These MUST carry the .ol2 prefix. The base rule is `.ol2 .nav a`
+         (specificity 0,2,1); a bare `.nav a` here is 0,1,1 and LOSES on
+         specificity no matter that it comes later or sits in a media query.
+         That is exactly how the five slots silently never applied and the bar
+         stayed 422px wide inside a 390px phone. */
+      .ol2 .nav a{flex:1 1 0;min-width:0;gap:4px;justify-content:center;text-align:center;font-size:11px;padding:7px 2px}
+      .ol2 .nav a[data-v="home"]{order:1} .ol2 .nav a[data-v="lane"]{order:2}
+      .ol2 .nav a[data-v="board"]{order:3} .ol2 .nav a[data-v="triage"]{order:4}
+      .ol2 .nav a.navmore{order:5;display:flex}
+      .ol2 .nav a[data-v="goals"], .ol2 .nav a[data-v="people"],
+      .ol2 .nav a[data-v="settings"], .ol2 .nav a[data-v="docs"]{display:none}
       .ol2 .nav::-webkit-scrollbar{display:none}
-      .ol2 .nav a{flex:0 0 auto}
-  .ol2 .nav a{padding:0 12px;min-height:44px;align-items:center;white-space:nowrap;font-size:12.5px;border:1px solid #26272D;border-radius:11px}
-  .ol2 .nav a .tag{margin-left:6px}
-  .ol2 .newt{margin:0 0 0 auto;min-height:44px;padding:0 13px;white-space:nowrap;font-size:12.5px;flex-shrink:0}
+  /* PR #32's stopgap lived HERE, after the five-slot rules above and at equal
+     specificity, so it won on source order and quietly undid them:
+       flex:0 0 auto   -> slots refuse to shrink to fit the phone
+       white-space:nowrap -> and refuse to wrap either
+     Together with overflow-x:auto on .side that produced a swipeable bar wider
+     than any phone. Removing only the scroll made it UNREACHABLE instead of
+     merely awkward. The slots must be allowed to shrink and wrap. */
+  .ol2 .nav a{flex-direction:column;justify-content:center;align-items:center;gap:2px;
+    padding:5px 2px;min-height:46px;font-size:10px;line-height:1.15;
+    border:1px solid #26272D;border-radius:11px;overflow:hidden}
+  .ol2 .nav a svg{width:15px;height:15px}
+  .ol2 .nav a .tag{margin-left:3px;font-size:9px;padding:0 4px}
+  /* #ol2HomeNew already gives Today a full-width primary New task button, so the
+     sidebar copy is a duplicate on a phone AND it was stealing width the five
+     slots needed. The mic stays: .side is the ONLY place voice capture lives,
+     and hiding it would remove voice capture from phones entirely (X17). */
+  .ol2 .newt{display:none}
   .ol2 .spk{margin:0;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;padding:0;flex-shrink:0}
   .ol2 .spk svg{width:18px;height:18px}
   .ol2 .spk .spk-label{display:none}
