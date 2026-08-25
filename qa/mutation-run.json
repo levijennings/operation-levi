@@ -38,5 +38,50 @@
     "id": "X34A",
     "verdict": "KILLED",
     "note": "guard catches it: the docs stop naming a destination the nav has"
+  },
+  {
+    "id": "EV1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the event emitter stops being reachable at all"
+  },
+  {
+    "id": "EV2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the render-loop suppression is removed and every count inflates"
+  },
+  {
+    "id": "EV3",
+    "verdict": "KILLED",
+    "note": "guard catches it: capturing a task stops being logged"
+  },
+  {
+    "id": "NG1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the notes box goes back to clipping long notes"
+  },
+  {
+    "id": "NG2",
+    "verdict": "KILLED",
+    "note": "guard catches it: text areas stop growing as you type"
+  },
+  {
+    "id": "AK2",
+    "verdict": "KILLED",
+    "note": "guard catches it: Ask Wingman goes back to sending no context"
+  },
+  {
+    "id": "AK3",
+    "verdict": "KILLED",
+    "note": "guard catches it: the server stops collapsing consecutive same-role turns"
+  },
+  {
+    "id": "AK4",
+    "verdict": "KILLED",
+    "note": "guard catches it: turns stop being written to the server and the thread is device-local again"
+  },
+  {
+    "id": "AK5",
+    "verdict": "KILLED",
+    "note": "guard catches it: the UI claims a sync it is not doing when signed out"
   }
 ]

@@ -399,6 +399,10 @@ html,body{margin:0;padding:0;background:#0E0F12;color:#E9EAEE;font-family:'Inter
             _workspaceId    = member.workspace_id;
             _userRole       = member.role;
             _userName       = member.name;
+            // The ol2 shell is a separate script block and cannot see these.
+            // The event layer (F6) needs the workspace id on every row.
+            window._lpWs   = _workspaceId;
+            window._lpUser = { id: (_currentUser && _currentUser.id) || null, name: _userName || '' };
             _userCategory   = member.category || null;
             _userVisibility = member.visibility || 'all';
 
@@ -2638,7 +2642,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             +'<div style="display:flex;align-items:flex-start;gap:7px"><button class="lp-t3" title="'+(t3on?'In Top 3 — click to remove':'Set as a Top 3 for today')+'" style="background:none;border:none;cursor:pointer;font-size:14px;line-height:1.3;padding:0;flex-shrink:0;color:'+(t3on?'#C08428':'#5a6270')+'">'+(t3on?'★':'☆')+'</button><div class="t" style="flex:1;min-width:0">'+esc(it.title||'Untitled')+'</div></div><div class="meta">'+avatar(it)+'<span class="lp-cat" style="color:'+lpCatColor(it.category)+';border-color:'+lpCatColor(it.category)+'">'+esc(it.category||'—')+'</span><span class="due lp-due" title="Click to change due date" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px">'+(it.dueDate?esc(lpDueFull(it.dueDate)):'＋ date')+'</span>'+(it.requireProof?'<span class="due" title="'+((it.proof&&it.proof.url)?'Proof attached':'Proof required to complete')+'">'+((it.proof&&it.proof.url)?'✔ proof':'⚑ proof')+'</span>':'')+(it._timerStart?'<span class="due" style="color:#C08428">⏱ running</span>':'')+(it.availableForEA?'<span class="due" style="color:#9573C9" title="Open for EA pickup">EA</span>':'')+(it.submittedBy?'<span class="due" style="color:#C08428" title="Submitted for review">submitted</span>':'')+(it.aiConfidence!=null?'<span class="due" style="color:'+(it.aiConfidence>=75?'#3FA276':(it.aiConfidence>=40?'#C08428':'#E08A8A'))+'" title="Wingman readiness">'+it.aiConfidence+'%</span>':'')+badges(it)+'</div>';
           var t3btn=el.querySelector('.lp-t3'); if(t3btn){ t3btn.onclick=function(ev){ ev.stopPropagation(); lpToggleTop3(it.id); renderColumns(); }; }
           (function(){ var dts=document.createElement('div'); dts.className='tdates'; dts.textContent=(cts?('added '+cts):'')+(cts&&uts?' · ':'')+(uts?('upd '+uts):''); el.appendChild(dts); })();
-          var taD=el.querySelector('.tadone'); if(taD) taD.onclick=function(ev){ ev.stopPropagation(); if(it.requireProof && !(it.proof&&it.proof.url) && !lpProof(it)) return; it.status='done'; it.columnEnteredAt=Date.now(); it.updatedAt=Date.now(); lpAudit(it,'Marked done from the board'); try{ persist(); }catch(e3){} updateCounts(); toast('Done'); renderColumns(); };
+          var taD=el.querySelector('.tadone'); if(taD) taD.onclick=function(ev){ ev.stopPropagation(); if(it.requireProof && !(it.proof&&it.proof.url) && !lpProof(it)) return; it.status='done'; it.columnEnteredAt=Date.now(); it.updatedAt=Date.now(); lpAudit(it,'Marked done from the board'); try{ persist(); }catch(e3){} updateCounts(); lpEvent('task.completed', { via:'board', ai_touched:!!it.aiArtifact, has_goal:!!((it.goalIds||[]).length) }, it.id); toast('Done'); renderColumns(); };
           var taX=el.querySelector('.tadel'); if(taX) taX.onclick=function(ev){ ev.stopPropagation(); if(taX.getAttribute('data-armed')){ deleteCard(it); return; } taX.setAttribute('data-armed','1'); taX.classList.add('armed'); taX.textContent='✕?'; setTimeout(function(){ try{ taX.removeAttribute('data-armed'); taX.classList.remove('armed'); taX.textContent='✕'; }catch(e4){} },2600); };
           var dueEl=el.querySelector('.lp-due'); if(dueEl){ dueEl.onclick=function(ev){ ev.stopPropagation(); lpEditDue(it.id, dueEl); }; }
           el.ondragstart=function(e){ e.dataTransfer.setData('text/plain', String(it.id)); e.dataTransfer.effectAllowed='move'; el.style.opacity='.45'; };
@@ -2811,7 +2815,33 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       ov.body=ov.querySelector('.lpmb');
       return ov;
     }
-    function lpOpen(ov){ document.body.appendChild(ov); setTimeout(function(){ var f=ov.querySelector('.lpmb .ein,.lpmb .etxt'); if(f&&!f.disabled&&!f.value){ try{ f.focus(); }catch(e){} } },60); return ov; }
+    // ── Text areas grow to fit their contents ────────────────────────────────
+    // Levi: "the note section is so small that you can't read all of the notes."
+    // It was min-height:88px with no growth, so a long note was clipped to about
+    // three lines and reopened clipped every time. Rule now: nothing scrolls
+    // inside a box — the box grows and the page scrolls.
+    function lpGrow(el){
+      if(!el || el.tagName !== 'TEXTAREA') return;
+      el.style.height = 'auto';
+      // +2 covers the border so the last line never sits under it.
+      el.style.height = Math.max(el.scrollHeight + 2, 44) + 'px';
+    }
+    function lpGrowAll(root){
+      try{
+        (root || document).querySelectorAll('textarea.ein, textarea.etxt').forEach(lpGrow);
+      }catch(e){}
+    }
+    // One delegated listener for the whole app. Every textarea, present or
+    // rendered later, grows as you type without needing to be wired up.
+    if(!window._lpGrowBound){
+      window._lpGrowBound = true;
+      document.addEventListener('input', function(e){
+        var t = e.target;
+        if(t && t.tagName === 'TEXTAREA' && (t.classList.contains('ein') || t.classList.contains('etxt'))) lpGrow(t);
+      }, true);
+    }
+
+    function lpOpen(ov){ document.body.appendChild(ov); lpGrowAll(ov); setTimeout(function(){ var f=ov.querySelector('.lpmb .ein,.lpmb .etxt'); if(f&&!f.disabled&&!f.value){ try{ f.focus(); }catch(e){} } },60); return ov; }
     function lpLibEdit(type, item){
       var libo=L(); if(!libo[type]) libo[type]=[];
       var isNew=!item; item=item||{}; var cats=lpLibCats();
@@ -3390,8 +3420,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       [].forEach.call(tr.querySelectorAll('[data-scopen]'),function(b){ b.onclick=function(){ var it=ITEMS().filter(function(x){ return String(x.id)===String(b.getAttribute('data-scopen')); })[0]; if(it) openReview(it); }; });
       lpWireWingTabs(tr);
     }
-    function draftFor(it){ var parts=assemble(it); callRun(it, parts, '', '', function(res){
+    function draftFor(it){ var parts=assemble(it); var _evT0=Date.now(); callRun(it, parts, '', '', function(res){
       if(res.ok&&res.j&&res.j.draft){
+        lpEvent('draft.completed', { ok:true, ms:Date.now()-_evT0, model:(res.j.model||''), chars:String(res.j.draft).length }, it.id);
         it.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()};
         it.aiStatus='ready'; it.aiError=''; it.status='review'; it.columnEnteredAt=Date.now();
         persist(); updateCounts();
@@ -3401,6 +3432,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         // draft, no error and no way to know. Say so, and leave a way to retry.
         it.aiStatus='failed';
         it.aiError=String((res&&res.j&&(res.j.detail||res.j.error))||('HTTP '+((res&&res.status)||0))).slice(0,240);
+        lpEvent('draft.completed', { ok:false, ms:Date.now()-_evT0, error:it.aiError.slice(0,120) }, it.id);
         it.aiFailedAt=Date.now();
         persist(); updateCounts();
         toast('▸ Wingman could not draft "'+(it.title||'Untitled')+'" — open it to try again');
@@ -3408,8 +3440,13 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     }); }
     function assignTri(it, who, row){
       if(row) row.classList.add('gone');
-      if(who==='Wingman'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('▸ Assigned to Wingman — drafting, lands in Needs review'); draftFor(it); }
-      else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist(); toast('Assigned to '+(who===meName()?'you':who)); if(who) lpNotifyAssign(who, it); }
+      var _evD = it.deliverable ? String(it.deliverable).trim() : '';
+      if(who==='Wingman'){ it.execMode='do-it'; it.status='thisweek'; it.columnEnteredAt=Date.now(); persist();
+        lpEvent('task.routed', { to:'wingman', has_deliverable:!!_evD, deliverable_len:_evD.length }, it.id);
+        toast('▸ Assigned to Wingman — drafting, lands in Needs review'); draftFor(it); }
+      else { it.execMode='track-it'; if(who){ it.assignees=[who]; it.responsible=who; } it.status='thisweek'; it.columnEnteredAt=Date.now(); persist();
+        lpEvent('task.routed', { to:(who===meName()?'me':'person'), has_deliverable:!!_evD, deliverable_len:_evD.length }, it.id);
+        toast('Assigned to '+(who===meName()?'you':who)); if(who) lpNotifyAssign(who, it); }
       setTimeout(showTriage, 280);
     }
     function runAllTri(){
@@ -4057,8 +4094,121 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         dp.innerHTML=h;
         [].forEach.call(dp.querySelectorAll('[data-doc]'),function(el){ el.onclick=function(){ _docsActive=el.getAttribute('data-doc'); render(); }; });
         var ab=document.getElementById('ol2AskBtn'), ai=document.getElementById('ol2AskIn'), ao=document.getElementById('ol2AskOut');
-        function ask(){ var q=(ai.value||'').trim(); if(!q) return; ab.disabled=true; ab.textContent='▸ Thinking…'; ao.style.display='block'; ao.textContent='';
-          fetch('/api/ask',{method:'POST',headers:apiHeaders(),body:JSON.stringify({question:q})}).then(function(r){ return r.json(); }).then(function(j){ ab.disabled=false; ab.textContent='▸ Ask'; ao.innerHTML='<b style="color:#C08428">▸ Wingman:</b> '+esc(j.answer||j.detail||j.error||'No answer.'); }).catch(function(e){ ab.disabled=false; ab.textContent='▸ Ask'; ao.textContent='Failed: '+e.message; }); }
+
+        // ── Ask Wingman keeps the conversation ──────────────────────────────
+        // Levi: "when I chat with wingman I would like to keep context of the
+        // previous conversations." It used to send {question} alone and overwrite
+        // the answer box on every ask, so each question started from nothing and
+        // the previous exchange wasn't even on screen. Now the thread is visible,
+        // survives a reload, and the recent turns are sent as context.
+        //
+        // Stored per browser. A thread that follows him between devices needs the
+        // database — deliberately not built yet.
+        var ASK_KEY='lpAskThread', ASK_MAX=40, ASK_SEND=12;
+
+        // Where the thread lives. Signed in -> public.ask_turns, so the
+        // conversation follows Levi between his laptop and his phone. Signed out
+        // or offline -> localStorage only, and the UI says so rather than
+        // pretending. It reconciles on load, not in realtime: a second device
+        // picks up the thread when you open Docs there, not mid-sentence.
+        function askSynced(){
+          return !!(window._lpSb && window._lpWs && window._lpUser && window._lpUser.id);
+        }
+        function askLocalRead(){
+          try{ var a=JSON.parse(localStorage.getItem(ASK_KEY)||'[]'); return Array.isArray(a)?a:[]; }
+          catch(e){ return []; }
+        }
+        function askLocalWrite(){
+          try{ localStorage.setItem(ASK_KEY, JSON.stringify((window._lpAsk||[]).slice(-ASK_MAX))); }catch(e){}
+        }
+        function askPull(){
+          if(!askSynced()){ window._lpAsk = askLocalRead(); askRender(false); return; }
+          // Newest first + limit, then reversed — ascending+limit would return the
+          // OLDEST forty, which is the opposite of what a conversation needs.
+          var q = window._lpSb.from('ask_turns')
+            .select('role,content,created_at')
+            .eq('workspace_id', window._lpWs)
+            .eq('user_id', window._lpUser.id)
+            .order('created_at',{ascending:false}).order('id',{ascending:false})
+            .limit(ASK_MAX);
+          q.then(function(r){
+            if(r && !r.error && r.data){
+              window._lpAsk = r.data.slice().reverse().map(function(t){
+                return { role: t.role, content: t.content };
+              });
+              askLocalWrite();
+            } else if(!window._lpAsk){
+              window._lpAsk = askLocalRead();   // server unreachable: show what we have
+            }
+            askRender(false);
+          }, function(){ if(!window._lpAsk) window._lpAsk = askLocalRead(); askRender(false); });
+        }
+        function askPush(role, content){
+          var text = String(content || '').slice(0, 8000);
+          if(!text.trim()) return;                       // the table rejects empties
+          if(!window._lpAsk) window._lpAsk = [];
+          window._lpAsk.push({ role: role, content: text });
+          askLocalWrite();
+          if(!askSynced()) return;
+          var q = window._lpSb.from('ask_turns').insert({
+            workspace_id: window._lpWs, user_id: window._lpUser.id,
+            role: role, content: text
+          });
+          if(q && q.then) q.then(function(){}, function(){});   // best effort; local copy already holds it
+        }
+        function askClear(){
+          window._lpAsk = []; askLocalWrite(); askRender(false);
+          if(!askSynced()) return;
+          // A real delete, because that is what "clear" means to the person
+          // pressing it. RLS scopes it to their own rows.
+          var q = window._lpSb.from('ask_turns').delete()
+            .eq('workspace_id', window._lpWs).eq('user_id', window._lpUser.id);
+          if(q && q.then) q.then(function(){}, function(){});
+        }
+        function askRender(pending){
+          var t = window._lpAsk || [];
+          if(!t.length && !pending){ ao.style.display='none'; ao.innerHTML=''; return; }
+          ao.style.display='block';
+          var html = t.map(function(m){
+            return m.role==='user'
+              ? '<div style="margin:0 0 10px"><b style="color:#9EA1AB">You:</b> '+esc(m.content)+'</div>'
+              : '<div style="margin:0 0 14px"><b style="color:#C08428">▸ Wingman:</b> '+esc(m.content)+'</div>';
+          }).join('');
+          if(pending) html += '<div style="margin:0 0 10px;color:#7E8796">▸ Wingman is thinking…</div>';
+          if(t.length){
+            html += '<div style="margin-top:6px;border-top:1px solid #23252B;padding-top:8px;display:flex;align-items:center;gap:10px">'
+              + '<button id="ol2AskClear" class="gbtn" style="font-size:11px;padding:4px 9px">Clear conversation</button>'
+              + '<span style="font-size:11px;color:#7E8796">'
+              + (askSynced() ? 'Synced — this conversation follows you to your phone'
+                             : 'This device only — sign in to sync')
+              + '</span></div>';
+          }
+          ao.innerHTML = html;
+          ao.scrollTop = ao.scrollHeight;
+          var cb=document.getElementById('ol2AskClear'); if(cb) cb.onclick=askClear;
+        }
+        function ask(){
+          var q=(ai.value||'').trim(); if(!q) return;
+          if(!window._lpAsk) window._lpAsk = askLocalRead();
+          var history = window._lpAsk.slice(-ASK_SEND).map(function(m){
+            return { role:m.role, content:m.content };
+          });
+          askPush('user', q);
+          ai.value=''; ab.disabled=true; ab.textContent='▸ Thinking…';
+          askRender(true);
+          fetch('/api/ask',{method:'POST',headers:apiHeaders(),body:JSON.stringify({
+            question:q, history:history
+          })}).then(function(r){ return r.json(); }).then(function(j){
+            ab.disabled=false; ab.textContent='▸ Ask';
+            askPush('assistant', String(j.answer||j.detail||j.error||'No answer.'));
+            askRender(false);
+            try{ if(window.lpEvent) window.lpEvent('wingman.asked',{turns:(window._lpAsk||[]).length,ok:!!j.answer,synced:askSynced()}); }catch(e){}
+          }).catch(function(e){
+            ab.disabled=false; ab.textContent='▸ Ask';
+            askPush('assistant','Failed: '+e.message); askRender(false);
+          });
+        }
+        askPull();
         if(ab) ab.onclick=ask; if(ai) ai.onkeydown=function(e){ if(e.key==='Enter') ask(); };
       }
       if(_docsData){ render(); return; }
@@ -4300,10 +4450,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       if(card.requireProof && !(card.proof&&card.proof.url)){ if(!lpProof(card)) return; }
       card.status='done'; card.columnEnteredAt=Date.now(); card.updatedAt=Date.now(); if(card.aiArtifact&&!card.aiArtifact.approvedAt) card.aiArtifact.approvedAt=Date.now();
       lpAudit(card,'Approved in the review lane'); try{ persist(); }catch(e){} updateCounts(); toast('Approved');
+      (function(){
+        var made = (card.aiArtifact && card.aiArtifact.createdAt) || 0;
+        lpEvent('draft.reviewed', { outcome:'approved', waited_ms: made ? (Date.now()-made) : null }, card.id);
+        lpEvent('task.completed', { via:'review_lane', ai_touched:!!card.aiArtifact, has_goal:!!((card.goalIds||[]).length) }, card.id);
+      })();
       lpReviewLane();
     }
     function lpLaneRedo(card){
       var note=window.prompt('What should Wingman change?'); if(note===null||!note.trim()) return;
+      (function(){
+        var made = (card.aiArtifact && card.aiArtifact.createdAt) || 0;
+        lpEvent('draft.reviewed', { outcome:'redone', waited_ms: made ? (Date.now()-made) : null, note_len: note.trim().length }, card.id);
+      })();
       var d=document.getElementById('ol2LaneDraft'); if(d){ d.classList.add('run'); d.textContent='Wingman is revising…'; }
       callRun(card, assemble(card), note.trim(), (card.aiArtifact&&card.aiArtifact.content)||'', function(res){
         if(res.ok&&res.j&&res.j.draft){ card.aiArtifact={kind:'draft',content:res.j.draft,model:res.j.model||'',createdAt:Date.now()}; card.aiStatus='ready'; card.updatedAt=Date.now(); try{ persist(); }catch(e){} }
@@ -4419,7 +4578,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         '<div class="rev rvbody">'+
           '<div class="rvpane"><div class="panelc">'+
             '<div class="rvtabs" id="edTabs"></div><div class="rvtab on" data-tab="detail">'+
-            '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical">'+esc(card.notes||'')+'</textarea>'+
+            '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical;overflow-y:hidden">'+esc(card.notes||'')+'</textarea>'+
             (lpIsTravel(card)?'<div class="travhint"><b>This looks like a trip.</b> Wingman can research flights, hotels and ground transport against your travel profile, then hand you a booking list.<button type="button" class="gbtn amber" id="edTripGo">▸ Plan this trip</button></div>':'')+
             '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
             lpExtrasHtml(card)+
@@ -4528,7 +4687,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         document.getElementById('edDue').onchange=function(){ card.dueDate=this.value; lpAudit(card,'Due → '+(this.value||'cleared')); persist(); };
         document.getElementById('edCat').onchange=function(){ card.category=this.value; lpAudit(card,'Category → '+this.value); persist(); };
         document.getElementById('edDeliv').onchange=function(){ card.deliverable=this.value; lpAudit(card,'Deliverable → '+(this.value||'cleared')); persist(); };
-        document.getElementById('edNotes').onchange=function(){ card.notes=this.value; persist(); };
+        (function(){ var en=document.getElementById('edNotes');
+          if(en){ en.onchange=function(){ card.notes=this.value; persist(); }; lpGrow(en); } })();
+        lpGrowAll(document);
         document.getElementById('edDo').onclick=function(){ card.execMode='do-it'; setModeBtns(); persist(); };
         document.getElementById('edTrack').onclick=function(){ card.execMode='track-it'; setModeBtns(); persist(); };
         (function(){ var t3=document.getElementById('edTop3'); if(!t3) return; function setT3(){ var on=top3Ids().indexOf(String(card.id))>=0; t3.textContent=on?'★ Top 3':'☆ Top 3'; t3.title=on?'In this week&#39;s Top 3 — click to remove':'Pin to this week&#39;s Top 3'; t3.classList.toggle('sel',on); } setT3(); t3.onclick=function(){ lpToggleTop3(card.id); setT3(); }; })();
@@ -4595,7 +4756,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           var sv=document.getElementById('ol2WingQSave'); if(sv) sv.onclick=function(){
             var add=[]; [].forEach.call(wb.querySelectorAll('.wqa'),function(inp){ var i=+inp.getAttribute('data-i'); if((inp.value||'').trim()) add.push('Q: '+qs[i]+'\nA: '+inp.value.trim()); });
             if(!add.length){ toast('Type at least one answer'); return; }
-            card.notes=((card.notes||'')+'\n\n'+add.join('\n')).trim(); var en=document.getElementById('edNotes'); if(en) en.value=card.notes; try{ persist(); }catch(e){}
+            card.notes=((card.notes||'')+'\n\n'+add.join('\n')).trim(); var en=document.getElementById('edNotes'); if(en){ en.value=card.notes; lpGrow(en); } try{ persist(); }catch(e){}
             toast('Saved — run Wingman again for a sharper draft'); wb.innerHTML='<div style="font-size:12px;color:#3FA276;margin-top:8px">Answers saved to the notes.</div>';
           };
         }
@@ -4763,6 +4924,45 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         })
         .catch(function(){ cont.disabled=false; capParseLocal(text); });
     }
+    // ── The event layer (Preflight F6) ──────────────────────────────────────
+    // Append-only product telemetry, written to public.app_events. Best effort by
+    // design: it must never block the UI, never throw, and never change what the
+    // user sees. If it fails, the app carries on and the grade loses one row.
+    //
+    // The 2-second suppression is here because this app re-renders constantly: an
+    // emit reached from a render path would otherwise inflate every count. Genuine
+    // repeats more than 2s apart still land, and the server holds a unique index
+    // on (workspace_id, client_event_id) so a network retry cannot double-count.
+    var _lpEvSeen = {};
+    function lpEvent(name, props, cardId){
+      try{
+        var sb = window._lpSb, ws = window._lpWs;
+        if(!sb || !ws) return;                      // local-only mode, or signed out
+        var key = name + '|' + (cardId || ''), now = Date.now();
+        if(_lpEvSeen[key] && (now - _lpEvSeen[key]) < 2000) return;
+        _lpEvSeen[key] = now;
+        var u = window._lpUser || {};
+        var q = sb.from('app_events').insert({
+          workspace_id: ws,
+          actor_id: u.id || null,
+          actor_name: u.name || (function(){ try{ return meName(); }catch(e){ return ''; } })() || null,
+          name: name,
+          card_id: cardId ? String(cardId) : null,
+          props: props || {},
+          source: 'client',
+          client_event_id: (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID()
+            : (name + '-' + now + '-' + Math.random().toString(36).slice(2,10))
+        });
+        if(q && q.then) q.then(function(){}, function(){});
+      }catch(e){ /* telemetry never breaks the app */ }
+    }
+    // Deliberately exposed. The services block is a separate <script> and will
+    // want to emit too, and a module-scoped emitter cannot be tested from
+    // page.evaluate() — which is exactly how this codebase has produced vacuous
+    // guards before. See qa/README.md, "the trap that keeps recurring".
+    window.lpEvent = lpEvent;
+
     function newItemBase(title, cat, due, deliverable, ownerName, src){
       return { source:(src&&src.source)||'unknown', sourceId:(src&&src.sourceId)||'', sourceInferred:false, createdBy:meName(),
         id:'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), type:'task', title:title||'Untitled', category:cat||'Personal', status:'thisweek',
@@ -4772,6 +4972,20 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         columnEnteredAt:Date.now(), createdAt:Date.now(), order:999, notionUrl:'', figmaUrl:'', googleDocsUrl:'', msDocsUrl:'', msExcelUrl:'',
         execMode:'track-it', aiStatus:'idle', aiArtifact:null, aiUsed:null, linkedContext:[], parentItemId:'' };
     }
+    // Every card in the app is built by newItemBase, so wrapping it is the only
+    // way to guarantee no creation path can slip past the log. Kept as a wrapper
+    // rather than an edit inside the constructor so the constructor stays pure.
+    var _lpNewItemBase = newItemBase;
+    newItemBase = function(title, cat, due, deliverable, ownerName, src){
+      var it = _lpNewItemBase(title, cat, due, deliverable, ownerName, src);
+      lpEvent('task.created', {
+        via: it.source || 'unknown',
+        category: it.category || '',
+        has_deliverable: !!(it.deliverable && String(it.deliverable).trim()),
+        owner: it.responsible || ''
+      }, it.id);
+      return it;
+    };
     function capConfirmParts(){
       var me=meName(); var d=capDraft;
       var parent=newItemBase(d.title, d.cat, d.due, d.deliverable, me, {source:capVia, sourceId:''});
@@ -4813,6 +5027,19 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       if(capDraft.notes) it.notes=capDraft.notes;
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
+      // NOTE: capConfirm builds its card inline instead of calling newItemBase,
+      // so the wrapper on newItemBase does NOT cover this path — and this is the
+      // most-used creation path in the app. Two divergent card constructors is a
+      // real hazard (a field added to one is silently missing from the other);
+      // logged as debt, emitted explicitly here so the event log is not wrong.
+      lpEvent('task.created', {
+        via: it.source || 'unknown',
+        category: it.category || '',
+        has_deliverable: !!(it.deliverable && String(it.deliverable).trim()),
+        owner: it.responsible || '',
+        mode: capMode || ''
+      }, it.id);
+      if(capMode==='do-it') lpEvent('task.routed', { to:'wingman', has_deliverable:!!(it.deliverable&&String(it.deliverable).trim()), from:'capture' }, it.id);
       persist(); closeCapture(); showBoard();
       if(own && own!==meName()) lpNotifyAssign(own, it);
       if(capMode==='do-it'){
