@@ -198,5 +198,20 @@
     "id": "CL2",
     "verdict": "KILLED",
     "note": "guard catches it: the one-tap confirm disappears and every type stays an unconfirmed guess forever"
+  },
+  {
+    "id": "MB1",
+    "verdict": "KILLED",
+    "note": "guard catches it: an unloaded roster reports every teammate as having no account"
+  },
+  {
+    "id": "MB1",
+    "verdict": "KILLED",
+    "note": "guard catches it: people with no account are handed invented ids, papering over the gap this was built to surface"
+  },
+  {
+    "id": "MB2",
+    "verdict": "KILLED",
+    "note": "guard catches it: Chad and Jason render as teammates again despite having no account and no way to be notified"
   }
 ]

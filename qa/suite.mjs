@@ -525,6 +525,68 @@ check('F2C', 'board',
     assert(r.hasSize, 'the attachment has no size');
   });
 
+check('MB1', 'members',
+  'A name on a card is resolved against the real roster — and someone with no account is NOT silently treated as a member',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      // The real production shape: two members, but work assigned to four people.
+      window._lpMembers = [
+        { name: 'Levi', role: 'admin', user_id: 'u-levi' },
+        { name: 'Zoe',  role: 'admin', user_id: 'u-zoe'  }
+      ];
+      return {
+        levi: window.lpMemberId('Levi'),
+        zoeCase: window.lpMemberId('  zoe '),      // trimmed + case-insensitive
+        chad: window.lpMemberId('Chad'),
+        statusZoe: window.lpMemberStatus('Zoe'),
+        statusChad: window.lpMemberStatus('Chad'),
+        statusEmpty: (() => { const keep = window._lpMembers; window._lpMembers = [];
+          const v = window.lpMemberStatus('Zoe'); window._lpMembers = keep; return v; })()
+      };
+    });
+    assertEq(r.levi, 'u-levi', 'a real member did not resolve to an id');
+    assertEq(r.zoeCase, 'u-zoe', 'name matching is not trim/case tolerant — "  zoe " is Zoe');
+    assertEq(r.chad, '', 'a non-member was given an id — that invents an account that does not exist');
+    assertEq(r.statusZoe, 'member', 'a real member was not reported as one');
+    assertEq(r.statusChad, 'unlinked', 'someone with no account was not flagged');
+    // Before the roster loads, everyone would look unlinked. Painting "no account"
+    // across the whole crew because a fetch has not returned is worse than silence.
+    assertEq(r.statusEmpty, 'unknown', 'an unloaded roster reports everyone as unlinked');
+  });
+
+check('MB2', 'members',
+  'The workload names who has no account instead of rendering them as teammates',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/NO ACCOUNT/.test(src), 'nothing marks a person with no account in the workload');
+    assert(/cannot sign in/.test(src), 'the consequence of having no account is not stated');
+    assert(/lpUnlinkedPeople/.test(src), 'the workload does not compute who is unlinked');
+    // And it must not fire when there is nothing to report.
+    const quiet = await page.evaluate(() => {
+      window._lpMembers = [{ name: 'Levi', user_id: 'u1' }, { name: 'Zoe', user_id: 'u2' }];
+      return window.lpUnlinkedPeople();
+    });
+    assert(Array.isArray(quiet), 'lpUnlinkedPeople did not return a list');
+  });
+
+check('MB3', 'members',
+  'Ids ride alongside names — the 85 existing cards keep working',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    // The whole safety argument for F15: names are NOT removed.
+    assert(/assignees/.test(src), 'the name field was removed — 85 cards depend on it');
+    assert(/it\.assigneeIds\s*=/.test(src), 'new cards do not record member ids');
+    assert(/lpBackfillMemberIds/.test(src), 'existing cards are never backfilled with ids');
+    const r = await page.evaluate(() => {
+      window._lpMembers = [{ name: 'Levi', user_id: 'u-levi' }];
+      // A card naming a non-member must keep the name and gain no fake id.
+      const ids = ['Levi', 'Chad'].map(n => window.lpMemberId(n)).filter(Boolean);
+      return ids;
+    });
+    assertEq(r.length, 1, 'the id list should contain only people who actually have accounts');
+    assertEq(r[0], 'u-levi', 'the resolvable member was not kept');
+  });
+
 check('CL1', 'classifier',
   'The classifier places the work Levi actually has, and abstains where abstaining is right',
   async ({ page }) => {

@@ -158,6 +158,18 @@
       "mutations": "40/40 killed",
       "suite": "restored (this file)",
       "note": "EMAIL (F2b): the largest typed bucket, 12 cards. api/send.js already existed and was never reachable from a card. lpEmailParse pulls To/Subject/Body out of the draft; a bare name like 'To: Chad' is REFUSED as an address rather than guessed at, send is two-step and the confirm names the recipient, and an unverified sending domain is reported as a setup problem instead of a generic failure. EM1/EM2/EM3. PURCHASE (F2c): 8 cards, the garage-lightbulbs case. No payment path — the standing rule is intact and PU2 asserts it. The load-bearing constraint is prices: this project has a fabrication precedent, so a price is only presented as real when its row carries a source URL; everything else is struck through and marked UNSOURCED with a warning. The PARSER enforces it — Wingman is not trusted to be honest about its own sourcing. PU1/PU2. CLASSIFIER: the problem was the TYPE LIST, not the regexes. Of 48 unplaceable cards, 14 were configuring another system, 8 access/account admin, 7 reviews, 4 training. `setup` is now the LARGEST bucket in the whole portfolio — bigger than email — and had no name at all. Added setup, review, admin, learning; habits and chores now abstain by design. Measured against the REAL 48: 0/48 → 37/48, and 6 of the 11 remaining are habits/chores that should abstain, so 37 of 42 real asset cards (88%). CL1's fixtures are production titles, not invented ones. One judgement call: 'Give me a list of all trailers FOR SALE' matched purchase before research. An explicit request for a list is research even when the subject is a purchase, so list/search intent is now probed first. CONFIRM: all 37 typed cards were still marked inferred days after the backfill because confirming meant re-picking from the dropdown. The GUESS chip is now a one-tap confirm. CL2."
+    },
+    {
+      "run": "R016",
+      "ranAt": "2026-08-26T02:35:00Z",
+      "trigger": "F15 member IDs (decision #6, pulled forward into Stage 1)",
+      "build": "cf4b8da + F15",
+      "total": 65,
+      "pass": 63,
+      "fail": 2,
+      "mutations": "43/43 killed",
+      "suite": "restored (this file)",
+      "note": "Production sized the problem before anything was built: workspace_members holds exactly TWO people (Levi, Zoe) while cards assign work to FOUR — Chad (2 cards) and Jason (1) have no account at all. Team Workload was rendering seven people as though all were on the team; three of them cannot sign in, cannot see the work, and will never receive a notification. Design: ids ride ALONGSIDE names, names are NOT removed. 85 cards depend on the name strings and a big-bang migration with no rollback is how data gets lost. newItemBase stamps assigneeIds at creation, lpBackfillMemberIds fills existing cards once the roster loads, and a card naming a non-member is left exactly as it is — inventing an id for someone with no account would paper over the gap this exists to surface. The workload now marks them NO ACCOUNT and says in words what that costs. Two deliberate subtleties, both mutation-proven: name matching is trim/case-insensitive, and an unloaded roster returns 'unknown' rather than 'unlinked' — painting 'no account' across the whole crew because a fetch has not returned yet is worse than saying nothing."
     }
   ]
 }

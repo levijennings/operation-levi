@@ -103,6 +103,12 @@ const MUTATIONS = [
    'habits and chores get asset types again, putting upkeep noise into the field the grade routes on'],
   ['CL2', 'index.html', 'id="edAssetOk"', 'id="edAssetOkX"',
    'the one-tap confirm disappears and every type stays an unconfirmed guess forever'],
+  ['MB1', 'index.html', "if(!lpMembers().length) return 'unknown';", "",
+   'an unloaded roster reports every teammate as having no account'],
+  ['MB1', 'index.html', "return (m && m.user_id) || '';", "return (m && m.user_id) || 'made-up-id';",
+   'people with no account are handed invented ids, papering over the gap this was built to surface'],
+  ['MB2', 'index.html', 'NO ACCOUNT', 'ON THE TEAM',
+   'Chad and Jason render as teammates again despite having no account and no way to be notified'],
 ];
 
 const out = [];
