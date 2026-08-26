@@ -4081,6 +4081,22 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       h+='<div class="set-sec"><h3>Crew members</h3>'+people.map(function(p){ var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,26):''; return '<div class="set-row">'+av+'<span style="color:#E9EAEE">'+esc(p)+'</span></div>'; }).join('')+'<div style="margin-top:12px"><button class="gbtn amber" id="ol2SetAdd">＋ Add member</button></div><div style="font-size:11.5px;color:#6E717B;margin-top:8px">Adding a member creates their sign-in and can send a welcome email.</div></div>';
       h+='<div class="set-sec"><h3>Notifications</h3><div class="set-row" style="border-top:none">The morning brief lands by email at 6:30 and can ping this phone.<button class="gbtn" id="ol2SetPush" style="margin-left:auto;flex-shrink:0">Phone alerts</button></div></div>';
       h+='<div class="set-sec"><h3>Account</h3><div class="set-row" style="border-top:none">Signed in as&nbsp;<b style="color:#E9EAEE">'+esc(email||'—')+'</b><button class="gbtn" id="ol2SetOut" style="margin-left:auto;flex-shrink:0">Sign out</button></div></div>';
+      // Activity recording, stated plainly. This is what the grade is computed
+      // from; if it is not recording, the grade is fiction and Levi should be
+      // able to see that here rather than by querying the database.
+      var _eh = (typeof window.lpEventHealth==='function') ? window.lpEventHealth() : null;
+      if(_eh){
+        var _ok = _eh.wired && _eh.failed === 0;
+        h+='<div class="set-sec"><h3>Activity recording</h3><div class="set-row" style="border-top:none">'
+          + (!_eh.wired
+              ? '<span style="color:#E0A33E">Not recording — signed out or offline.</span>'
+              : (_eh.failed
+                  ? '<span style="color:#E06C6C">'+_eh.failed+' event'+(_eh.failed===1?'':'s')+' rejected this session.</span>'
+                  : '<span style="color:#6FBF8B">Recording.</span>'))
+          + '&nbsp;<span style="color:#8A8F99">'+_eh.sent+' sent this session.</span>'
+          + (_eh.lastError ? '<div style="width:100%;font-size:11.5px;color:#8A8F99;margin-top:6px">Last error: '+esc(_eh.lastError.slice(0,140))+'</div>' : '')
+          + '</div><div style="font-size:11.5px;color:#6E717B;margin-top:8px">Your AI usage grade is computed from these. Zero sent across a whole session means the grade has nothing to read.</div></div>';
+      }
       sp.innerHTML=h;
       var ad=document.getElementById('ol2SetAdd'); if(ad) ad.onclick=function(){ if(typeof openAddMemberModal==='function') openAddMemberModal(); };
       var pb=document.getElementById('ol2SetPush'); if(pb) lpEnablePush(pb);
@@ -5019,12 +5035,23 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     // repeats more than 2s apart still land, and the server holds a unique index
     // on (workspace_id, client_event_id) so a network retry cannot double-count.
     var _lpEvSeen = {};
+    // Aug 26: app_events sat at ZERO rows for a day and nobody could tell whether
+    // that meant "not used yet" or "silently broken", because every outcome —
+    // success, RLS rejection, network failure, signed-out skip — looked exactly
+    // the same from the outside: nothing. Diagnosis took a live database probe.
+    //
+    // Telemetry still must never break the app, so errors are still caught. But
+    // caught is not the same as invisible: every outcome now increments a counter
+    // and failures reach the console and Settings. An event layer you cannot
+    // falsify is not an event layer, it is a hope.
+    window._lpEvStats = { sent: 0, failed: 0, skipped: 0, lastError: '', lastSentAt: 0 };
     function lpEvent(name, props, cardId){
+      var st = window._lpEvStats;
       try{
         var sb = window._lpSb, ws = window._lpWs;
-        if(!sb || !ws) return;                      // local-only mode, or signed out
+        if(!sb || !ws){ st.skipped++; return; }     // local-only mode, or signed out
         var key = name + '|' + (cardId || ''), now = Date.now();
-        if(_lpEvSeen[key] && (now - _lpEvSeen[key]) < 2000) return;
+        if(_lpEvSeen[key] && (now - _lpEvSeen[key]) < 2000) return;  // render-loop dupe, not a skip
         _lpEvSeen[key] = now;
         var u = window._lpUser || {};
         var q = sb.from('app_events').insert({
@@ -5039,9 +5066,44 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             ? window.crypto.randomUUID()
             : (name + '-' + now + '-' + Math.random().toString(36).slice(2,10))
         });
-        if(q && q.then) q.then(function(){}, function(){});
-      }catch(e){ /* telemetry never breaks the app */ }
+        if(q && q.then) q.then(function(res){
+          if(res && res.error){ st.failed++; st.lastError = String(res.error.message || res.error); console.warn('[lpEvent] rejected:', name, st.lastError); }
+          else { st.sent++; st.lastSentAt = Date.now(); }
+        }, function(err){
+          st.failed++; st.lastError = String((err && err.message) || err);
+          console.warn('[lpEvent] failed:', name, st.lastError);
+        });
+      }catch(e){
+        st.failed++; st.lastError = String((e && e.message) || e);
+        try{ console.warn('[lpEvent] threw:', name, st.lastError); }catch(e2){}
+      }
     }
+    window.lpEventHealth = function(){
+      var st = window._lpEvStats || {};
+      return { sent: st.sent|0, failed: st.failed|0, skipped: st.skipped|0,
+               lastError: st.lastError || '', lastSentAt: st.lastSentAt || 0,
+               wired: !!(window._lpSb && window._lpWs) };
+    };
+
+    // A heartbeat, so "the table is empty" can never again be ambiguous. Every
+    // load of a signed-in session writes exactly one row. If the table is empty
+    // now, the layer is broken — there is no other reading. It also gives the
+    // grade a real denominator: sessions, not just actions.
+    var _lpLoadedSent = false;
+    function lpEventBoot(tries){
+      if(_lpLoadedSent) return;
+      if(window._lpSb && window._lpWs){
+        _lpLoadedSent = true;
+        lpEvent('app.loaded', {
+          w: (window.innerWidth||0), phone: (window.innerWidth||0) <= 720,
+          standalone: !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+        });
+        return;
+      }
+      if((tries||0) > 60) return;                  // ~30s, then give up quietly
+      setTimeout(function(){ lpEventBoot((tries||0)+1); }, 500);
+    }
+    setTimeout(function(){ lpEventBoot(0); }, 800);
     // ── F1: what does this task actually produce? ────────────────────────────
     // The old `deliverable` field is free text — good definitions of done, but
     // nothing can route on prose. This is the typed half. Wingman infers it, the
