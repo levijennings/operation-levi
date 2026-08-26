@@ -4668,11 +4668,38 @@ dots + 'Levi&#39;s Projects</td></tr>' +
                 '<option value="">— not set —</option>'+
                 LP_ASSET_TYPES.map(function(t){ return '<option value="'+t+'"'+(card.assetType===t?' selected':'')+'>'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>'; }).join('')+
               '</select>'+
-              (card.assetTypeInferred&&card.assetType?'<span class="tag" style="font-size:9px">GUESS</span>':'')+
+              // A guess nobody can confirm stays a guess forever — all 37 typed
+              // cards were still marked inferred days after the backfill, because
+              // confirming meant re-picking the value from the dropdown. One tap.
+              (card.assetTypeInferred&&card.assetType
+                ? '<button class="tag" id="edAssetOk" title="Confirm this is right" style="font-size:9px;cursor:pointer;border:none">GUESS · confirm</button>'
+                : (card.assetType?'<span class="tag" style="font-size:9px;background:#16301f;color:#6FBF8B">CONFIRMED</span>':''))+
               (LP_FILE_TYPES[card.assetType]&&card.aiArtifact&&card.aiArtifact.content
                 ? '<button class="gbtn amber" id="edMake">▸ Build the '+LP_FILE_TYPES[card.assetType]+'</button>'
                 : '')+
             '</div>'+
+            // Purchase comparison, rendered from the draft's table.
+            (card.assetType==='purchase' && card.aiArtifact && card.aiArtifact.content
+              ? lpPurchaseHtml(card) : '')+
+            // Email compose. Shown only for email cards that actually have a
+            // draft — an empty compose box on every card is clutter.
+            (card.assetType==='email' && card.aiArtifact && card.aiArtifact.content
+              ? (function(){ var em=lpEmailParse(card); var sent=!!(card.aiArtifact&&card.aiArtifact.sentAt);
+                  return '<div class="emailc" style="border:1px solid #26272D;border-radius:11px;padding:12px;margin-bottom:14px">'+
+                    '<div style="font-size:11px;letter-spacing:.08em;color:#8A8F99;margin-bottom:8px">EMAIL</div>'+
+                    (sent
+                      ? '<div style="color:#6FBF8B;font-size:13px">Sent to '+esc(card.aiArtifact.sentTo||'')+' on '+new Date(card.aiArtifact.sentAt).toLocaleString()+'.</div>'
+                      : '<label class="erl">To</label><input class="ein" id="edMailTo" placeholder="nobody@example.com" value="'+esc(em.to)+'">'+
+                        '<label class="erl">Subject</label><input class="ein" id="edMailSubj" value="'+esc(em.subject)+'">'+
+                        '<label class="erl">Message</label><textarea class="ein" id="edMailBody" style="min-height:150px;resize:vertical">'+esc(em.body)+'</textarea>'+
+                        (card.emailError?'<div style="color:#E06C6C;font-size:12px;margin-top:8px">'+esc(String(card.emailError).slice(0,220))+'</div>':'')+
+                        '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">'+
+                          '<button class="gbtn amber" id="edMailSend">▸ Send</button>'+
+                          '<span style="font-size:11.5px;color:#6E717B">Sending is final. Wingman never sends on its own.</span>'+
+                        '</div>')+
+                  '</div>';
+                })()
+              : '')+
             '<label class="erl">Notes</label><textarea class="ein" id="edNotes" style="min-height:88px;resize:vertical;overflow-y:hidden">'+esc(card.notes||'')+'</textarea>'+
             (lpIsTravel(card)?'<div class="travhint"><b>This looks like a trip.</b> Wingman can research flights, hotels and ground transport against your travel profile, then hand you a booking list.<button type="button" class="gbtn amber" id="edTripGo">▸ Plan this trip</button></div>':'')+
             '<div class="wingq"><button type="button" class="gbtn" id="ol2AskWing" style="width:100%;margin-top:10px">▸ What does Wingman need to know?</button><div id="ol2WingQBody"></div></div>'+
@@ -4787,6 +4814,37 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           var mk=document.getElementById('edMake');
           if(mk) mk.onclick=function(){ mk.disabled=true; mk.textContent='▸ Building…';
             lpProduceFile(card, function(){ try{ openReview(card); }catch(e){} }); };
+          var ok=document.getElementById('edAssetOk');
+          if(ok) ok.onclick=function(){
+            card.assetTypeInferred=false; card.updatedAt=Date.now();
+            try{ lpAudit(card,'Confirmed asset type: '+card.assetType); }catch(e){}
+            try{ persist(); }catch(e){}
+            lpEvent('assettype.confirmed', { type:card.assetType }, card.id);
+            try{ openReview(card); }catch(e){}
+          };
+          var sd=document.getElementById('edMailSend');
+          if(sd){
+            var armed=false, tm=null;
+            sd.onclick=function(){
+              var to=(document.getElementById('edMailTo')||{}).value||'';
+              var sub=(document.getElementById('edMailSubj')||{}).value||'';
+              var bod=(document.getElementById('edMailBody')||{}).value||'';
+              to=to.trim();
+              if(!to || to.indexOf('@')<0){ toast('Needs a real email address first'); return; }
+              if(!bod.trim()){ toast('Nothing to send — the message is empty'); return; }
+              // Two-step, and the second step NAMES the recipient. Sending mail is
+              // irreversible; a single mis-click should not be able to do it, and
+              // the confirm should say who it is going to rather than just "sure?".
+              if(!armed){
+                armed=true; sd.textContent='▸ Send to '+to+' — click again';
+                tm=setTimeout(function(){ armed=false; sd.textContent='▸ Send'; }, 5000);
+                return;
+              }
+              clearTimeout(tm); armed=false;
+              sd.disabled=true; sd.textContent='▸ Sending…';
+              lpEmailSend(card, to, sub, bod, function(){ try{ openReview(card); }catch(e){} });
+            };
+          }
         })();
         (function(){ var en=document.getElementById('edNotes');
           if(en){ en.onchange=function(){ card.notes=this.value; persist(); }; lpGrow(en); } })();
@@ -5108,25 +5166,53 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     // The old `deliverable` field is free text — good definitions of done, but
     // nothing can route on prose. This is the typed half. Wingman infers it, the
     // person confirms it, and F2 below reads it to decide which file to build.
+    // Aug 26: this list was written before anything was typed, and the typed data
+    // then said it was wrong. Of 48 cards the classifier could not place, 14 were
+    // configuring another system (the FareHarbor onboarding run), 8 were access
+    // and account admin, 7 were reviews or audits of someone else's work, and 4
+    // were training. `setup` alone is now the LARGEST bucket in the portfolio —
+    // bigger than email. A taxonomy that cannot name the biggest thing its owner
+    // actually does is not a taxonomy.
     var LP_ASSET_TYPES = ['document','spreadsheet','deck','image','email','research',
-                          'plan','decision','call','purchase','other'];
+                          'plan','decision','call','purchase',
+                          'setup','review','admin','learning','other'];
     // Types Wingman can produce as a real file today. Kept deliberately short:
     // a mediocre generated deck is worse than no deck, so deck/image wait.
     var LP_FILE_TYPES = { document:'docx', spreadsheet:'xlsx' };
 
-    function lpInferAssetType(title, deliverable){
+    function lpInferAssetType(title, deliverable, cardType){
+      // A habit or chore is upkeep, not an asset. "Daily Workout", "3L Water" and
+      // "Shampoo Carpets" do not produce anything, and forcing them into a type
+      // would put noise into the one field the grade routes on.
+      if(cardType === 'habit' || cardType === 'chore') return '';
       var t = ((title||'') + ' ' + (deliverable||'')).toLowerCase();
+      // Order matters: the FIRST match wins, so the more specific work-shapes are
+      // probed before the generic ones. `document` stays last because words like
+      // "brief" and "summary" appear inside almost everything.
       var probe = [
-        ['spreadsheet', /\b(spreadsheet|budget|projection|forecast|model|xlsx|excel|csv|line item|pricing table|roster)\b/],
-        ['deck',        /\b(deck|slide|presentation|pitch|keynote|pptx)\b/],
-        ['image',       /\b(image|photo|graphic|logo|thumbnail|content image|banner|creative)\b/],
+        // Configuring or onboarding inside somebody else's system. The single
+        // biggest thing in this portfolio and it had no name until now.
+        ['setup',       /\b(onboard\w*|set ?up|setup|configure|configuration|install|provision|migrate|dashboard setup|implementation)\b/],
+        // Looking at work and forming a judgement on it.
+        ['review',      /\b(qa|audit|review|critique|proofread|walkthrough|inspect|ux audit|website review)\b/],
+        // Accounts, access, credentials, forms, subscriptions, permits.
+        ['admin',       /\b(access|permission|login|log ?in|credential|admin|account|permit|licence|license|subscriptions?|paylocity|payroll|expense|reimburse\w*|form)\b/],
+        ['learning',    /\b(course|training|learning path|curriculum|tutorial|blueprint|getting started|certif\w*|study)\b/],
+        ['spreadsheet', /\b(spreadsheet|budget|projection|forecast|model|xlsx|excel|csv|line item|pricing table|roster|calculator)\b/],
+        ['deck',        /\b(deck|slide|slides|presentation|pitch|keynote|pptx|town hall)\b/],
+        ['image',       /\b(image|photo|graphic|logo|thumbnail|content image|banner|creative|page design)\b/],
         ['email',       /\b(email|e-mail|reply|follow[- ]?up note|outreach message)\b/],
-        ['call',        /\b(call|phone|dial|ring|talk to|meet with|meeting with)\b/],
-        ['purchase',    /\b(order|buy|purchase|book|pay|invoice|reimburse|subscribe|cancel .*subscription)\b/],
+        ['call',        /\b(call|phone|dial|ring|talk to|meet with|meeting with|prep for .*(discussion|meeting))\b/],
+        // An explicit request to produce a LIST is research, even when the subject
+        // of the list is something to buy. "Give me a list of all trailers for
+        // sale" is an afternoon of comparison, not a checkout — and typing it as
+        // a purchase would route it to a decision brief with nothing to compare.
+        ['research',    /\b(list of all|look for|search for|shortlist|compare)\b/],
+        ['purchase',    /\b(order|buy|purchase|book|pay|invoice|subscribe|dealership|for sale)\b/],
         ['decision',    /\b(decide|decision|choose|approve|sign|signature|pick)\b/],
-        ['research',    /\b(research|compare|options|find out|look into|investigate|shortlist)\b/],
+        ['research',    /\b(research|compare|options|find out|look into|investigate|shortlist|list of all|look for|search for)\b/],
         ['plan',        /\b(plan|roadmap|strategy|outline|scope|schedule|checklist)\b/],
-        ['document',    /\b(doc|document|memo|one[- ]?pager|brief|report|proposal|write[- ]?up|agreement|summary|copy|draft)\b/]
+        ['document',    /\b(doc|document\w*|memo|one[- ]?pager|brief|report|proposal|write[- ]?up|agreement|summary|copy|draft)\b/]
       ];
       for(var i=0;i<probe.length;i++){ if(probe[i][1].test(t)) return probe[i][0]; }
       return '';
@@ -5140,7 +5226,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var list = ITEMS(), n = 0;
         list.forEach(function(c){
           if(c.assetType) return;
-          var g = lpInferAssetType(c.title, c.deliverable);
+          var g = lpInferAssetType(c.title, c.deliverable, c.type);
           if(!g) return;
           c.assetType = g; c.assetTypeInferred = true; n++;
         });
@@ -5309,7 +5395,171 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         else attach(path);
       }, function(){ toast('Built the file but could not store it'); attach(''); });
     }
-    window.lpProduceFile = lpProduceFile;   // testable; see qa/ on module scoping
+    window.lpProduceFile = lpProduceFile;
+    window.lpInferAssetType = lpInferAssetType;   // exposed so guards test the real classifier
+
+    // ── F2b: email deliverables ─────────────────────────────────────────────
+    // The typed portfolio says `email` is the LARGEST bucket (12 of 85 cards) —
+    // bigger than document and spreadsheet combined by an order of magnitude.
+    // An email does not need an OOXML writer; it needs a recipient, a subject,
+    // and a way to leave. api/send.js already existed and was never reachable
+    // from a card.
+    //
+    // Wingman writes prose. This pulls a real email out of it rather than making
+    // Levi retype: leading "To:" / "Subject:" lines are honoured when the draft
+    // has them, and when it does not, the subject falls back to the card title
+    // and nothing is invented for the recipient — an empty To is left empty and
+    // the send stays disabled. Guessing a recipient is how mail goes to the
+    // wrong person.
+    function lpEmailParse(card){
+      var raw = (card.aiArtifact && card.aiArtifact.content) || '';
+      var to = '', subject = '', lines = String(raw).replace(/\r/g,'').split('\n'), i = 0;
+      // Only scan the header block at the very top, and stop at the first blank
+      // line — a "Subject:" written halfway down the body is body text.
+      for(; i < lines.length && i < 8; i++){
+        var ln = lines[i].trim();
+        if(!ln){ if(to || subject){ i++; } break; }
+        var mt = ln.match(/^(?:\*\*)?to(?:\*\*)?\s*:\s*(.+)$/i);
+        var ms = ln.match(/^(?:\*\*)?subject(?:\*\*)?\s*:\s*(.+)$/i);
+        if(mt && !to){ to = mt[1].replace(/\*\*/g,'').trim(); continue; }
+        if(ms && !subject){ subject = ms[1].replace(/\*\*/g,'').trim(); continue; }
+        break;
+      }
+      var body = (to || subject) ? lines.slice(i).join('\n').replace(/^\n+/,'') : raw;
+      if(!subject) subject = card.title || '';
+      // A person's name is not an address. Keep only what can actually be sent.
+      if(to && to.indexOf('@') < 0) to = '';
+      return { to: to, subject: subject, body: body };
+    }
+
+    function lpEmailHtml(text){
+      // Plain-text body → minimal HTML. Deliberately no styling: a personal email
+      // that arrives looking like a newsletter reads as marketing.
+      return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .split(/\n{2,}/).map(function(p){ return '<p>'+p.replace(/\n/g,'<br>')+'</p>'; }).join('\n');
+    }
+
+    function lpEmailSend(card, to, subject, body, cb){
+      fetch('/api/send', { method:'POST', headers:apiHeaders(), body:JSON.stringify({
+        to: to, subject: subject, text: body, html: lpEmailHtml(body)
+      })}).then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){
+        if(!res.ok || !res.j || !res.j.sent){
+          var d = (res.j && (res.j.detail || res.j.error)) || 'send failed';
+          // Say which failure it is. "no_from" means the sending domain is not
+          // verified — that is a setup problem, not a bad address, and telling
+          // someone "send failed" for it costs an hour of looking in the wrong place.
+          card.emailError = (res.j && res.j.error === 'no_from')
+            ? 'The sending domain is not verified in Resend yet. ' + d
+            : String(d);
+          card.aiStatus = 'send_failed';
+          try{ persist(); }catch(e){}
+          lpEvent('deliverable.sent', { kind:'email', ok:false, error:String(d).slice(0,120) }, card.id);
+          toast('Not sent — ' + String(card.emailError).slice(0,90));
+          if(cb) cb(false);
+          return;
+        }
+        card.emailError = '';
+        card.aiStatus = 'sent';
+        card.aiArtifact = card.aiArtifact || { kind:'draft', content:body, createdAt:Date.now() };
+        card.aiArtifact.sentAt = Date.now();
+        card.aiArtifact.sentTo = to;
+        card.updatedAt = Date.now();
+        try{ lpAudit(card, 'Email sent to ' + to); }catch(e){}
+        try{ persist(); }catch(e){}
+        lpEvent('deliverable.sent', { kind:'email', ok:true, chars:String(body).length }, card.id);
+        toast('Sent to ' + to);
+        if(cb) cb(true);
+      })
+      .catch(function(e){
+        card.emailError = String((e && e.message) || e);
+        card.aiStatus = 'send_failed';
+        try{ persist(); }catch(e2){}
+        lpEvent('deliverable.sent', { kind:'email', ok:false, error:'network' }, card.id);
+        toast('Not sent — ' + card.emailError.slice(0,90));
+        if(cb) cb(false);
+      });
+    }
+    window.lpEmailParse = lpEmailParse;
+    window.lpEmailSend = lpEmailSend;
+
+    // ── F2c: purchase decision briefs ───────────────────────────────────────
+    // `purchase` is the second-largest typed bucket (8 of 85) and it is the
+    // garage-lightbulbs case: work that stalls not because it is hard but because
+    // deciding takes twenty minutes of comparison Levi never sits down to do.
+    //
+    // The standing rule is unchanged — booking and payment stay human. So this
+    // does NOT buy anything. It turns a draft into a comparison Levi can act on
+    // in one look, and then gets out of the way.
+    //
+    // The hard constraint here is prices. This project has a fabrication
+    // precedent, and a made-up price is worse than no price because it looks
+    // like research. A row is only allowed to present its price as real when it
+    // carries a source URL; everything else is shown with the price struck
+    // through and marked UNSOURCED. Wingman is not trusted to be honest about
+    // this — the parser enforces it.
+    function lpPurchaseParse(card){
+      var md = (card.aiArtifact && card.aiArtifact.content) || '';
+      var rows = lpMdRows(md);
+      if(rows.length < 2) return { options: [], note: 'no table' };
+      var head = rows[0].map(function(h){ return String(h).toLowerCase(); });
+      function col(){ for(var i=0;i<arguments.length;i++){ var want=arguments[i];
+        for(var j=0;j<head.length;j++){ if(head[j].indexOf(want)>-1) return j; } } return -1; }
+      var iOpt = col('option','item','product','choice','name');
+      var iPrice = col('price','cost','$');
+      var iSrc = col('source','link','url','where','vendor','retailer');
+      var iNote = col('note','why','pro','detail','comment');
+      if(iOpt < 0) iOpt = 0;
+      var opts = rows.slice(1).map(function(r){
+        var src = iSrc > -1 ? String(r[iSrc]||'') : '';
+        // Accept a bare URL or a markdown [label](url); anything else is not a source.
+        var m = src.match(/https?:\/\/[^\s)\]]+/);
+        var url = m ? m[0] : '';
+        var label = String(r[iOpt]||'').trim();
+        var rec = /\brecommend/i.test(r.join(' ')) || /^\s*(★|\*)/.test(label);
+        return {
+          option: label.replace(/^\s*(★|\*)\s*/,''),
+          price: iPrice > -1 ? String(r[iPrice]||'').trim() : '',
+          url: url,
+          sourced: !!url,
+          note: iNote > -1 ? String(r[iNote]||'').trim() : '',
+          recommended: rec
+        };
+      }).filter(function(o){ return o.option; });
+      return { options: opts, note: '' };
+    }
+
+    function lpPurchaseHtml(card){
+      var P = lpPurchaseParse(card);
+      if(!P.options.length) return '';
+      var unsourced = P.options.filter(function(o){ return o.price && !o.sourced; }).length;
+      var h = '<div class="purch" style="border:1px solid #26272D;border-radius:11px;padding:12px;margin-bottom:14px">'+
+        '<div style="font-size:11px;letter-spacing:.08em;color:#8A8F99;margin-bottom:8px">OPTIONS</div>';
+      h += P.options.map(function(o){
+        return '<div style="display:flex;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid #1e2026">'+
+          '<div style="flex:1 1 0;min-width:0">'+
+            '<span style="color:#E9EAEE">'+esc(o.option)+'</span>'+
+            (o.recommended?' <span class="tag" style="font-size:9px">PICK</span>':'')+
+            (o.note?'<div style="font-size:11.5px;color:#8A8F99;margin-top:2px">'+esc(o.note)+'</div>':'')+
+          '</div>'+
+          '<div style="flex:0 0 auto;text-align:right">'+
+            (o.price
+              ? (o.sourced
+                  ? '<span style="color:#E9EAEE">'+esc(o.price)+'</span>'
+                  : '<span style="color:#6E717B;text-decoration:line-through">'+esc(o.price)+'</span> <span class="tag" style="font-size:9px;background:#3a2a12;color:#E0A33E">UNSOURCED</span>')
+              : '<span style="color:#6E717B">no price</span>')+
+            (o.url?'<div style="margin-top:4px"><a href="'+esc(o.url)+'" target="_blank" rel="noopener" style="font-size:11.5px;color:#C08428">▸ Open to buy</a></div>':'')+
+          '</div>'+
+        '</div>';
+      }).join('');
+      h += '<div style="font-size:11.5px;color:#6E717B;margin-top:10px">'+
+        (unsourced
+          ? '<b style="color:#E0A33E">'+unsourced+' price'+(unsourced===1?'':'s')+' came with no source link and may be invented — check before you rely on '+(unsourced===1?'it':'them')+'.</b> '
+          : '')+
+        'Wingman does not buy anything. You click through and pay.</div>';
+      return h + '</div>';
+    }
+    window.lpPurchaseParse = lpPurchaseParse;   // testable; see qa/ on module scoping
 
     // Deliberately exposed. The services block is a separate <script> and will
     // want to emit too, and a module-scoped emitter cannot be tested from
@@ -5345,7 +5595,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       var it = _lpNewItemBase(title, cat, due, deliverable, ownerName, src);
       // F1: guess what this produces so Wingman can route on it. Marked as a
       // guess — the person confirms it on the task, and nothing treats it as fact.
-      var _at = lpInferAssetType(it.title, it.deliverable);
+      var _at = lpInferAssetType(it.title, it.deliverable, it.type);
       if(_at){ it.assetType = _at; it.assetTypeInferred = true; }
       lpEvent('task.created', {
         via: it.source || 'unknown',
