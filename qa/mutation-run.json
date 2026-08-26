@@ -253,5 +253,35 @@
     "id": "X34C",
     "verdict": "KILLED",
     "note": "guard catches it: the docs promise Wingman will buy things, contradicting the standing rule that payment stays human"
+  },
+  {
+    "id": "GR1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the grade prints a confident number off an almost-empty events table — the exact mistake that cost a day here"
+  },
+  {
+    "id": "GR1",
+    "verdict": "KILLED",
+    "note": "guard catches it: diagnostic rows are counted as real activity and inflate the grade"
+  },
+  {
+    "id": "GR2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the agreed 40/35/25 weighting silently changes"
+  },
+  {
+    "id": "GR2",
+    "verdict": "KILLED",
+    "note": "guard catches it: overdue work stops dragging momentum down, so a pile of late tasks still scores well"
+  },
+  {
+    "id": "QZ1",
+    "verdict": "KILLED",
+    "note": "guard catches it: scoring exactly 70% fails, when 70 is stated as the pass mark"
+  },
+  {
+    "id": "QZ1",
+    "verdict": "KILLED",
+    "note": "guard catches it: a half-finished quiz can be scored, reporting how much was skipped as if it were what is known"
   }
 ]

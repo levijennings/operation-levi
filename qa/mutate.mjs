@@ -125,6 +125,18 @@ const MUTATIONS = [
    'the docs start describing Libraries, a surface that was retired'],
   ['X34C', 'docs.json', 'Wingman does not buy anything', 'Wingman completes the purchase for you',
    'the docs promise Wingman will buy things, contradicting the standing rule that payment stays human'],
+  ['GR1', 'index.html', 'if(ev.length < LP_GRADE_MIN_EVENTS){', 'if(false){',
+   'the grade prints a confident number off an almost-empty events table — the exact mistake that cost a day here'],
+  ['GR1', 'index.html', "return e.name && e.name.indexOf('diag.') !== 0;", 'return true;',
+   'diagnostic rows are counted as real activity and inflate the grade'],
+  ['GR2', 'index.html', '(usage * 40) + (momentum * 35) + (effect * 25)', '(usage * 34) + (momentum * 33) + (effect * 33)',
+   'the agreed 40/35/25 weighting silently changes'],
+  ['GR2', 'index.html', 'momentum= Math.max(0, flow * (1 - 0.5 * drag))', 'momentum= flow',
+   'overdue work stops dragging momentum down, so a pile of late tasks still scores well'],
+  ['QZ1', 'index.html', 'passed: pct >= lpQuizPass()', 'passed: pct > lpQuizPass()',
+   'scoring exactly 70% fails, when 70 is stated as the pass mark'],
+  ['QZ1', 'index.html', 'if(unanswered.length){', 'if(false){',
+   'a half-finished quiz can be scored, reporting how much was skipped as if it were what is known'],
 ];
 
 const out = [];

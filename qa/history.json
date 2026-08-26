@@ -194,6 +194,18 @@
       "mutations": "51/51 killed",
       "suite": "restored (this file)",
       "note": "FIRST FULLY GREEN RUN. 71/71, zero failures, zero errors. X34A/X34B had been the only two red checks since the suite was rebuilt on Aug 22.\\nREALTIME: the supabase_realtime publication contained NO TABLES, so a subscription would have sat silent forever and looked like working code. Migration ask_turns_realtime adds the table; RLS still scopes delivery to user_id = auth.uid(), so one person's conversation cannot reach another's socket, and REPLICA IDENTITY stays DEFAULT rather than putting every turn's text in the WAL. Two things the client must get right and both are mutation-proven: your own insert echoes back down the socket and must not double-post, and a realtime failure must not take the Ask panel down — the pull-on-open path is untouched. The label only says 'Live' when a channel is actually open.\\nDOCS: rewritten from scratch against the app as it now is. The old set was Aug 17 and described three surfaces that no longer exist (My Day, My Week, Libraries) while never naming Today.\\nX34C is new and is the important one: X34A hard-codes the five destinations in the SUITE, so it can only ever be as current as the test file — retire a surface and it keeps passing while the docs rot. X34C derives the nav from the running app and the claims from docs.json and checks them against EACH OTHER. It also asserts the docs state the standing limits (no buying, nothing sends without you, decks not generated) and derives the deck claim from LP_FILE_TYPES rather than trusting prose."
+    },
+    {
+      "run": "R019",
+      "ranAt": "2026-08-26T04:05:00Z",
+      "trigger": "Decisions #9 and #10: the AI grade and the confidence quiz — the last two roadmap items",
+      "build": "1d8475c + grade + quiz",
+      "total": 74,
+      "pass": 74,
+      "fail": 0,
+      "mutations": "57/57 killed",
+      "suite": "restored (this file)",
+      "note": "GRADE: usage 40 / momentum 35 / effectiveness 25, as agreed. The arithmetic matters less than the refusal: below 12 real events in 30 days it returns NO SCORE and says why. A grade drawn from an almost-empty events table is a confident number meaning nothing, and this project already lost a day to that class of mistake. GR1 mutation-proves the refusal AND that the diag.* rows left behind by that same investigation are excluded — otherwise the first grade Levi ever saw would have been inflated by my own debugging.\\nMomentum is completions against creations, damped by how much is overdue RIGHT NOW, so a pile of late work cannot score well on flow alone. Effectiveness is approvals over drafts REVIEWED, not over drafts made — a draft nobody has looked at is not evidence of anything.\\nQUIZ: 16 questions, pass at 70% inclusive (mutation-proven at the boundary — 'pass is 70' failing at exactly 70 would be a lie). Several questions are about the LIMITS: what Wingman will not do, why an unsourced price is struck through, why a deck cannot be generated. Knowing the limits is what makes delegation safe. A partly-filled sheet is refused rather than scored, because that percentage would measure how much was skipped rather than what is known."
     }
   ]
 }

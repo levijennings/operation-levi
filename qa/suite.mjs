@@ -555,6 +555,101 @@ check('F2C', 'board',
     assert(r.hasSize, 'the attachment has no size');
   });
 
+check('GR1', 'grade',
+  'With too little recorded activity the grade shows NO SCORE instead of a confident number',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      const call = (rows) => new Promise(res => {
+        window._lpSb = { from: () => ({ select(){ const q={ eq(){return q;}, gte(){return q;}, limit(){return q;},
+          then(ok){ ok({ data: rows, error: null }); return Promise.resolve(); } }; return q; } }) };
+        window._lpWs = 'ws-1';
+        window.lpGrade(res);
+      });
+      const ev = (name, props) => ({ name, props: props || {}, occurred_at: new Date().toISOString() });
+      const thin = await call([ev('app.loaded'), ev('task.created')]);
+      // Diagnostic rows must not be counted as real activity.
+      const diagOnly = await call(Array.from({ length: 40 }, () => ev('diag.probe')));
+      const signedOut = await new Promise(res => { window._lpSb = null; window._lpWs = null; window.lpGrade(res); });
+      return { thin, diagOnly, signedOut };
+    });
+    assert(!r.thin.ok, 'a grade was produced from 2 events');
+    assertEq(r.thin.reason, 'thin', `wrong reason for a thin dataset: ${r.thin.reason}`);
+    assert(/Not enough recorded activity/.test(r.thin.message), 'the thin-data message does not say why there is no score');
+    assert(!('score' in r.thin), 'a score leaked out alongside the no-score message');
+
+    assert(!r.diagOnly.ok, 'diagnostic rows were counted as real activity and produced a grade');
+    assert(!r.signedOut.ok, 'a grade was produced while signed out');
+    assertEq(r.signedOut.reason, 'signed-out', 'the signed-out case is not reported as such');
+  });
+
+check('GR2', 'grade',
+  'The weights are 40/35/25 and each part is computed from what actually happened',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const ev = (name, props) => ({ name, props: props || {} });
+      // Perfect: every task routed, every task finished, every draft approved.
+      const perfect = window.lpGradeCompute([
+        ...Array.from({ length: 4 }, () => ev('task.created')),
+        ...Array.from({ length: 4 }, () => ev('task.routed', { to: 'wingman' })),
+        ...Array.from({ length: 4 }, () => ev('task.completed')),
+        ...Array.from({ length: 4 }, () => ev('draft.reviewed', { outcome: 'approved' }))
+      ], []);
+      // Nothing routed, nothing finished, every draft sent back.
+      const bad = window.lpGradeCompute([
+        ...Array.from({ length: 4 }, () => ev('task.created')),
+        ...Array.from({ length: 4 }, () => ev('draft.reviewed', { outcome: 'redone' }))
+      ], []);
+      // Overdue work must drag momentum down even when the counts look fine.
+      const dragged = window.lpGradeCompute([
+        ...Array.from({ length: 4 }, () => ev('task.created')),
+        ...Array.from({ length: 4 }, () => ev('task.completed'))
+      ], [{ status: 'active', dueDate: '2000-01-01' }, { status: 'active', dueDate: '2000-01-01' }]);
+      const clean = window.lpGradeCompute([
+        ...Array.from({ length: 4 }, () => ev('task.created')),
+        ...Array.from({ length: 4 }, () => ev('task.completed'))
+      ], [{ status: 'active', dueDate: '2999-01-01' }]);
+      return { perfect, bad, dragged, clean };
+    });
+    assertEq(r.perfect.parts.map(p => p.weight).join('/'), '40/35/25', 'the weights are not 40/35/25');
+    assertEq(r.perfect.score, 100, `a perfect window did not score 100: ${r.perfect.score}`);
+    assertEq(r.bad.score, 0, `nothing routed, nothing done, nothing approved should be 0: ${r.bad.score}`);
+    assert(r.dragged.score < r.clean.score,
+      `overdue work did not drag momentum down (${r.dragged.score} vs ${r.clean.score})`);
+    // Effectiveness must be approvals over reviews, not approvals over drafts made.
+    assertEq(r.perfect.parts[2].pct, 100, 'effectiveness is not measuring approvals against reviews');
+    assertEq(r.bad.parts[2].pct, 0, 'drafts that were all sent back still scored on effectiveness');
+  });
+
+check('QZ1', 'quiz',
+  'The quiz passes at 70%, refuses to score a partly-filled sheet, and marks the limits correctly',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const all = window.LP_QUIZ.map(q => q.c);
+      const perfect = window.lpQuizScore(all);
+      // Exactly at the boundary: the pass mark must be inclusive.
+      const n = window.LP_QUIZ.length;
+      const need = Math.ceil(0.70 * n);
+      const atMark = window.lpQuizScore(all.map((c, i) => (i < need ? c : (c + 1) % 4)));
+      const belowMark = window.lpQuizScore(all.map((c, i) => (i < need - 1 ? c : (c + 1) % 4)));
+      return { pass: window.lpQuizPass(), n, perfect, atMark, belowMark,
+               opts: window.LP_QUIZ.map(q => q.a.length) };
+    });
+    assertEq(r.pass, 70, 'the pass mark is not 70%');
+    assert(r.n >= 12, `a "comprehensive" quiz with only ${r.n} questions is not comprehensive`);
+    assert(r.opts.every(n => n === 4), 'not every question offers four options');
+    assertEq(r.perfect.pct, 100, 'a perfect sheet did not score 100');
+    assert(r.perfect.passed, 'a perfect sheet did not pass');
+    assert(r.atMark.passed, `${r.atMark.pct}% should pass — the 70% mark must be inclusive`);
+    assert(!r.belowMark.passed, `${r.belowMark.pct}% should not pass`);
+    assertEq(r.perfect.wrong.length, 0, 'a perfect sheet reported wrong answers');
+    assert(r.belowMark.wrong.length > 0, 'a failing sheet did not report which ones to look at');
+
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/Answer every question first/.test(src),
+      'a partly-filled quiz can be scored — the percentage would measure skipping, not knowledge');
+    assert(/quiz\.completed/.test(src), 'finishing the quiz is not recorded as an event');
+  });
+
 check('RT1', 'wingman',
   'Realtime appends an incoming turn but never double-posts your own echo',
   async ({ page }) => {
