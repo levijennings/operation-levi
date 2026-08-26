@@ -5350,6 +5350,11 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         // sale" is an afternoon of comparison, not a checkout — and typing it as
         // a purchase would route it to a decision brief with nothing to compare.
         ['research',    /\b(list of all|look for|search for|shortlist|compare)\b/],
+        // "Book" is genuinely two verbs. Booking a flight is a purchase; booking
+        // your own calendar is a plan. Production caught this one: "Book Ideal
+        // Week Schedule" was typed as a purchase because `book` is probed before
+        // `schedule`. Calendar intent wins over the bare verb.
+        ['plan',        /\b(ideal week|time ?block|calendar|schedule)\b/],
         ['purchase',    /\b(order|buy|purchase|book|pay|invoice|subscribe|dealership|for sale)\b/],
         ['decision',    /\b(decide|decision|choose|approve|sign|signature|pick)\b/],
         ['research',    /\b(research|compare|options|find out|look into|investigate|shortlist|list of all|look for|search for)\b/],
