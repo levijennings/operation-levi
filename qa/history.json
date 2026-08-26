@@ -182,6 +182,18 @@
       "mutations": "46/46 killed",
       "suite": "restored (this file)",
       "note": "DETAIL RELAYOUT: NOT rebuilt. Levi's complaint ('I cannot see all of the information') predated the tab strip and notes auto-grow. Checked production directly before touching anything: 5 tabs render and are visible, notes are 105px and not scrollable, the pane is 1.4 screens. Rebuilding what is already fixed would have been busywork; his judgement on the current build is what settles it. A LOCAL-HARNESS TRAP worth knowing: in the signed-out fixture, opening a card renders the detail and then hides it ~570ms later, so #ol2Review ends up display:none. This does NOT happen on production (verified in Levi's signed-in browser: the pane opens and stays). Any future guard that drives the detail pane in the local harness will pass or fail for the wrong reason — check production before believing it. CAPTURE INTERVIEW: built to Levi's own words. Questions are computed from what the parse MISSED, not asked of a model — instant, works offline, and cannot ask about a detail the person already gave. Asking 'when is this due?' about a card that says 'due Friday' is how an interview becomes a tax. The definition-of-done question is marked MATTERS MOST because 41% deliverable coverage is the reason drafts kept landing as the easy 20%. His rule applied literally: a DO-IT card with no definition of done parks in Waiting on Levi rather than drafting against a guess — and a parked card no longer emits task.routed, so the routed count cannot lie. Track-it cards never park; that is his own work. CI3 exists because I INTRODUCED a bug building this: the taller preview pushed Confirm off the bottom of a phone. The button was in the DOM, matched a selector, and could not be clicked. Three existing guards (C1, EV3, AT1) went red and caught it. 'Present in the DOM' is not 'reachable by a thumb'."
+    },
+    {
+      "run": "R018",
+      "ranAt": "2026-08-26T03:35:00Z",
+      "trigger": "Decision #8 realtime Ask + F3 knowledge-base rewrite",
+      "build": "a96de8b + realtime + docs",
+      "total": 71,
+      "pass": 71,
+      "fail": 0,
+      "mutations": "51/51 killed",
+      "suite": "restored (this file)",
+      "note": "FIRST FULLY GREEN RUN. 71/71, zero failures, zero errors. X34A/X34B had been the only two red checks since the suite was rebuilt on Aug 22.\\nREALTIME: the supabase_realtime publication contained NO TABLES, so a subscription would have sat silent forever and looked like working code. Migration ask_turns_realtime adds the table; RLS still scopes delivery to user_id = auth.uid(), so one person's conversation cannot reach another's socket, and REPLICA IDENTITY stays DEFAULT rather than putting every turn's text in the WAL. Two things the client must get right and both are mutation-proven: your own insert echoes back down the socket and must not double-post, and a realtime failure must not take the Ask panel down — the pull-on-open path is untouched. The label only says 'Live' when a channel is actually open.\\nDOCS: rewritten from scratch against the app as it now is. The old set was Aug 17 and described three surfaces that no longer exist (My Day, My Week, Libraries) while never naming Today.\\nX34C is new and is the important one: X34A hard-codes the five destinations in the SUITE, so it can only ever be as current as the test file — retire a surface and it keeps passing while the docs rot. X34C derives the nav from the running app and the claims from docs.json and checks them against EACH OTHER. It also asserts the docs state the standing limits (no buying, nothing sends without you, decks not generated) and derives the deck claim from LP_FILE_TYPES rather than trusting prose."
     }
   ]
 }

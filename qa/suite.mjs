@@ -354,6 +354,36 @@ check('X34B', 'docs',
       `docs.json still describes retired surfaces: ${retired.join(', ')}`);
   });
 
+check('X34C', 'docs',
+  'The docs and the nav are checked against EACH OTHER, not against a list in this file',
+  async ({ page }) => {
+    // X34A hard-codes the five destinations, which means it can only ever be as
+    // current as this file. When a surface is added or retired, a hard-coded list
+    // keeps passing while the docs go stale. Derive both sides instead.
+    const nav = await page.evaluate(() =>
+      [...document.querySelectorAll('#ol2Nav a')]
+        .map(a => (a.textContent || '').replace(/\d+/g, '').replace(/[▸☰]/g, '').trim())
+        .filter(Boolean));
+    const docs = JSON.parse(await readFile(join(REPO, 'docs.json'), 'utf8'));
+    const blob = JSON.stringify(docs);
+    const missing = nav.filter(d => !blob.includes(d));
+    assertEq(missing.length, 0,
+      `the nav has destinations the docs never mention: ${missing.join(', ')} — Wingman answers from these pages, so it would misdirect`);
+
+    // And the docs must not promise capabilities that were deliberately NOT built.
+    // Claiming these would be worse than silence: they are the standing limits.
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    const generatesDecks = /LP_FILE_TYPES\s*=\s*\{[^}]*deck/.test(src);
+    if (!generatesDecks) {
+      assert(/not generated yet|Decks and images are not/.test(blob),
+        'the app cannot generate decks, and the docs do not say so');
+    }
+    assert(/does not buy|not buy anything/.test(blob),
+      'the docs do not state that Wingman will not buy anything — that is a standing rule, not an implementation detail');
+    assert(/never sends|without you/.test(blob),
+      'the docs do not state that nothing sends without the person');
+  });
+
 /* ─────────────────────── events (Preflight F6) ─────────────────────── */
 
 // The emitter is deliberately on window. A module-scoped emitter cannot be
@@ -523,6 +553,96 @@ check('F2C', 'board',
     assertEq(r.name, 'memo.docx', 'attachment is not named from the task');
     assert(r.gen === true, 'the attachment is not marked as generated');
     assert(r.hasSize, 'the attachment has no size');
+  });
+
+check('RT1', 'wingman',
+  'Realtime appends an incoming turn but never double-posts your own echo',
+  async ({ page }) => {
+    // The Ask panel is built lazily when Docs opens, so the subscription must be
+    // exercised by opening Docs — not by poking an exported function that only
+    // exists afterwards. Driving the real path is the point.
+    await page.evaluate(() => {
+      window.__h = []; window.__sub = 0; window.__rm = 0;
+      window._lpSb = {
+        channel: () => { const ch = {
+            on: (_e, cfg, fn) => { window.__h.push({ cfg, fn }); return ch; },
+            subscribe: () => { window.__sub++; return ch; } }; return ch; },
+        removeChannel: () => { window.__rm++; },
+        from: () => ({
+          select(){ const q={ eq(){return q;}, order(){return q;}, limit(){return q;},
+            then(ok){ ok({ data: [], error: null }); return Promise.resolve(); } }; return q; },
+          insert(){ return Promise.resolve({ error: null }); }
+        })
+      };
+      window._lpWs = 'ws-1';
+      window._lpUser = { id: 'u-1', name: 'Levi' };
+      window._lpAsk = null;
+      try { localStorage.removeItem('lpAskThread'); } catch (e) {}
+    });
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.waitForTimeout(600);
+
+    const r = await page.evaluate(() => {
+      const h = window.__h[0];
+      if (!h) return { noHandler: true, sub: window.__sub };
+      window._lpAsk = [{ role: 'user', content: 'already on screen' }];
+      const fire = (row) => h.fn({ new: row });
+      fire({ role: 'user', content: 'already on screen', user_id: 'u-1', workspace_id: 'ws-1' });
+      const afterEcho = window._lpAsk.length;
+      fire({ role: 'assistant', content: 'from the phone', user_id: 'u-1', workspace_id: 'ws-1' });
+      const afterNew = window._lpAsk.length;
+      fire({ role: 'assistant', content: 'someone else', user_id: 'u-1', workspace_id: 'ws-OTHER' });
+      const afterForeign = window._lpAsk.length;
+      window.lpAskUnsubscribe();
+      return { sub: window.__sub, rm: window.__rm, afterEcho, afterNew, afterForeign,
+               filter: h.cfg.filter, table: h.cfg.table, event: h.cfg.event,
+               tail: window._lpAsk[window._lpAsk.length - 1] };
+    });
+    assert(!r.noHandler, `no realtime subscription was opened when Ask loaded (subscribe calls: ${r.sub})`);
+    assertEq(r.table, 'ask_turns', `subscribed to the wrong table: ${r.table}`);
+    assertEq(r.event, 'INSERT', 'the subscription is not scoped to inserts');
+    assert(/user_id=eq\.u-1/.test(r.filter || ''),
+      `the subscription is not filtered to this user (${r.filter}) — other people's conversations would arrive`);
+    assertEq(r.afterEcho, 1, 'your own turn was appended a second time when it echoed back');
+    assertEq(r.afterNew, 2, 'a turn from another device did not appear');
+    assertEq(r.afterForeign, 2, 'a row from a different workspace was accepted into the thread');
+    assertEq(r.tail.content, 'from the phone', 'the wrong turn ended up at the tail');
+    assertEq(r.rm, 1, 'the channel is never cleaned up');
+  });
+
+check('RT2', 'wingman',
+  'Realtime is not load-bearing — Ask still works when it cannot connect',
+  async ({ page }) => {
+    await page.evaluate(() => {
+      window._lpSb = {
+        channel: () => { throw new Error('realtime unavailable'); },
+        from: () => ({
+          select(){ const q={ eq(){return q;}, order(){return q;}, limit(){return q;},
+            then(ok){ ok({ data: [], error: null }); return Promise.resolve(); } }; return q; },
+          insert(){ return Promise.resolve({ error: null }); }
+        })
+      };
+      window._lpWs = 'ws-1'; window._lpUser = { id: 'u-1' };
+      window._lpAsk = null;
+      try { localStorage.removeItem('lpAskThread'); } catch (e) {}
+    });
+    const errors = [];
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.locator('#ol2Nav').getByText('Docs', { exact: false }).first().click();
+    // If a realtime failure escaped, the Ask panel would never mount at all.
+    await page.waitForSelector('#ol2AskIn', { timeout: 8000 });
+    await page.waitForTimeout(500);
+    const usable = await page.evaluate(() => ({
+      input: !!document.getElementById('ol2AskIn'),
+      btn: !!document.getElementById('ol2AskBtn')
+    }));
+    assert(usable.input && usable.btn, 'the Ask panel did not mount when realtime threw');
+    assertEq(errors.length, 0, `a realtime failure escaped to the page: ${errors[0] || ''}`);
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    // The label must not promise live delivery when no channel is open.
+    assert(/_askChan \? 'Live/.test(src),
+      'the UI claims live sync without checking that a channel is actually open');
   });
 
 check('CI1', 'capture',

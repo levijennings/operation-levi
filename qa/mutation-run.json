@@ -228,5 +228,30 @@
     "id": "CI3",
     "verdict": "KILLED",
     "note": "guard catches it: the capture overlay stops scrolling and a tall interview strands Confirm off the bottom of a phone"
+  },
+  {
+    "id": "RT1",
+    "verdict": "KILLED",
+    "note": "guard catches it: your own turn is appended twice every time it echoes back down the socket"
+  },
+  {
+    "id": "RT1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the subscription stops being scoped to one user and other people’s conversations arrive on your screen"
+  },
+  {
+    "id": "RT2",
+    "verdict": "KILLED",
+    "note": "guard catches it: a realtime failure escapes and takes the whole Ask panel down with it"
+  },
+  {
+    "id": "X34B",
+    "verdict": "KILLED",
+    "note": "guard catches it: the docs start describing Libraries, a surface that was retired"
+  },
+  {
+    "id": "X34C",
+    "verdict": "KILLED",
+    "note": "guard catches it: the docs promise Wingman will buy things, contradicting the standing rule that payment stays human"
   }
 ]

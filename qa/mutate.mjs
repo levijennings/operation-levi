@@ -51,7 +51,7 @@ const MUTATIONS = [
    'the server stops collapsing consecutive same-role turns'],
   ['AK4', 'index.html', "var q = window._lpSb.from('ask_turns').insert({", "var q = ({}).x || (function(){return null})() || (window._lpSb.from('ask_turns'), {\n            insert: function(){ return null; } }).insert({",
    'turns stop being written to the server and the thread is device-local again'],
-  ['AK5', 'index.html', "? 'Synced — this conversation follows you to your phone'\n                             : 'This device only — sign in to sync'", "? 'Synced' : 'Synced'",
+  ['AK5', 'index.html', "                             : 'This device only — sign in to sync')", "                             : 'Synced — this conversation follows you to your phone')",
    'the UI claims a sync it is not doing when signed out'],
   ['C1', 'index.html', 'var it=newItemBase(capDraft.title', "var it={id:'v'+Date.now().toString(36), type:'task'}; var _unused=(capDraft.title",
    'capture goes back to building its own card object'],
@@ -115,6 +115,16 @@ const MUTATIONS = [
    'an under-specified do-it card is handed to Wingman to draft against nothing instead of waiting on Levi'],
   ['CI3', 'index.html', "padding:10vh 0 4vh;overflow-y:auto", "padding-top:10vh",
    'the capture overlay stops scrolling and a tall interview strands Confirm off the bottom of a phone'],
+  ['RT1', 'index.html', "for(var i=t.length-1; i>=0 && i>=t.length-4; i--){", "for(var i=-1; i>=0; i--){",
+   'your own turn is appended twice every time it echoes back down the socket'],
+  ['RT1', 'index.html', "filter:'user_id=eq.' + window._lpUser.id", "filter:''",
+   'the subscription stops being scoped to one user and other people\u2019s conversations arrive on your screen'],
+  ['RT2', 'index.html', "}catch(e){ _askChan = null; }", "}finally{ }",
+   'a realtime failure escapes and takes the whole Ask panel down with it'],
+  ['X34B', 'docs.json', 'Its hub has three tabs', 'Libraries has three tabs',
+   'the docs start describing Libraries, a surface that was retired'],
+  ['X34C', 'docs.json', 'Wingman does not buy anything', 'Wingman completes the purchase for you',
+   'the docs promise Wingman will buy things, contradicting the standing rule that payment stays human'],
 ];
 
 const out = [];
