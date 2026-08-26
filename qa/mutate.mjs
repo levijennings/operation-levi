@@ -87,6 +87,22 @@ const MUTATIONS = [
    'the heartbeat stops firing and an empty events table becomes ambiguous again'],
   ['EV6', 'index.html', "<h3>Activity recording</h3>", "<h3>Hidden</h3>",
    'Settings stops telling anyone whether their activity is actually being recorded'],
+  ['EM1', 'index.html', "if(to && to.indexOf('@') < 0) to = '';", "",
+   'a bare name like "To: Chad" is accepted as an email address — the way mail reaches the wrong person'],
+  ['EM2', 'index.html', "card.aiArtifact.sentTo = to;", "card.aiArtifact.sentTo = '';",
+   'the card stops recording who the email actually went to'],
+  ['EM3', 'index.html', "(res.j && res.j.error === 'no_from')", "(false)",
+   'an unverified sending domain is reported as a generic failure, sending anyone hunting the wrong problem'],
+  ['PU1', 'index.html', "sourced: !!url,", "sourced: true,",
+   'every price is treated as researched, including the ones Wingman invented with no source'],
+  ['PU2', 'index.html', "UNSOURCED", "OK",
+   'the UNSOURCED marker disappears and a made-up price reads as a real one'],
+  ['CL1', 'index.html', "['setup',       /", "['setupX',      /",
+   'the biggest real bucket in the portfolio (14 FareHarbor setup cards) goes back to being unclassifiable'],
+  ['CL1', 'index.html', "if(cardType === 'habit' || cardType === 'chore') return '';", "if(false) return '';",
+   'habits and chores get asset types again, putting upkeep noise into the field the grade routes on'],
+  ['CL2', 'index.html', 'id="edAssetOk"', 'id="edAssetOkX"',
+   'the one-tap confirm disappears and every type stays an unconfirmed guess forever'],
 ];
 
 const out = [];

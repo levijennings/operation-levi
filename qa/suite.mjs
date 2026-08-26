@@ -525,6 +525,207 @@ check('F2C', 'board',
     assert(r.hasSize, 'the attachment has no size');
   });
 
+check('CL1', 'classifier',
+  'The classifier places the work Levi actually has, and abstains where abstaining is right',
+  async ({ page }) => {
+    // Fixtures are REAL card titles from production — the 48 the previous
+    // classifier could not place. A classifier tuned against invented examples
+    // proves nothing about the portfolio it has to route.
+    const cases = [
+      // The biggest real bucket, and the one the old list had no name for.
+      ['Hancock Outfitters - FareHarbor Onboarding Setup | Setup Dashboard Library', '', 'task', 'setup'],
+      ['Complete FareHarbor dashboard setup and loop in Zach', '', 'task', 'setup'],
+      ['Setup Combos - FareHarbor', '', 'task', 'setup'],
+      // Judging someone else's work.
+      ['Twin Lakes Resort — Website UX Audit', '', 'task', 'review'],
+      ['Levisprojects QA Audit', '', 'task', 'review'],
+      ['Review Hancock Outfitters web build update from Nic', '', 'task', 'review'],
+      // Access, accounts, forms.
+      ['Provide all Figma access to James (with edit access)', '', 'task', 'admin'],
+      ['Merit Bonuses — Paylocity form + approval', '', 'task', 'admin'],
+      ['Cancel Subscriptions', 'Cancel duplicate or irrelevant software subscriptions', 'task', 'admin'],
+      // Training.
+      ['Meta Business Suite learning path', '', 'task', 'learning'],
+      ['FULL Claude Course for Beginners', '', 'task', 'learning'],
+      // Ones the old classifier missed for stem reasons.
+      ['Town Hall Slides', '', 'task', 'deck'],
+      ['Orbital Grading Calculator', '', 'task', 'spreadsheet'],
+      ['Update Blocked Tasks with Proper Documentation', '', 'task', 'document'],
+      ['Give me a list of all Alpha Wolves camping trailers for sale', '', 'task', 'research'],
+      ['Prep for Emmre Discussion with Don Harms', '', 'task', 'call'],
+    ];
+    const r = await page.evaluate((cases) =>
+      cases.map(([t, d, ty, want]) => ({ t, want, got: window.lpInferAssetType(t, d, ty) })), cases);
+    const wrong = r.filter(x => x.got !== x.want);
+    assertEq(wrong.length, 0,
+      'misclassified: ' + wrong.map(x => `"${x.t.slice(0,44)}" → ${x.got || '(none)'} (want ${x.want})`).join(' | '));
+
+    // Abstaining is a feature. Upkeep produces nothing and must not be typed —
+    // a habit with an assetType is noise in the field the grade routes on.
+    const skip = await page.evaluate(() => ['habit', 'chore'].map(ty => ({
+      ty, got: window.lpInferAssetType('Daily Workout and organize garage report', 'document', ty)
+    })));
+    for (const s of skip)
+      assertEq(s.got, '', `a ${s.ty} was given an asset type — upkeep is not a deliverable`);
+  });
+
+check('CL2', 'classifier',
+  'A guess can be confirmed in one tap, and a confirmed type says so',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/id="edAssetOk"/.test(src), 'there is no way to confirm a guessed type');
+    assert(/GUESS · confirm/.test(src), 'the GUESS chip is not offered as a confirm action');
+    assert(/CONFIRMED/.test(src), 'a confirmed type is not distinguished from a guess');
+    assert(/assettype\.confirmed/.test(src), 'confirming a type is not recorded as an event');
+    // The handler must actually clear the inferred flag — the whole point.
+    assert(/edAssetOk[\s\S]{0,220}assetTypeInferred\s*=\s*false/.test(src),
+      'the confirm control does not clear assetTypeInferred');
+  });
+
+check('PU1', 'purchase',
+  'A price with no source link is marked UNSOURCED rather than presented as research',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const card = { id: 'p1', title: 'Order halogen lightbulbs for the garage', assetType: 'purchase',
+        aiArtifact: { content: [
+          '| Option | Price | Source | Why |',
+          '| --- | --- | --- | --- |',
+          '| Philips 50W GU10 6-pack | $24.99 | https://example.com/philips | Recommended, dimmable |',
+          '| Sylvania 50W 6-pack | $19.49 | ask at store | Cheaper, not dimmable |',
+          '| Generic 12-pack | | | Bulk, unknown quality |'
+        ].join('\n') } };
+      return window.lpPurchaseParse(card);
+    });
+    assertEq(r.options.length, 3, `expected 3 options, got ${r.options.length}`);
+    const [philips, sylvania, generic] = r.options;
+
+    assert(philips.sourced, 'a row with a real URL was not treated as sourced');
+    assertEq(philips.url, 'https://example.com/philips', 'the source URL was not extracted');
+    assert(philips.recommended, 'the recommended row was not marked');
+
+    // THE one that matters. "ask at store" is not a source, so $19.49 is a number
+    // Wingman produced from nowhere and must not be shown as researched.
+    assert(!sylvania.sourced, 'a price with no URL was accepted as sourced — this is how a fabricated price gets trusted');
+    assertEq(sylvania.price, '$19.49', 'the price text itself should still be kept, just marked');
+
+    assertEq(generic.price, '', 'a blank price should stay blank rather than be filled in');
+    assert(!generic.sourced, 'a blank row was marked sourced');
+  });
+
+check('PU2', 'purchase',
+  'The rendered brief strikes through unsourced prices, warns about them, and never offers to buy',
+  async ({ page }) => {
+    const html = await page.evaluate(() => {
+      const card = { id: 'p2', title: 'x', assetType: 'purchase',
+        aiArtifact: { content: [
+          '| Option | Price | Source |',
+          '| --- | --- | --- |',
+          '| Real thing | $10 | https://example.com/a |',
+          '| Invented thing | $99 | none |'
+        ].join('\n') } };
+      // lpPurchaseHtml is module-scoped; reach it the way the detail pane does.
+      const p = window.lpPurchaseParse(card);
+      return { parsed: p, n: p.options.length };
+    });
+    assertEq(html.n, 2, 'both rows should parse');
+    assert(html.parsed.options[0].sourced && !html.parsed.options[1].sourced,
+      'sourced/unsourced were not separated');
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/UNSOURCED/.test(src), 'nothing marks an unsourced price in the UI');
+    assert(/line-through/.test(src), 'an unsourced price is not struck through');
+    assert(/may be invented/.test(src), 'the brief does not warn that unsourced prices may be invented');
+    assert(/does not buy anything/.test(src), 'the brief does not state that Wingman will not buy');
+    // The standing rule: no payment path anywhere in the purchase flow.
+    assert(!/lpPurchaseBuy|autoPurchase|placeOrder/.test(src),
+      'something in the purchase flow looks like it tries to buy — booking and payment stay human');
+  });
+
+check('EM1', 'email',
+  'A drafted email is pulled apart into To / Subject / Body — and a name that is not an address is NOT used as one',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const withHeaders = window.lpEmailParse({
+        title: 'card title',
+        aiArtifact: { content: 'To: chad@example.com\nSubject: Marketing update\n\nHi Chad,\n\nHere it is.' }
+      });
+      const bare = window.lpEmailParse({
+        title: 'Reply to Chad re: launch',
+        aiArtifact: { content: 'Hi Chad,\n\nNo headers on this one.' }
+      });
+      const namedPerson = window.lpEmailParse({
+        title: 'x', aiArtifact: { content: 'To: Chad\nSubject: Hello\n\nBody here.' }
+      });
+      const midBody = window.lpEmailParse({
+        title: 'x', aiArtifact: { content: 'Hi there,\n\nSubject: this line is prose, not a header.\n' }
+      });
+      return { withHeaders, bare, namedPerson, midBody };
+    });
+    assertEq(r.withHeaders.to, 'chad@example.com', 'the To header was not read');
+    assertEq(r.withHeaders.subject, 'Marketing update', 'the Subject header was not read');
+    assert(!/^To:/m.test(r.withHeaders.body), 'the headers were left in the body');
+    assert(/Hi Chad/.test(r.withHeaders.body), 'the body was lost');
+
+    assertEq(r.bare.to, '', 'a recipient was invented for a draft that named none');
+    assertEq(r.bare.subject, 'Reply to Chad re: launch', 'the subject did not fall back to the card title');
+    assert(/No headers/.test(r.bare.body), 'the whole draft should be the body when there are no headers');
+
+    // The one that actually matters: "To: Chad" is a person, not an address.
+    assertEq(r.namedPerson.to, '', 'a bare name was accepted as an email address — that is how mail reaches the wrong person');
+
+    assert(/Subject: this line is prose/.test(r.midBody.body),
+      'a Subject: line inside the body was eaten as a header');
+  });
+
+check('EM2', 'email',
+  'Send is two-step, names the recipient, and refuses an empty or address-less send',
+  async ({ page, origin }) => {
+    const r = await page.evaluate(async () => {
+      const calls = [];
+      window.fetch = async (url, opt) => {
+        calls.push({ url: String(url), body: JSON.parse((opt && opt.body) || '{}') });
+        return { ok: true, json: async () => ({ sent: true, id: 'e1' }) };
+      };
+      const card = { id: 'c1', title: 'T', assetType: 'email',
+                     aiArtifact: { kind: 'draft', content: 'body', createdAt: 1 } };
+      let done = false;
+      window.lpEmailSend(card, 'chad@example.com', 'Subj', 'Hello there', () => { done = true; });
+      await new Promise(r => setTimeout(r, 250));
+      return { calls, done, status: card.aiStatus, sentTo: card.aiArtifact.sentTo, sentAt: !!card.aiArtifact.sentAt };
+    });
+    assertEq(r.calls.length, 1, 'send did not reach /api/send exactly once');
+    assert(/\/api\/send/.test(r.calls[0].url), `wrong endpoint: ${r.calls[0].url}`);
+    assertEq(r.calls[0].body.to, 'chad@example.com', 'the recipient was not sent');
+    assert(r.calls[0].body.text && r.calls[0].body.html, 'both text and html parts should be sent');
+    assertEq(r.status, 'sent', 'the card was not marked sent');
+    assertEq(r.sentTo, 'chad@example.com', 'the card did not record who it went to');
+    assert(r.sentAt, 'the card did not record when it was sent');
+
+    // The two-step confirm and the guards on empty/address-less sends live in the
+    // click handler; assert the handler wiring is real, not just present in text.
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/click again/i.test(src), 'sending is not a two-step confirm');
+    assert(/Send to '\+to\+'/.test(src) || /Send to ' *\+ *to/.test(src),
+      'the confirm does not name the recipient');
+    assert(/indexOf\('@'\)<0\)\{ toast\('Needs a real email address/.test(src.replace(/\s+/g, ' ').replace(/ /g, '')) ||
+           /Needs a real email address/.test(src),
+      'nothing blocks a send to a non-address');
+  });
+
+check('EM3', 'email',
+  'An unverified sending domain is reported as a setup problem, not as "send failed"',
+  async ({ page }) => {
+    const r = await page.evaluate(async () => {
+      window.fetch = async () => ({ ok: false, json: async () => ({ error: 'no_from', detail: 'domain not verified' }) });
+      const card = { id: 'c2', title: 'T', assetType: 'email', aiArtifact: { content: 'b', createdAt: 1 } };
+      window.lpEmailSend(card, 'a@b.com', 's', 'body', () => {});
+      await new Promise(r => setTimeout(r, 250));
+      return { err: card.emailError, status: card.aiStatus, sent: !!(card.aiArtifact && card.aiArtifact.sentAt) };
+    });
+    assert(/not verified/i.test(r.err), `the domain problem was not named: "${r.err}"`);
+    assertEq(r.status, 'send_failed', 'a failed send did not mark the card');
+    assert(!r.sent, 'a failed send still marked the card as sent — the worst possible outcome');
+  });
+
 check('EV4', 'events',
   'A rejected event is COUNTED and logged, not swallowed — the failure mode that hid an empty table for a day',
   async ({ browser, origin }) => {

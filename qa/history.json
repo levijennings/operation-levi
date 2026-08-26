@@ -146,6 +146,18 @@
       "mutations": "32/32 killed",
       "suite": "restored (this file)",
       "note": "VERDICT: the emitter was never broken. Proven against PRODUCTION, not a stub — a raw insert from Levi's signed-in browser returned 201, and window.lpEvent('diag.viafn') wrote a real row. RLS, both CHECK constraints, and the _lpSb/_lpWs/_lpUser globals were all correct. The zero rows meant nobody had performed an instrumented action on a page loaded after the layer deployed (a tab open since before the deploy runs the old code). The REAL defect was that this was unanswerable without a database probe: lpEvent swallowed every outcome, so success, RLS denial, network failure and signed-out skip all looked identical from outside — nothing. Fixed by making the layer falsifiable: _lpEvStats counts sent/failed/skipped and keeps the last error, failures reach console.warn, an app.loaded heartbeat fires once per signed-in load so an empty table can ONLY mean broken, and Settings states the recording state in words. EV4/EV5/EV6 added and mutation-proven. AK4 was rewritten too: it counted app_events inserts and broke the moment the heartbeat was added — a guard that counts is a guard that fails for the wrong reason, so it now asserts the event by NAME. Two diagnostic rows (diag.probe, diag.viafn) are permanent in app_events: the table has no delete policy by design. They are honestly named and harmless."
+    },
+    {
+      "run": "R015",
+      "ranAt": "2026-08-26T02:10:00Z",
+      "trigger": "Roadmap items 3-5: email deliverables, purchase decision briefs, classifier rebuilt from the typed portfolio",
+      "build": "d5221fb + F2b/F2c/classifier",
+      "total": 62,
+      "pass": 60,
+      "fail": 2,
+      "mutations": "40/40 killed",
+      "suite": "restored (this file)",
+      "note": "EMAIL (F2b): the largest typed bucket, 12 cards. api/send.js already existed and was never reachable from a card. lpEmailParse pulls To/Subject/Body out of the draft; a bare name like 'To: Chad' is REFUSED as an address rather than guessed at, send is two-step and the confirm names the recipient, and an unverified sending domain is reported as a setup problem instead of a generic failure. EM1/EM2/EM3. PURCHASE (F2c): 8 cards, the garage-lightbulbs case. No payment path — the standing rule is intact and PU2 asserts it. The load-bearing constraint is prices: this project has a fabrication precedent, so a price is only presented as real when its row carries a source URL; everything else is struck through and marked UNSOURCED with a warning. The PARSER enforces it — Wingman is not trusted to be honest about its own sourcing. PU1/PU2. CLASSIFIER: the problem was the TYPE LIST, not the regexes. Of 48 unplaceable cards, 14 were configuring another system, 8 access/account admin, 7 reviews, 4 training. `setup` is now the LARGEST bucket in the whole portfolio — bigger than email — and had no name at all. Added setup, review, admin, learning; habits and chores now abstain by design. Measured against the REAL 48: 0/48 → 37/48, and 6 of the 11 remaining are habits/chores that should abstain, so 37 of 42 real asset cards (88%). CL1's fixtures are production titles, not invented ones. One judgement call: 'Give me a list of all trailers FOR SALE' matched purchase before research. An explicit request for a list is research even when the subject is a purchase, so list/search intent is now probed first. CONFIRM: all 37 typed cards were still marked inferred days after the backfill because confirming meant re-picking from the dropdown. The GUESS chip is now a one-tap confirm. CL2."
     }
   ]
 }

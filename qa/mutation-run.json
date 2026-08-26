@@ -158,5 +158,45 @@
     "id": "EV6",
     "verdict": "KILLED",
     "note": "guard catches it: Settings stops telling anyone whether their activity is actually being recorded"
+  },
+  {
+    "id": "EM1",
+    "verdict": "KILLED",
+    "note": "guard catches it: a bare name like \"To: Chad\" is accepted as an email address — the way mail reaches the wrong person"
+  },
+  {
+    "id": "EM2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the card stops recording who the email actually went to"
+  },
+  {
+    "id": "EM3",
+    "verdict": "KILLED",
+    "note": "guard catches it: an unverified sending domain is reported as a generic failure, sending anyone hunting the wrong problem"
+  },
+  {
+    "id": "PU1",
+    "verdict": "KILLED",
+    "note": "guard catches it: every price is treated as researched, including the ones Wingman invented with no source"
+  },
+  {
+    "id": "PU2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the UNSOURCED marker disappears and a made-up price reads as a real one"
+  },
+  {
+    "id": "CL1",
+    "verdict": "KILLED",
+    "note": "guard catches it: the biggest real bucket in the portfolio (14 FareHarbor setup cards) goes back to being unclassifiable"
+  },
+  {
+    "id": "CL1",
+    "verdict": "KILLED",
+    "note": "guard catches it: habits and chores get asset types again, putting upkeep noise into the field the grade routes on"
+  },
+  {
+    "id": "CL2",
+    "verdict": "KILLED",
+    "note": "guard catches it: the one-tap confirm disappears and every type stays an unconfirmed guess forever"
   }
 ]
