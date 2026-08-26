@@ -403,6 +403,22 @@ html,body{margin:0;padding:0;background:#0E0F12;color:#E9EAEE;font-family:'Inter
             // The event layer (F6) needs the workspace id on every row.
             window._lpWs   = _workspaceId;
             window._lpUser = { id: (_currentUser && _currentUser.id) || null, name: _userName || '' };
+            // F15: the real member roster, kept where the ol2 shell can see it.
+            // Until now this was fetched only to paint one Settings list, so the
+            // rest of the app had no way to tell a real member from a name someone
+            // typed on a card — and 3 of the 7 people showing in Team Workload
+            // have no account at all.
+            window._lpMembers = window._lpMembers || [];
+            try {
+                _sb.from('workspace_members').select('name, role, user_id, category, visibility')
+                   .eq('workspace_id', _workspaceId)
+                   .then(function(r){
+                     if (r && r.data) {
+                       window._lpMembers = r.data;
+                       try { if (typeof window.lpMembersLoaded === 'function') window.lpMembersLoaded(); } catch (e) {}
+                     }
+                   }, function(){});
+            } catch (e) {}
             _userCategory   = member.category || null;
             _userVisibility = member.visibility || 'all';
 
@@ -3998,7 +4014,15 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var wingRev=all.filter(function(i){ return i.status==='review' && i.aiArtifact && i.aiArtifact.content; }).length;
         h+='<div class="lp-team">'
           +'<div class="lp-tcard" id="lpHomeWing"><div class="pav wing" style="width:32px;height:32px;font-size:14px">▸</div><div class="i"><div class="nm" style="color:#E0B871">Wingman</div><div class="st"><b>'+wingWk+'</b> drafted · <b>'+wingRev+'</b> for review</div></div></div>'
-          +people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var od=its.filter(function(i){ return i.status!=='done' && i.dueDate && i.dueDate<today; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+'</div><div class="st"><b>'+wk+'</b> this week'+(od?(' · <b style="color:#E08A8A">'+od+'</b> overdue'):'')+'</div></div></div>'; }).join('')+'</div>';
+          +people.map(function(p){ var its=pItems(p); var wk=its.filter(function(i){ return i.status!=='done' && wkSt.indexOf(i.status)>=0; }).length; var od=its.filter(function(i){ return i.status!=='done' && i.dueDate && i.dueDate<today; }).length; var av=(typeof getAvatarHTML==='function')?getAvatarHTML(p,32):('<div class="av">'+esc(initials(p).toUpperCase())+'</div>'); var _ms=(typeof lpMemberStatus==='function')?lpMemberStatus(p):'unknown'; return '<div class="lp-tcard'+(homeExpandedPerson===p?' on':'')+(_ms==='unlinked'?' unlinked':'')+'" data-person="'+esc(p)+'">'+av+'<div class="i"><div class="nm">'+esc(p)+(_ms==='unlinked'?' <span class="tag" style="font-size:9px;background:#3a2a12;color:#E0A33E" title="No account in this workspace — cannot sign in and will never receive a notification">NO ACCOUNT</span>':'')+'</div><div class="st"><b>'+wk+'</b> this week'+(od?(' · <b style="color:#E08A8A">'+od+'</b> overdue'):'')+'</div></div></div>'; }).join('')+'</div>';
+        (function(){
+          // Say it once, in words, rather than leaving the reader to notice the chips.
+          var un=(typeof lpUnlinkedPeople==='function')?lpUnlinkedPeople():[];
+          if(un.length) h+='<div style="font-size:11.5px;color:#E0A33E;margin-top:8px">'
+            +esc(un.join(', '))+(un.length===1?' has':' have')+' no account in this workspace. '
+            +'Work assigned to '+(un.length===1?'them':'them')+' is tracked here but they cannot sign in, '
+            +'see it, or be notified. Add '+(un.length===1?'them':'them')+' in Settings → Crew members.</div>';
+        })();
         if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div></div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
       })();
       home.innerHTML=h;
@@ -5398,6 +5422,64 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     window.lpProduceFile = lpProduceFile;
     window.lpInferAssetType = lpInferAssetType;   // exposed so guards test the real classifier
 
+    // ── F15: people are strings, and that is the bug ────────────────────────
+    // Every card names its people ("Zoe", "Chad") with nothing behind the name.
+    // Production shows the cost plainly: work is assigned to Chad (2 cards) and
+    // Jason (1), and NEITHER is a workspace member — no account, no sign-in, no
+    // notification will ever reach them, while Team Workload renders them beside
+    // Levi and Zoe as though they were on the team.
+    //
+    // Names are NOT ripped out. 85 cards depend on them and a big-bang migration
+    // with no rollback is exactly the kind of change that loses data. Instead an
+    // id rides ALONGSIDE the name, and the name stays the display value.
+    function lpMembers(){ return (window._lpMembers || []); }
+    function lpMemberByName(name){
+      var n = String(name||'').trim().toLowerCase();
+      if(!n) return null;
+      var ms = lpMembers();
+      for(var i=0;i<ms.length;i++){ if(String(ms[i].name||'').trim().toLowerCase() === n) return ms[i]; }
+      return null;
+    }
+    function lpMemberId(name){ var m = lpMemberByName(name); return (m && m.user_id) || ''; }
+    // Unknown is not the same as absent. Before the roster has loaded, every name
+    // would look unlinked — and painting "no account" over the whole crew because
+    // a fetch has not returned yet is worse than saying nothing.
+    function lpMemberStatus(name){
+      if(!lpMembers().length) return 'unknown';
+      return lpMemberByName(name) ? 'member' : 'unlinked';
+    }
+    function lpUnlinkedPeople(){
+      if(!lpMembers().length) return [];
+      var seen = {}, out = [];
+      (typeof ITEMS==='function' ? ITEMS() : []).forEach(function(it){
+        (it.assignees||[]).forEach(function(nm){
+          if(!nm || seen[nm]) return; seen[nm] = 1;
+          if(lpMemberStatus(nm) === 'unlinked') out.push(nm);
+        });
+      });
+      return out.sort();
+    }
+    // Stamp ids onto cards whose people ARE members, once per session. Cards
+    // naming a non-member are left exactly as they are — inventing an id for
+    // somebody with no account would paper over the very gap this surfaces.
+    function lpBackfillMemberIds(){
+      if(window._lpMemberIdsDone) return;
+      if(!lpMembers().length) return;              // nothing to resolve against yet
+      window._lpMemberIdsDone = true;
+      var changed = 0;
+      (typeof ITEMS==='function' ? ITEMS() : []).forEach(function(it){
+        var names = it.assignees || []; if(!names.length) return;
+        var ids = names.map(function(n){ return lpMemberId(n); }).filter(Boolean);
+        var prev = JSON.stringify(it.assigneeIds || []);
+        if(JSON.stringify(ids) !== prev){ it.assigneeIds = ids; changed++; }
+      });
+      if(changed){ try{ persist(); }catch(e){} }
+    }
+    window.lpMemberId = lpMemberId;
+    window.lpMemberStatus = lpMemberStatus;
+    window.lpUnlinkedPeople = lpUnlinkedPeople;
+    window.lpMembersLoaded = function(){ try{ lpBackfillMemberIds(); }catch(e){} };
+
     // ── F2b: email deliverables ─────────────────────────────────────────────
     // The typed portfolio says `email` is the LARGEST bucket (12 of 85 cards) —
     // bigger than document and spreadsheet combined by an order of magnitude.
@@ -5596,6 +5678,9 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       // F1: guess what this produces so Wingman can route on it. Marked as a
       // guess — the person confirms it on the task, and nothing treats it as fact.
       var _at = lpInferAssetType(it.title, it.deliverable, it.type);
+      // F15: stamp member ids next to the names at creation. Names stay the
+      // display value; ids are what survives a rename.
+      try{ it.assigneeIds = (it.assignees||[]).map(function(n){ return lpMemberId(n); }).filter(Boolean); }catch(e){ it.assigneeIds = []; }
       if(_at){ it.assetType = _at; it.assetTypeInferred = true; }
       lpEvent('task.created', {
         via: it.source || 'unknown',
