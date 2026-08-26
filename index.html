@@ -1784,10 +1784,14 @@ dots + 'Levi&#39;s Projects</td></tr>' +
 .ol2 .litem .lt{font-weight:600;font-size:14px;display:flex;align-items:center;gap:9px}
 .ol2 .litem .ld{color:#8A8D97;font-size:12.5px;margin-top:6px;line-height:1.5}
 /* voice capture */
-.ol2cap{position:fixed;inset:0;z-index:9200;background:rgba(4,4,6,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding-top:10vh;font-family:'Inter',system-ui,sans-serif}
+.ol2cap{position:fixed;inset:0;z-index:9200;background:rgba(4,4,6,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:10vh 0 4vh;overflow-y:auto;font-family:'Inter',system-ui,sans-serif}
 .ol2cap.on{display:flex}
 .ol2cap *{box-sizing:border-box}
-.ol2cap .cap{width:540px;max-width:92vw;background:#121317;border:1px solid #30353d;border-radius:18px;padding:28px 30px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5);color:#E9EAEE}
+/* The interview adds questions to the preview, which made the modal taller
+   than the screen and pushed Confirm out of reach — the action existed but
+   could not be clicked. The overlay scrolls and the card holds its own
+   height so the buttons are always reachable, on a phone too. */
+.ol2cap .cap{width:540px;max-width:92vw;max-height:none;margin:auto;background:#121317;border:1px solid #30353d;border-radius:18px;padding:28px 30px 24px;box-shadow:0 30px 80px rgba(0,0,0,.5);color:#E9EAEE}
 .ol2cap .mic{width:74px;height:74px;border-radius:50%;background:#C08428;margin:2px auto 14px;display:flex;align-items:center;justify-content:center;color:#1c1304;position:relative;cursor:pointer}
 .ol2cap .mic svg{width:30px;height:30px}
 .ol2cap .mic.live::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid #C08428;opacity:.5;animation:ol2pulse 1.3s ease-out infinite}
@@ -5011,6 +5015,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           '<div class="prow"><span>Category</span><b id="ol2pvCat"></b></div>'+
           '<div class="prow"><span>Context</span><b id="ol2pvCtx"></b></div>'+
           '<div id="ol2pvParts"></div>'+
+          '<div id="ol2capIv"></div>'+
           '<div class="modes" id="ol2capModes"><div class="mode" id="ol2mDo">▸ Do-it · Wingman drafts</div><div class="mode" id="ol2mTrack">◷ Track-it · you do</div></div>'+
         '</div>'+
         '<div class="cact" id="ol2capAct1"><button class="gbtn" id="ol2capCancel">Cancel</button><button class="gbtn amber" id="ol2capCont">Continue →</button></div>'+
@@ -5068,6 +5073,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       $c('ol2pvCtx').textContent=capDraft.ctx?capDraft.ctx.name:'—';
       var single=(capDraft.parts||[]).length<2 ? (capDraft.parts&&capDraft.parts[0]) : null;
       setCapMode((single&&single.suggestedOwner==='Wingman')||capDraft.doit?'do-it':'track-it');
+      try{ renderInterview(); }catch(e){}
       renderParts();
       $c('ol2capPv').classList.add('on'); $c('ol2capAct1').style.display='none'; $c('ol2capAct2').style.display='flex';
       $c('ol2capH').textContent='Got it — here’s the plan'; $c('ol2capSub').textContent=capDraft.ai?'Wingman structured it. Adjust owners, then confirm.':'Wingman structured your sentence. Confirm to save.';
@@ -5479,6 +5485,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     window.lpMemberStatus = lpMemberStatus;
     window.lpUnlinkedPeople = lpUnlinkedPeople;
     window.lpMembersLoaded = function(){ try{ lpBackfillMemberIds(); }catch(e){} };
+    window.lpCaptureGaps = function(d,m){ try{ return lpCaptureGaps(d,m); }catch(e){ return []; } };
 
     // ── F2b: email deliverables ─────────────────────────────────────────────
     // The typed portfolio says `email` is the LARGEST bucket (12 of 85 cards) —
@@ -5711,6 +5718,66 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       });
       capDraft=null;
     }
+    // ── Capture interview (decision #7) ─────────────────────────────────────
+    // Levi's words: "New task entered > Wingman asks questions to have complete
+    // scope and details > Wingman asks for context, assets, or additional
+    // questions > If the task moving forward is dependent on me it should go to
+    // the waiting on me column."
+    //
+    // The questions are computed from what the parse actually MISSED, not asked
+    // of a model. Deterministic beats clever here: it is instant, it works with
+    // no network, and it cannot invent a question about a detail the person
+    // already gave. Wingman asking "when is this due?" about a card that says
+    // "due Friday" is how an interview becomes a tax.
+    function lpCaptureGaps(draft, mode){
+      var g = [];
+      if(!draft) return g;
+      if(!draft.due) g.push({ k:'due', q:'When does this need to be done?', ph:'Friday, next week, 2026-09-04' });
+      // The one that actually governs draft quality. 41% of cards had no
+      // definition of done, and a draft written against no target is the reason
+      // Wingman's output kept landing as "the easy 20%".
+      if(!draft.deliverable) g.push({ k:'deliverable', q:'What does done look like?', ph:'Signed agreement filed · deck reviewed by Chad', key:true });
+      if(!draft.ctx) g.push({ k:'ctx', q:'Anything Wingman should read first?', ph:'Link, doc name, or a sentence of background' });
+      // Only worth asking when somebody else may own it.
+      if(mode === 'track-it' && !draft.owner) g.push({ k:'owner', q:'Who is doing this?', ph:'A name' });
+      return g;
+    }
+    function renderInterview(){
+      var box = $c('ol2capIv'); if(!box) return;
+      var gaps = lpCaptureGaps(capDraft, capMode);
+      capDraft._gaps = gaps;
+      if(!gaps.length){ box.innerHTML=''; return; }
+      box.innerHTML =
+        '<div style="border-top:1px solid #26272D;margin-top:10px;padding-top:10px">'+
+          '<div style="font-size:11px;letter-spacing:.08em;color:#8A8F99;margin-bottom:8px">WINGMAN NEEDS TO KNOW</div>'+
+          gaps.map(function(g,i){
+            return '<div style="margin-bottom:8px">'+
+              '<label class="erl" style="display:block">'+esc(g.q)+(g.key?' <span class="tag" style="font-size:9px">MATTERS MOST</span>':'')+'</label>'+
+              '<input class="ein" data-iv="'+esc(g.k)+'" placeholder="'+esc(g.ph)+'">'+
+            '</div>';
+          }).join('')+
+          '<div style="font-size:11.5px;color:#6E717B">Skip anything you do not know. '+
+          (capMode==='do-it'
+            ? 'If Wingman still has no target it will park the card in Waiting rather than draft against a guess.'
+            : 'Nothing here is required.')+'</div>'+
+        '</div>';
+    }
+    function readInterview(){
+      var box = $c('ol2capIv'); if(!box || !capDraft) return { answered:0, skipped:0 };
+      var answered = 0, skipped = 0;
+      (capDraft._gaps||[]).forEach(function(g){
+        var el = box.querySelector('[data-iv="'+g.k+'"]');
+        var v = el ? String(el.value||'').trim() : '';
+        if(!v){ skipped++; return; }
+        answered++;
+        if(g.k==='due'){ var d=parseDue(v.toLowerCase()); capDraft.due = d || v; }
+        else if(g.k==='deliverable'){ capDraft.deliverable = v; }
+        else if(g.k==='owner'){ capDraft.owner = v; }
+        else if(g.k==='ctx'){ capDraft.notes = (capDraft.notes ? capDraft.notes+'\n\n' : '') + v; }
+      });
+      return { answered: answered, skipped: skipped };
+    }
+
     function capConfirm(){
       if(!capDraft) return;
       if(capDraft.ai && capDraft.parts && capDraft.parts.length>1){ capConfirmParts(); return; }
@@ -5720,6 +5787,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(p0.deliverable&&!capDraft.deliverable) capDraft.deliverable=p0.deliverable;
         if(p0.confidence&&!capDraft.assess) capDraft.assess={confidence:p0.confidence,reason:p0.reason||'',questions:[],suggest:{}};
       }
+      var _iv = readInterview();
       var own=capDraft.owner||meName();
       // ONE constructor. capConfirm used to build this object inline, duplicating
       // the entire card shape — which meant a field added to newItemBase was
@@ -5733,11 +5801,27 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       it.linkedContext=capDraft.ctx?[capDraft.ctx.name]:[];
       if(capDraft.assess){ it.aiConfidence=capDraft.assess.confidence; it.aiAssess={reason:capDraft.assess.reason,questions:capDraft.assess.questions,suggest:capDraft.assess.suggest}; }
       if(capDraft.notes) it.notes=capDraft.notes;
+      // His rule, applied literally: when the thing that would let Wingman start
+      // is Levi's to supply and he did not supply it, the card waits ON HIM
+      // rather than pretending to be workable. Only do-it cards park — a
+      // track-it card is his own work and nothing is blocked.
+      var _parked = false;
+      if(capMode==='do-it' && !String(it.deliverable||'').trim()){
+        it.status='waiting';
+        it.waitingOn='What done looks like';
+        it.waitingFrom=meName();
+        it.columnEnteredAt=Date.now();
+        _parked = true;
+        try{ lpAudit(it,'Parked in Waiting — Wingman has no definition of done to draft against'); }catch(e){}
+      }
+      lpEvent('capture.interviewed', { asked:(capDraft._gaps||[]).length, answered:_iv.answered, skipped:_iv.skipped, parked:_parked, mode:capMode }, it.id);
       try{ if(typeof items!=='undefined' && items && items.push) items.push(it); }catch(e){}
-      if(capMode==='do-it') lpEvent('task.routed', { to:'wingman', has_deliverable:!!(it.deliverable&&String(it.deliverable).trim()), from:'capture' }, it.id);
+      if(capMode==='do-it' && !_parked) lpEvent('task.routed', { to:'wingman', has_deliverable:!!(it.deliverable&&String(it.deliverable).trim()), from:'capture' }, it.id);
       persist(); closeCapture(); showBoard();
       if(own && own!==meName()) lpNotifyAssign(own, it);
-      if(capMode==='do-it'){
+      if(_parked){
+        toast('◷ Parked in Waiting — tell it what done looks like and it will draft');
+      } else if(capMode==='do-it'){
         toast('▸ Card created — Wingman is drafting…');
         var parts=assemble(it);
         callRun(it, parts, '', '', function(res){
@@ -5755,8 +5839,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     $c('ol2capCont').onclick=function(){ stopRec(); capParse(); };
     $c('ol2capBack').onclick=function(){ $c('ol2capPv').classList.remove('on'); $c('ol2capAct1').style.display='flex'; $c('ol2capAct2').style.display='none'; $c('ol2capH').textContent='Speak a task'; $c('ol2capSub').textContent='Tap the mic and talk — or type below'; };
     $c('ol2capConfirm').onclick=capConfirm;
-    $c('ol2mDo').onclick=function(){ setCapMode('do-it'); };
-    $c('ol2mTrack').onclick=function(){ setCapMode('track-it'); };
+    $c('ol2mDo').onclick=function(){ setCapMode('do-it'); try{ renderInterview(); }catch(e){} };
+    $c('ol2mTrack').onclick=function(){ setCapMode('track-it'); try{ renderInterview(); }catch(e){} };
     cap.onclick=function(e){ if(e.target===cap) closeCapture(); };
     window.ol2OpenCapture=openCapture;
 
