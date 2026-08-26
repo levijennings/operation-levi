@@ -206,6 +206,18 @@
       "mutations": "57/57 killed",
       "suite": "restored (this file)",
       "note": "GRADE: usage 40 / momentum 35 / effectiveness 25, as agreed. The arithmetic matters less than the refusal: below 12 real events in 30 days it returns NO SCORE and says why. A grade drawn from an almost-empty events table is a confident number meaning nothing, and this project already lost a day to that class of mistake. GR1 mutation-proves the refusal AND that the diag.* rows left behind by that same investigation are excluded — otherwise the first grade Levi ever saw would have been inflated by my own debugging.\\nMomentum is completions against creations, damped by how much is overdue RIGHT NOW, so a pile of late work cannot score well on flow alone. Effectiveness is approvals over drafts REVIEWED, not over drafts made — a draft nobody has looked at is not evidence of anything.\\nQUIZ: 16 questions, pass at 70% inclusive (mutation-proven at the boundary — 'pass is 70' failing at exactly 70 would be a lie). Several questions are about the LIMITS: what Wingman will not do, why an unsourced price is struck through, why a deck cannot be generated. Knowing the limits is what makes delegation safe. A partly-filled sheet is refused rather than scored, because that percentage would measure how much was skipped rather than what is known."
+    },
+    {
+      "run": "R020",
+      "ranAt": "2026-08-26T04:30:00Z",
+      "trigger": "Production data showed a real misclassification: 'Book Ideal Week Schedule' typed as a purchase",
+      "build": "b6026b3 + book/schedule fix",
+      "total": 74,
+      "pass": 74,
+      "fail": 0,
+      "mutations": "58/58 killed",
+      "suite": "restored (this file)",
+      "note": "'Book' is two different verbs and the classifier only knew one of them. Booking a flight is a purchase; booking your own calendar is a plan. `book` sat in the purchase probe ahead of `schedule` in the plan probe, so 'Book Ideal Week Schedule' — blocking out his own week — was typed as something to buy. Calendar intent is now probed before the bare verb.\\nCL1 asserts BOTH directions with real production titles: 'Book Ideal Week Schedule' → plan and 'Book October MS Conference Tampa trip' → purchase. One-directional fixtures are how a fix for one sense quietly breaks the other.\\nFound by reading what the classifier actually did to 85 real cards rather than by re-reading the regexes. The guards were all green while this was wrong, because no fixture covered it."
     }
   ]
 }

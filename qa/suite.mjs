@@ -910,6 +910,11 @@ check('CL1', 'classifier',
       ['Update Blocked Tasks with Proper Documentation', '', 'task', 'document'],
       ['Give me a list of all Alpha Wolves camping trailers for sale', '', 'task', 'research'],
       ['Prep for Emmre Discussion with Don Harms', '', 'task', 'call'],
+      // Caught in production: "book" is two different verbs. Booking a flight is
+      // a purchase; booking your own calendar is a plan. Both directions asserted
+      // so a fix for one does not quietly break the other.
+      ['Book Ideal Week Schedule', '', 'task', 'plan'],
+      ['Book October MS Conference Tampa trip', '', 'task', 'purchase'],
     ];
     const r = await page.evaluate((cases) =>
       cases.map(([t, d, ty, want]) => ({ t, want, got: window.lpInferAssetType(t, d, ty) })), cases);

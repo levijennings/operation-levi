@@ -195,6 +195,11 @@
     "note": "guard catches it: habits and chores get asset types again, putting upkeep noise into the field the grade routes on"
   },
   {
+    "id": "CL1",
+    "verdict": "KILLED",
+    "note": "guard catches it: \"Book Ideal Week Schedule\" is typed as a purchase again because `book` outranks `schedule`"
+  },
+  {
     "id": "CL2",
     "verdict": "KILLED",
     "note": "guard catches it: the one-tap confirm disappears and every type stays an unconfirmed guess forever"

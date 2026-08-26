@@ -101,6 +101,8 @@ const MUTATIONS = [
    'the biggest real bucket in the portfolio (14 FareHarbor setup cards) goes back to being unclassifiable'],
   ['CL1', 'index.html', "if(cardType === 'habit' || cardType === 'chore') return '';", "if(false) return '';",
    'habits and chores get asset types again, putting upkeep noise into the field the grade routes on'],
+  ['CL1', 'index.html', "['plan',        /\\b(ideal week|time ?block|calendar|schedule)\\b/],", "",
+   '"Book Ideal Week Schedule" is typed as a purchase again because `book` outranks `schedule`'],
   ['CL2', 'index.html', 'id="edAssetOk"', 'id="edAssetOkX"',
    'the one-tap confirm disappears and every type stays an unconfirmed guess forever'],
   ['MB1', 'index.html', "if(!lpMembers().length) return 'unknown';", "",
