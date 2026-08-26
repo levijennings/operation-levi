@@ -4013,6 +4013,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var people=(typeof getAllAssignees==='function'?getAllAssignees():[]).slice();
         function pItems(p){ return all.filter(function(it){ var ppl=[].concat(it.assignees||[], (it.raci&&it.raci.R)||[], (it.raci&&it.raci.A)?[it.raci.A]:[], it.responsible?[it.responsible]:[]); return ppl.indexOf(p)>=0; }); }
         var wkSt=['thisweek','priority','active','today','waiting'];
+        h+='<div class="ulbl" style="margin:26px 0 9px">Your AI grade</div><div id="ol2Grade"><div style="font-size:12px;color:#6E717B">Reading your activity…</div></div>';
         h+='<div class="ulbl" style="margin:26px 0 9px">Team workload</div>';
         var wingWk=all.filter(function(i){ return i.aiArtifact && i.aiArtifact.createdAt && i.aiArtifact.createdAt>Date.now()-7*86400000; }).length;
         var wingRev=all.filter(function(i){ return i.status==='review' && i.aiArtifact && i.aiArtifact.content; }).length;
@@ -4030,6 +4031,11 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         if(homeExpandedPerson){ var ex=pItems(homeExpandedPerson).filter(function(i){ return i.status!=='done'; }); ex.sort(function(a,b){ return (Number(a.order)||0)-(Number(b.order)||0); }); h+='<div class="lp-expand"><div class="ulbl" style="margin:14px 0 8px">'+esc(homeExpandedPerson)+' · open tasks ('+ex.length+')</div>'+(ex.length?ex.map(function(it){ return '<div class="md-row" data-open="'+esc(it.id)+'"><div style="flex:1;min-width:0"><div class="t">'+esc(it.title||'Untitled')+'</div><div class="s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+lpCatColor(it.category)+';margin-right:5px;vertical-align:middle"></span>'+esc(it.category||'')+' · '+esc(it.status||'')+(it.dueDate?(' · '+esc(dueLabel(it.dueDate))):'')+'</div></div></div>'; }).join(''):'<div class="empty">No open tasks.</div>')+'</div>'; }
       })();
       home.innerHTML=h;
+      (function(){
+        var gh=document.getElementById('ol2Grade'); if(!gh) return;
+        try{ lpGrade(function(g){ var el=document.getElementById('ol2Grade'); if(el) el.innerHTML=lpGradeHtml(g); }); }
+        catch(e){ gh.innerHTML='<div style="font-size:12px;color:#E0A33E">Grade unavailable.</div>'; }
+      })();
       var hn=document.getElementById('ol2HomeNew'); if(hn) hn.onclick=function(){ if(typeof window.ol2OpenCaptureTyped==='function') window.ol2OpenCaptureTyped(); else openCapture({type:true}); };
       function runBrief(send){
         var card=document.getElementById('ol2BriefCard'); if(card) card.querySelectorAll('button').forEach(function(b){ b.disabled=true; });
@@ -4191,6 +4197,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
       }).join('');
     }
     var _docsData=null, _docsActive=null;
+    var _quizOpen=false, _quizAns={}, _quizResult=null;
     function showDocs(){
       hideAllPanels();
       var dp=document.getElementById('ol2Docs'); dp.style.display='';
@@ -4201,12 +4208,71 @@ dots + 'Levi&#39;s Projects</td></tr>' +
         var active=_docsData.sections.filter(function(x){ return x.id===_docsActive; })[0]||_docsData.sections[0];
         var h='<div class="hrow"><div><h1 class="syne">Docs</h1><p>How Levi\'s Projects works — and Wingman answers questions from these same pages. Updated '+esc(_docsData.updated)+'.</p></div></div>';
         h+='<div class="doc-ask"><input id="ol2AskIn" placeholder="Ask Wingman anything about the app…"/><button class="gbtn amber" id="ol2AskBtn">▸ Ask</button></div><div id="ol2AskOut" class="doc-askout" style="display:none"></div>';
+        h+='<div id="ol2QuizWrap" style="margin:14px 0"></div>';
         h+='<div class="doc-wrap"><div class="doc-side">';
         groups.forEach(function(g){ h+='<div class="doc-g">'+esc(g)+'</div>'+byGroup[g].map(function(sec){ return '<a class="doc-l'+(sec.id===_docsActive?' on':'')+'" data-doc="'+esc(sec.id)+'">'+esc(sec.title)+'</a>'; }).join(''); });
         h+='</div><div class="doc-body"><h2 class="syne">'+esc(active.title)+'</h2>'+mdLite(active.body)+'</div></div>';
         dp.innerHTML=h;
         [].forEach.call(dp.querySelectorAll('[data-doc]'),function(el){ el.onclick=function(){ _docsActive=el.getAttribute('data-doc'); render(); }; });
+        renderQuiz();
         var ab=document.getElementById('ol2AskBtn'), ai=document.getElementById('ol2AskIn'), ao=document.getElementById('ol2AskOut');
+
+        function renderQuiz(){
+          var w=document.getElementById('ol2QuizWrap'); if(!w) return;
+          if(!_quizOpen){
+            var last=null; try{ last=JSON.parse(localStorage.getItem('lpQuizLast')||'null'); }catch(e){}
+            w.innerHTML='<div style="border:1px solid #26272D;border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+              '<div style="flex:1;min-width:200px"><b style="color:#E9EAEE">Do you actually know this thing?</b>'+
+              '<div style="font-size:11.5px;color:#8A8F99;margin-top:2px">'+LP_QUIZ.length+' questions on how it really behaves, including what it will not do. Pass is '+lpQuizPass()+'%.</div></div>'+
+              (last?'<div style="font-size:11.5px;color:'+(last.passed?'#6FBF8B':'#E0A33E')+'">Last: '+last.pct+'% · '+(last.passed?'passed':'not passed')+'</div>':'')+
+              '<button class="gbtn amber" id="ol2QuizGo">▸ Take the quiz</button></div>';
+            var gb=document.getElementById('ol2QuizGo');
+            if(gb) gb.onclick=function(){ _quizOpen=true; _quizAns={}; _quizResult=null; renderQuiz(); };
+            return;
+          }
+          if(_quizResult){
+            var r=_quizResult;
+            w.innerHTML='<div style="border:1px solid '+(r.passed?'#2c5a3e':'#5a4a2c')+';border-radius:11px;padding:14px">'+
+              '<div style="font-size:20px;font-weight:800;color:'+(r.passed?'#6FBF8B':'#E0A33E')+'">'+r.pct+'% — '+(r.passed?'passed':'not passed yet')+'</div>'+
+              '<div style="font-size:12px;color:#8A8F99;margin:4px 0 10px">'+r.right+' of '+r.total+' right. Pass is '+lpQuizPass()+'%.</div>'+
+              (r.wrong.length
+                ? '<div style="font-size:12px;color:#E9EAEE;margin-bottom:6px">Worth a second look:</div>'+
+                  r.wrong.map(function(i){ return '<div style="margin-bottom:8px;font-size:12px"><div style="color:#8A8F99">'+esc(LP_QUIZ[i].q)+'</div><div style="color:#6FBF8B">→ '+esc(LP_QUIZ[i].a[LP_QUIZ[i].c])+'</div></div>'; }).join('')
+                : '<div style="font-size:12px;color:#6FBF8B">Every one right.</div>')+
+              '<button class="gbtn" id="ol2QuizAgain" style="margin-top:8px">Take it again</button></div>';
+            var ag=document.getElementById('ol2QuizAgain');
+            if(ag) ag.onclick=function(){ _quizAns={}; _quizResult=null; renderQuiz(); };
+            return;
+          }
+          w.innerHTML='<div style="border:1px solid #26272D;border-radius:11px;padding:14px">'+
+            LP_QUIZ.map(function(q,i){
+              return '<div style="margin-bottom:12px"><div style="font-size:12.5px;color:#E9EAEE;margin-bottom:5px">'+(i+1)+'. '+esc(q.q)+'</div>'+
+                q.a.map(function(opt,j){
+                  return '<label style="display:block;font-size:12px;color:#8A8F99;padding:2px 0;cursor:pointer">'+
+                    '<input type="radio" name="qz'+i+'" value="'+j+'"'+(_quizAns[i]===j?' checked':'')+' style="margin-right:6px">'+esc(opt)+'</label>';
+                }).join('')+'</div>';
+            }).join('')+
+            '<div id="ol2QuizErr" style="font-size:12px;color:#E0A33E;margin-bottom:8px;display:none"></div>'+
+            '<button class="gbtn amber" id="ol2QuizDone">▸ Score it</button></div>';
+          [].forEach.call(w.querySelectorAll('input[type=radio]'),function(r){
+            r.onchange=function(){ _quizAns[parseInt(r.name.slice(2),10)]=parseInt(r.value,10); };
+          });
+          var db2=document.getElementById('ol2QuizDone');
+          if(db2) db2.onclick=function(){
+            var unanswered=[]; for(var i=0;i<LP_QUIZ.length;i++){ if(typeof _quizAns[i]!=='number') unanswered.push(i+1); }
+            if(unanswered.length){
+              var er=document.getElementById('ol2QuizErr');
+              // Scoring a partly-filled quiz would report a low percentage that
+              // measures how much was skipped, not what is known.
+              if(er){ er.style.display='block'; er.textContent='Answer every question first — still open: '+unanswered.join(', ')+'.'; }
+              return;
+            }
+            _quizResult=lpQuizScore(_quizAns);
+            try{ localStorage.setItem('lpQuizLast', JSON.stringify({pct:_quizResult.pct,passed:_quizResult.passed,at:Date.now()})); }catch(e){}
+            try{ lpEvent('quiz.completed', { pct:_quizResult.pct, passed:_quizResult.passed, right:_quizResult.right, total:_quizResult.total }); }catch(e){}
+            renderQuiz();
+          };
+        }
 
         // ── Ask Wingman keeps the conversation ──────────────────────────────
         // Levi: "when I chat with wingman I would like to keep context of the
@@ -5532,6 +5598,164 @@ dots + 'Levi&#39;s Projects</td></tr>' +
     window.lpUnlinkedPeople = lpUnlinkedPeople;
     window.lpMembersLoaded = function(){ try{ lpBackfillMemberIds(); }catch(e){} };
     window.lpCaptureGaps = function(d,m){ try{ return lpCaptureGaps(d,m); }catch(e){ return []; } };
+
+    // ── The grade (decision #9, weights 40/35/25) ──────────────────────────
+    // Usage 40 · Momentum 35 · Effectiveness 25.
+    //
+    // The rule that matters more than the arithmetic: this is computed from
+    // recorded activity, and when there is not enough recorded activity it
+    // returns NO SCORE. A grade drawn from an empty events table is a confident
+    // number that means nothing, and this project has already lost a day to
+    // exactly that class of mistake. Say "not enough yet" instead.
+    var LP_GRADE_MIN_EVENTS = 12;      // below this, any percentage is noise
+    var LP_GRADE_WINDOW_DAYS = 30;
+
+    function lpGradeCompute(events, cards){
+      var open = cards.filter(function(c){ return c.status !== 'done'; });
+      var n = function(name){ return events.filter(function(e){ return e.name === name; }).length; };
+
+      // USAGE — of the work that could have gone to Wingman, how much did.
+      var created = n('task.created');
+      var routed  = events.filter(function(e){ return e.name === 'task.routed' && e.props && e.props.to === 'wingman'; }).length;
+      var usage   = created ? Math.min(1, routed / created) : 0;
+
+      // MOMENTUM — is work leaving, or only arriving. Completions against
+      // creations, damped by how much is overdue right now.
+      var done    = n('task.completed');
+      var today   = new Date().toISOString().slice(0,10);
+      var overdue = open.filter(function(c){ return c.dueDate && c.dueDate < today; }).length;
+      var flow    = created ? Math.min(1, done / created) : (done ? 1 : 0);
+      var drag    = open.length ? Math.min(1, overdue / open.length) : 0;
+      var momentum= Math.max(0, flow * (1 - 0.5 * drag));
+
+      // EFFECTIVENESS — when Wingman produced something, was it good enough to
+      // use. Approvals against everything that came back for review.
+      var reviewed = events.filter(function(e){ return e.name === 'draft.reviewed'; });
+      var approved = reviewed.filter(function(e){ return e.props && e.props.outcome === 'approved'; }).length;
+      var effect   = reviewed.length ? approved / reviewed.length : 0;
+
+      var score = Math.round((usage * 40) + (momentum * 35) + (effect * 25));
+      var band  = score >= 80 ? 'Strong' : score >= 60 ? 'Working' : score >= 35 ? 'Patchy' : 'Barely used';
+      return {
+        score: score, band: band,
+        parts: [
+          { k:'usage',    label:'AI usage',      weight:40, pct:Math.round(usage*100),
+            detail: created ? (routed + ' of ' + created + ' new tasks went to Wingman') : 'no tasks created in this window' },
+          { k:'momentum', label:'Momentum',      weight:35, pct:Math.round(momentum*100),
+            detail: created ? (done + ' finished against ' + created + ' created' + (overdue ? (' · ' + overdue + ' overdue now') : '')) : 'nothing created in this window' },
+          { k:'effect',   label:'Effectiveness', weight:25, pct:Math.round(effect*100),
+            detail: reviewed.length ? (approved + ' of ' + reviewed.length + ' drafts approved as-is') : 'no drafts reviewed in this window' }
+        ]
+      };
+    }
+
+    function lpGrade(cb){
+      var cards = (typeof ITEMS==='function' ? ITEMS() : []);
+      if(!window._lpSb || !window._lpWs){
+        cb({ ok:false, reason:'signed-out', message:'Sign in to see your grade — it is computed from recorded activity.' });
+        return;
+      }
+      var since = new Date(Date.now() - LP_GRADE_WINDOW_DAYS*86400000).toISOString();
+      var q = window._lpSb.from('app_events')
+        .select('name,props,occurred_at')
+        .eq('workspace_id', window._lpWs)
+        .gte('occurred_at', since)
+        .limit(5000);
+      q.then(function(r){
+        if(!r || r.error || !r.data){
+          cb({ ok:false, reason:'unreadable', message:'Could not read your activity. The grade needs it, so no score is shown.' });
+          return;
+        }
+        var ev = r.data.filter(function(e){ return e.name && e.name.indexOf('diag.') !== 0; });
+        if(ev.length < LP_GRADE_MIN_EVENTS){
+          cb({ ok:false, reason:'thin', events:ev.length,
+               message:'Not enough recorded activity yet — ' + ev.length + ' event' + (ev.length===1?'':'s') +
+                       ' in ' + LP_GRADE_WINDOW_DAYS + ' days. A score off this little would be noise, so there is none.' });
+          return;
+        }
+        var g = lpGradeCompute(ev, cards);
+        g.ok = true; g.events = ev.length; g.days = LP_GRADE_WINDOW_DAYS;
+        cb(g);
+      }, function(){
+        cb({ ok:false, reason:'unreadable', message:'Could not read your activity. The grade needs it, so no score is shown.' });
+      });
+    }
+    window.lpGradeCompute = lpGradeCompute;
+    window.lpGrade = lpGrade;
+
+    function lpGradeHtml(g){
+      if(!g.ok){
+        return '<div class="lp-grade" style="border:1px solid #26272D;border-radius:12px;padding:14px">'+
+          '<div style="font-size:11px;letter-spacing:.08em;color:#8A8F99;margin-bottom:6px">AI GRADE</div>'+
+          '<div style="color:#E0A33E;font-size:13px">'+esc(g.message)+'</div></div>';
+      }
+      return '<div class="lp-grade" style="border:1px solid #26272D;border-radius:12px;padding:14px">'+
+        '<div style="font-size:11px;letter-spacing:.08em;color:#8A8F99;margin-bottom:6px">AI GRADE · LAST '+g.days+' DAYS</div>'+
+        '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">'+
+          '<div style="font-size:34px;font-weight:800;font-family:\'Space Grotesk\',sans-serif;color:#E9EAEE">'+g.score+'</div>'+
+          '<div style="color:#C08428;font-weight:600">'+esc(g.band)+'</div>'+
+          '<div style="margin-left:auto;font-size:11px;color:#6E717B">from '+g.events+' recorded events</div>'+
+        '</div>'+
+        g.parts.map(function(p){
+          return '<div style="margin-bottom:8px">'+
+            '<div style="display:flex;font-size:12px"><span style="color:#E9EAEE">'+esc(p.label)+'</span>'+
+              '<span style="margin-left:auto;color:#8A8F99">'+p.pct+'% <span style="color:#6E717B">of '+p.weight+'</span></span></div>'+
+            '<div style="height:5px;background:#1e2026;border-radius:3px;margin:4px 0 3px"><div style="height:5px;width:'+p.pct+'%;background:#C08428;border-radius:3px"></div></div>'+
+            '<div style="font-size:11px;color:#6E717B">'+esc(p.detail)+'</div>'+
+          '</div>';
+        }).join('')+
+      '</div>';
+    }
+
+    // ── The confidence quiz (decision #10, pass = 70%) ─────────────────────
+    // Answers are drawn from how the app actually behaves, not from marketing
+    // copy — several questions are about the LIMITS, because knowing what
+    // Wingman will not do is the part that makes delegation safe.
+    var LP_QUIZ = [
+      { q:'You capture a task, pick Do-it, and never say what done looks like. What happens?',
+        a:['It parks in Waiting on you','Wingman drafts it anyway','It goes straight to Done','It is deleted'], c:0 },
+      { q:'Wingman drafted an email. What does it take to send it?',
+        a:['Two presses, and the second names the recipient','One press','It sends automatically when approved','You copy it into your mail app'], c:0 },
+      { q:'A purchase option shows a price with no source link. How does it appear?',
+        a:['Struck through and marked UNSOURCED','Exactly like the others','Hidden entirely','Highlighted as the best deal'], c:0 },
+      { q:'Wingman found three options for something you need to buy. Who buys it?',
+        a:['You do — Wingman never buys','Wingman, once you approve','Your EA automatically','Whoever is assigned'], c:0 },
+      { q:'A task produces a Spreadsheet but the draft has no table. What does Build do?',
+        a:['Refuses rather than shipping an empty sheet','Creates a one-column sheet','Creates an empty file','Converts it to a document'], c:0 },
+      { q:'What does the GUESS chip next to a task type mean?',
+        a:['Wingman inferred it and you have not confirmed it','The task is low priority','Wingman is unsure the task is real','The type cannot be changed'], c:0 },
+      { q:'Which of these is NOT one of the five phone bar slots?',
+        a:['Goals','Today','Needs review','Missions'], c:0 },
+      { q:'Someone is assigned work but shows NO ACCOUNT. What is true?',
+        a:['They cannot sign in or be notified','They are on holiday','Their tasks are hidden','They are an admin'], c:0 },
+      { q:'When does the morning brief arrive?',
+        a:['6:30 your local time, year-round','6:30 UTC','Whenever you open the app','Only on weekdays'], c:0 },
+      { q:'Settings → Activity recording says nothing is being recorded. What does that mean for your grade?',
+        a:['The grade has nothing to read and should not be trusted','The grade defaults to 100','Nothing — it is unrelated','Your tasks are not saving'], c:0 },
+      { q:'Where does everything Wingman drafts go before it counts as done?',
+        a:['Needs review','Done','Backlog','Top 3'], c:0 },
+      { q:'Your Ask Wingman conversation is visible to:',
+        a:['Only you','Every workspace member','Workspace admins','Anyone with the link'], c:0 },
+      { q:'Wingman drafted something you did not like. What is the most useful thing to do?',
+        a:['Redo it with a note saying what was wrong','Rewrite it yourself','Delete the card','Mark it done'], c:0 },
+      { q:'The capture interview asks about a due date. When will it NOT ask?',
+        a:['When you already said when it is due','It always asks','Only for Track-it tasks','Only on a phone'], c:0 },
+      { q:'Which does Wingman NOT do?',
+        a:['Operate other systems on your behalf','Draft an email','Build a docx','Compare purchase options'], c:0 },
+      { q:'A card produces a Deck. Can Wingman build the file?',
+        a:['No — decks are deliberately not generated yet','Yes, as .pptx','Yes, as a PDF','Only on desktop'], c:0 }
+    ];
+    function lpQuizPass(){ return 70; }
+    function lpQuizScore(answers){
+      var right = 0;
+      LP_QUIZ.forEach(function(q,i){ if(answers[i] === q.c) right++; });
+      var pct = Math.round((right / LP_QUIZ.length) * 100);
+      return { right:right, total:LP_QUIZ.length, pct:pct, passed: pct >= lpQuizPass(),
+               wrong: LP_QUIZ.map(function(q,i){ return answers[i]===q.c ? null : i; }).filter(function(x){ return x!==null; }) };
+    }
+    window.LP_QUIZ = LP_QUIZ;
+    window.lpQuizScore = lpQuizScore;
+    window.lpQuizPass = lpQuizPass;
 
     // ── F2b: email deliverables ─────────────────────────────────────────────
     // The typed portfolio says `email` is the LARGEST bucket (12 of 85 cards) —
