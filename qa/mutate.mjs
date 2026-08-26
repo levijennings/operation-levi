@@ -81,6 +81,12 @@ const MUTATIONS = [
    'the mobile bar rules drop below `.ol2 .nav a` on specificity and the five slots silently never apply'],
   ['NAV1', 'index.html', '.ol2 .newt{display:none}', '.ol2 .newt{margin:0 0 0 auto;min-height:44px;padding:0 13px;white-space:nowrap;font-size:12.5px;flex-shrink:0}',
    'the duplicate New task button returns to the bar and squeezes every slot label into unreadability'],
+  ['EV4', 'index.html', "if(res && res.error){ st.failed++;", "if(false){ st.failed++;",
+   'a rejected event goes back to being swallowed silently — the exact failure that hid an empty table for a day'],
+  ['EV5', 'index.html', "        lpEvent('app.loaded', {", "        (function(){}) && ('app.loaded', {",
+   'the heartbeat stops firing and an empty events table becomes ambiguous again'],
+  ['EV6', 'index.html', "<h3>Activity recording</h3>", "<h3>Hidden</h3>",
+   'Settings stops telling anyone whether their activity is actually being recorded'],
 ];
 
 const out = [];

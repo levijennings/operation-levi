@@ -134,6 +134,18 @@
       "mutations": "29/29 killed",
       "suite": "restored (this file)",
       "note": "R012 was WRONG about the phone. Three separate faults, none of which any guard could see. (1) `.ol2.on{grid-template-columns:1fr}` — 1fr is minmax(auto,1fr) and its auto minimum is min-content, so the single column resolved to ~590px inside a 390px viewport and .ol2's position:fixed;inset:0 CLIPPED the overflow, which is why body text was cut mid-sentence while documentElement.scrollWidth stayed clean. (2) The mobile bar rules were written as `.nav a` (0,1,1) against a base rule of `.ol2 .nav a` (0,2,1) — they LOST on specificity, so flex:1 1 0 never applied and the five slots never existed. (3) PR #32's real stopgap was a LATER equal-specificity block (flex:0 0 auto + white-space:nowrap) that I never found; in R012 I removed only overflow-x:auto, which turned a swipeable bar into an unreachable one. NAV1 measured nav.scrollWidth-nav.clientWidth — the bar against ITSELF — which reports zero for an oversized bar hanging off the screen. It now measures every slot's rect against the viewport, forces the 5th slot visible (the fixture has 0 needs-review so it never rendered), and fails on clipped labels. MOB1 is new and checks the WHOLE page for elements past the right edge."
+    },
+    {
+      "run": "R014",
+      "ranAt": "2026-08-26T01:40:00Z",
+      "trigger": "app_events had 0 rows; diagnosing whether the event layer was broken or merely unused",
+      "build": "a885448 + event instrumentation",
+      "total": 55,
+      "pass": 53,
+      "fail": 2,
+      "mutations": "32/32 killed",
+      "suite": "restored (this file)",
+      "note": "VERDICT: the emitter was never broken. Proven against PRODUCTION, not a stub — a raw insert from Levi's signed-in browser returned 201, and window.lpEvent('diag.viafn') wrote a real row. RLS, both CHECK constraints, and the _lpSb/_lpWs/_lpUser globals were all correct. The zero rows meant nobody had performed an instrumented action on a page loaded after the layer deployed (a tab open since before the deploy runs the old code). The REAL defect was that this was unanswerable without a database probe: lpEvent swallowed every outcome, so success, RLS denial, network failure and signed-out skip all looked identical from outside — nothing. Fixed by making the layer falsifiable: _lpEvStats counts sent/failed/skipped and keeps the last error, failures reach console.warn, an app.loaded heartbeat fires once per signed-in load so an empty table can ONLY mean broken, and Settings states the recording state in words. EV4/EV5/EV6 added and mutation-proven. AK4 was rewritten too: it counted app_events inserts and broke the moment the heartbeat was added — a guard that counts is a guard that fails for the wrong reason, so it now asserts the event by NAME. Two diagnostic rows (diag.probe, diag.viafn) are permanent in app_events: the table has no delete policy by design. They are honestly named and harmless."
     }
   ]
 }

@@ -143,5 +143,20 @@
     "id": "NAV1",
     "verdict": "KILLED",
     "note": "guard catches it: the duplicate New task button returns to the bar and squeezes every slot label into unreadability"
+  },
+  {
+    "id": "EV4",
+    "verdict": "KILLED",
+    "note": "guard catches it: a rejected event goes back to being swallowed silently — the exact failure that hid an empty table for a day"
+  },
+  {
+    "id": "EV5",
+    "verdict": "KILLED",
+    "note": "guard catches it: the heartbeat stops firing and an empty events table becomes ambiguous again"
+  },
+  {
+    "id": "EV6",
+    "verdict": "KILLED",
+    "note": "guard catches it: Settings stops telling anyone whether their activity is actually being recorded"
   }
 ]

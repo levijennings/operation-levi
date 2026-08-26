@@ -525,6 +525,70 @@ check('F2C', 'board',
     assert(r.hasSize, 'the attachment has no size');
   });
 
+check('EV4', 'events',
+  'A rejected event is COUNTED and logged, not swallowed — the failure mode that hid an empty table for a day',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage();
+    const warnings = [];
+    page.on('console', m => { if (m.type() === 'warning') warnings.push(m.text()); });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(async () => {
+      // Stand up a Supabase client whose insert always rejects — exactly what an
+      // RLS denial or a dead network looks like from inside lpEvent.
+      window._lpSb = { from: () => ({ insert: () => Promise.resolve({ error: { message: 'row-level security' } }) }) };
+      window._lpWs = 'ws-test';
+      window._lpUser = { id: 'u1', name: 'Tester' };
+      window.lpEvent('test.rejected', { a: 1 }, 'card-1');
+      await new Promise(r => setTimeout(r, 300));
+      return window.lpEventHealth();
+    });
+    await page.close();
+    assert(r.failed >= 1, `a rejected insert was not counted (failed=${r.failed}) — this is the swallow that hid the empty table`);
+    assertEq(r.sent, 0, 'a rejected insert was counted as sent');
+    assert(/row-level security/.test(r.lastError), `the rejection reason was not kept: "${r.lastError}"`);
+    assert(warnings.some(w => /lpEvent/.test(w)), 'nothing reached the console when an event was rejected');
+  });
+
+check('EV5', 'events',
+  'A signed-in load writes one app.loaded heartbeat, so an empty table can only mean broken',
+  async ({ browser, origin }) => {
+    const page = await browser.newPage();
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    const r = await page.evaluate(async () => {
+      const seen = [];
+      window._lpSb = { from: () => ({ insert: (row) => { seen.push(row); return Promise.resolve({ error: null }); } }) };
+      window._lpWs = 'ws-test';
+      window._lpUser = { id: 'u1', name: 'Tester' };
+      await new Promise(r => setTimeout(r, 4000));   // let the boot poller find the globals
+      return { names: seen.map(x => x.name), health: window.lpEventHealth() };
+    });
+    await page.close();
+    assert(r.names.includes('app.loaded'),
+      `no app.loaded heartbeat once signed in — events seen: ${JSON.stringify(r.names)}`);
+    assert(r.health.sent >= 1, 'the heartbeat was not counted as sent');
+  });
+
+check('EV6', 'events',
+  'Settings states plainly whether activity is being recorded',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/Activity recording/.test(src), 'Settings has no Activity recording section');
+    assert(/lpEventHealth/.test(src), 'Settings does not read the event health');
+    // Drive it for real rather than trusting the string.
+    await page.keyboard.press('g');
+    await page.keyboard.press('s');
+    await page.waitForTimeout(900);
+    const txt = await page.evaluate(() => {
+      const el = document.getElementById('ol2Settings');
+      return el ? el.innerText : '';
+    });
+    assert(/Activity recording/i.test(txt), 'the Activity recording section does not render on Settings');
+    assert(/Recording|Not recording|rejected/i.test(txt), `no recording state is stated: ${txt.slice(0, 200)}`);
+  });
+
 check('NAV1', 'mobile',
   'Every phone bar slot sits inside the viewport — measured against the SCREEN, not the bar\'s own box',
   async ({ browser, origin }) => {
@@ -832,7 +896,10 @@ check('AK4', 'wingman',
       ins: window.__ins.filter(x => x.tbl === 'ask_turns')
              .map(x => ({ t: x.tbl, role: x.row.role, ws: !!x.row.workspace_id,
                           uid: !!x.row.user_id, c: String(x.row.content).slice(0, 24) })),
-      events: window.__ins.filter(x => x.tbl === 'app_events').length,
+      // Name the event rather than counting them. Counting broke the moment the
+      // app.loaded heartbeat was added — a guard that counts is a guard that
+      // fails for the wrong reason.
+      events: window.__ins.filter(x => x.tbl === 'app_events').map(x => x.row.name),
       badge: (document.getElementById('ol2AskOut') || {}).innerText || ''
     }));
     assertEq(r.ins.length, 2, `expected the question and the answer to be written, got ${JSON.stringify(r.ins)}`);
@@ -841,7 +908,8 @@ check('AK4', 'wingman',
     assertEq(r.ins[1].role, 'assistant', 'second written turn is not the answer');
     assert(r.ins[0].ws && r.ins[0].uid, 'a turn was written without a workspace or user');
     assert(/follows you/i.test(r.badge), 'the UI does not tell the user the thread is synced');
-    assertEq(r.events, 1, 'asking Wingman did not also emit its wingman.asked event');
+    assert(r.events.includes('wingman.asked'),
+      `asking Wingman did not emit wingman.asked — events seen: ${JSON.stringify(r.events)}`);
   });
 
 check('AK5', 'wingman',
