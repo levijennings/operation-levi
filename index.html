@@ -4254,6 +4254,7 @@ dots + 'Levi&#39;s Projects</td></tr>' +
               window._lpAsk = askLocalRead();   // server unreachable: show what we have
             }
             askRender(false);
+            askSubscribe();
           }, function(){ if(!window._lpAsk) window._lpAsk = askLocalRead(); askRender(false); });
         }
         function askPush(role, content){
@@ -4269,6 +4270,50 @@ dots + 'Levi&#39;s Projects</td></tr>' +
           });
           if(q && q.then) q.then(function(){}, function(){});   // best effort; local copy already holds it
         }
+        // ── Decision #8: realtime ─────────────────────────────────────────────
+        // Until now the thread reconciled on OPEN — ask something on the laptop
+        // and the phone stayed stale until you navigated to Docs there. This
+        // subscribes to your own rows so a turn appears wherever you are looking.
+        //
+        // Two things it must not do. It must not double-post your own turns: the
+        // insert you just made comes straight back down the socket, so every
+        // arriving row is matched against what is already on screen before it is
+        // appended. And it must not become load-bearing — if realtime is
+        // unavailable the pull-on-open path is untouched and the thread still
+        // works, just not instantly.
+        var _askChan = null;
+        function askSubscribe(){
+          if(_askChan || !askSynced()) return;
+          try{
+            _askChan = window._lpSb
+              .channel('ask-' + window._lpUser.id)
+              .on('postgres_changes',
+                  { event:'INSERT', schema:'public', table:'ask_turns',
+                    filter:'user_id=eq.' + window._lpUser.id },
+                  function(payload){
+                    var row = payload && payload.new; if(!row) return;
+                    if(String(row.workspace_id||'') !== String(window._lpWs||'')) return;
+                    var t = window._lpAsk || (window._lpAsk = []);
+                    // The echo of our own insert. Same role and same text already
+                    // at the tail means this is the turn we just wrote locally.
+                    for(var i=t.length-1; i>=0 && i>=t.length-4; i--){
+                      if(t[i].role === row.role && t[i].content === row.content) return;
+                    }
+                    t.push({ role: row.role, content: row.content });
+                    if(t.length > ASK_MAX) window._lpAsk = t.slice(-ASK_MAX);
+                    askLocalWrite();
+                    askRender(false);
+                  })
+              .subscribe();
+          }catch(e){ _askChan = null; }
+        }
+        function askUnsubscribe(){
+          try{ if(_askChan) window._lpSb.removeChannel(_askChan); }catch(e){}
+          _askChan = null;
+        }
+        window.lpAskSubscribe = askSubscribe;
+        window.lpAskUnsubscribe = askUnsubscribe;
+
         function askClear(){
           window._lpAsk = []; askLocalWrite(); askRender(false);
           if(!askSynced()) return;
@@ -4292,7 +4337,8 @@ dots + 'Levi&#39;s Projects</td></tr>' +
             html += '<div style="margin-top:6px;border-top:1px solid #23252B;padding-top:8px;display:flex;align-items:center;gap:10px">'
               + '<button id="ol2AskClear" class="gbtn" style="font-size:11px;padding:4px 9px">Clear conversation</button>'
               + '<span style="font-size:11px;color:#7E8796">'
-              + (askSynced() ? 'Synced — this conversation follows you to your phone'
+              + (askSynced() ? (_askChan ? 'Live — new turns appear here as they happen, on any device'
+                                          : 'Synced — this conversation follows you to your phone')
                              : 'This device only — sign in to sync')
               + '</span></div>';
           }
