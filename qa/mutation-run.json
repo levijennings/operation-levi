@@ -213,5 +213,20 @@
     "id": "MB2",
     "verdict": "KILLED",
     "note": "guard catches it: Chad and Jason render as teammates again despite having no account and no way to be notified"
+  },
+  {
+    "id": "CI1",
+    "verdict": "KILLED",
+    "note": "guard catches it: capture stops asking what done looks like — the gap behind 41% deliverable coverage and weak drafts"
+  },
+  {
+    "id": "CI2",
+    "verdict": "KILLED",
+    "note": "guard catches it: an under-specified do-it card is handed to Wingman to draft against nothing instead of waiting on Levi"
+  },
+  {
+    "id": "CI3",
+    "verdict": "KILLED",
+    "note": "guard catches it: the capture overlay stops scrolling and a tall interview strands Confirm off the bottom of a phone"
   }
 ]

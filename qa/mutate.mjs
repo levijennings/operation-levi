@@ -109,6 +109,12 @@ const MUTATIONS = [
    'people with no account are handed invented ids, papering over the gap this was built to surface'],
   ['MB2', 'index.html', 'NO ACCOUNT', 'ON THE TEAM',
    'Chad and Jason render as teammates again despite having no account and no way to be notified'],
+  ['CI1', 'index.html', "if(!draft.deliverable) g.push({ k:'deliverable'", "if(false) g.push({ k:'deliverable'",
+   'capture stops asking what done looks like — the gap behind 41% deliverable coverage and weak drafts'],
+  ['CI2', 'index.html', "if(capMode==='do-it' && !String(it.deliverable||'').trim()){", "if(false){",
+   'an under-specified do-it card is handed to Wingman to draft against nothing instead of waiting on Levi'],
+  ['CI3', 'index.html', "padding:10vh 0 4vh;overflow-y:auto", "padding-top:10vh",
+   'the capture overlay stops scrolling and a tall interview strands Confirm off the bottom of a phone'],
 ];
 
 const out = [];

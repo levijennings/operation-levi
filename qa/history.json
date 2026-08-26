@@ -170,6 +170,18 @@
       "mutations": "43/43 killed",
       "suite": "restored (this file)",
       "note": "Production sized the problem before anything was built: workspace_members holds exactly TWO people (Levi, Zoe) while cards assign work to FOUR — Chad (2 cards) and Jason (1) have no account at all. Team Workload was rendering seven people as though all were on the team; three of them cannot sign in, cannot see the work, and will never receive a notification. Design: ids ride ALONGSIDE names, names are NOT removed. 85 cards depend on the name strings and a big-bang migration with no rollback is how data gets lost. newItemBase stamps assigneeIds at creation, lpBackfillMemberIds fills existing cards once the roster loads, and a card naming a non-member is left exactly as it is — inventing an id for someone with no account would paper over the gap this exists to surface. The workload now marks them NO ACCOUNT and says in words what that costs. Two deliberate subtleties, both mutation-proven: name matching is trim/case-insensitive, and an unloaded roster returns 'unknown' rather than 'unlinked' — painting 'no account' across the whole crew because a fetch has not returned yet is worse than saying nothing."
+    },
+    {
+      "run": "R017",
+      "ranAt": "2026-08-26T03:05:00Z",
+      "trigger": "Decision #7: capture interview. Task-detail relayout checked against production first and found already shipped.",
+      "build": "b9699c9 + capture interview",
+      "total": 68,
+      "pass": 66,
+      "fail": 2,
+      "mutations": "46/46 killed",
+      "suite": "restored (this file)",
+      "note": "DETAIL RELAYOUT: NOT rebuilt. Levi's complaint ('I cannot see all of the information') predated the tab strip and notes auto-grow. Checked production directly before touching anything: 5 tabs render and are visible, notes are 105px and not scrollable, the pane is 1.4 screens. Rebuilding what is already fixed would have been busywork; his judgement on the current build is what settles it. A LOCAL-HARNESS TRAP worth knowing: in the signed-out fixture, opening a card renders the detail and then hides it ~570ms later, so #ol2Review ends up display:none. This does NOT happen on production (verified in Levi's signed-in browser: the pane opens and stays). Any future guard that drives the detail pane in the local harness will pass or fail for the wrong reason — check production before believing it. CAPTURE INTERVIEW: built to Levi's own words. Questions are computed from what the parse MISSED, not asked of a model — instant, works offline, and cannot ask about a detail the person already gave. Asking 'when is this due?' about a card that says 'due Friday' is how an interview becomes a tax. The definition-of-done question is marked MATTERS MOST because 41% deliverable coverage is the reason drafts kept landing as the easy 20%. His rule applied literally: a DO-IT card with no definition of done parks in Waiting on Levi rather than drafting against a guess — and a parked card no longer emits task.routed, so the routed count cannot lie. Track-it cards never park; that is his own work. CI3 exists because I INTRODUCED a bug building this: the taller preview pushed Confirm off the bottom of a phone. The button was in the DOM, matched a selector, and could not be clicked. Three existing guards (C1, EV3, AT1) went red and caught it. 'Present in the DOM' is not 'reachable by a thumb'."
     }
   ]
 }

@@ -525,6 +525,86 @@ check('F2C', 'board',
     assert(r.hasSize, 'the attachment has no size');
   });
 
+check('CI1', 'capture',
+  'The interview asks only about what the parse actually missed',
+  async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const bare   = window.lpCaptureGaps({ title: 'Order bulbs' }, 'do-it').map(g => g.k);
+      const full   = window.lpCaptureGaps({ title: 'x', due: '2026-09-04', deliverable: 'Bulbs on the shelf', ctx: { name: 'garage' }, owner: 'Levi' }, 'do-it').map(g => g.k);
+      const dueOnly= window.lpCaptureGaps({ title: 'x', due: '2026-09-04' }, 'do-it').map(g => g.k);
+      const track  = window.lpCaptureGaps({ title: 'x', due: 'd', deliverable: 'z', ctx: { name: 'c' } }, 'track-it').map(g => g.k);
+      const doit   = window.lpCaptureGaps({ title: 'x', due: 'd', deliverable: 'z', ctx: { name: 'c' } }, 'do-it').map(g => g.k);
+      const key = window.lpCaptureGaps({ title: 'x' }, 'do-it').filter(g => g.key).map(g => g.k);
+      return { bare, full, dueOnly, track, doit, key };
+    });
+    assert(r.bare.includes('due') && r.bare.includes('deliverable') && r.bare.includes('ctx'),
+      `a bare capture should be asked about all three: ${JSON.stringify(r.bare)}`);
+    // The point of computing gaps instead of asking a model: never ask about
+    // something the person already said.
+    assertEq(r.full.length, 0, `nothing was missing yet questions were still asked: ${JSON.stringify(r.full)}`);
+    assert(!r.dueOnly.includes('due'), 'it asked for a due date that was already given');
+    // Owner only matters when somebody else might do it.
+    assert(r.track.includes('owner'), 'a track-it card with no owner was not asked who is doing it');
+    assert(!r.doit.includes('owner'), 'a do-it card was asked for an owner — Wingman is the owner');
+    assertEq(r.key.join(','), 'deliverable',
+      'the definition of done is not flagged as the one that matters most');
+  });
+
+check('CI2', 'capture',
+  'A do-it card with no definition of done parks in Waiting on Levi instead of drafting against a guess',
+  async ({ page }) => {
+    const src = await readFile(join(REPO, 'index.html'), 'utf8');
+    assert(/it\.status='waiting'/.test(src), 'nothing parks an under-specified do-it card');
+    assert(/waitingOn='What done looks like'/.test(src), 'the card does not say what it is waiting for');
+    assert(/waitingFrom=meName\(\)/.test(src), 'the card does not say it is waiting on Levi himself');
+    // It must NOT then claim the work was routed to Wingman.
+    assert(/capMode==='do-it' && !_parked\) lpEvent\('task\.routed'/.test(src),
+      'a parked card still reports itself as routed to Wingman — the count would lie');
+    // And a track-it card must never park: that is Levi's own work, nothing blocks it.
+    assert(/capMode==='do-it' && !String\(it\.deliverable\|\|''\)\.trim\(\)/.test(src),
+      'parking is not restricted to do-it cards');
+    assert(/capture\.interviewed/.test(src), 'the interview outcome is not recorded as an event');
+  });
+
+check('CI3', 'capture',
+  'Confirm stays reachable once the interview makes the modal tall — on a short phone screen',
+  async ({ browser, origin }) => {
+    // The interview added questions and pushed the action row past the bottom of
+    // the viewport. The button existed, was visible to a selector, and could not
+    // be clicked. "Present in the DOM" is not "reachable by a thumb".
+    const page = await browser.newPage({ viewport: { width: 390, height: 667 }, isMobile: true, hasTouch: true });
+    await page.goto(`${origin}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('#ol2Home', { timeout: 15000 });
+    await page.waitForTimeout(700);
+    await page.evaluate(() => window.ol2OpenCaptureTyped());
+    await page.waitForSelector('#ol2capTa', { timeout: 8000 });
+    await page.fill('#ol2capTa', 'Order halogen lightbulbs for the garage');
+    await page.click('#ol2capCont');
+    await page.waitForTimeout(900);
+    const r = await page.evaluate(() => {
+      const btn = document.getElementById('ol2capConfirm');
+      const overlay = document.querySelector('.ol2cap');
+      if (!btn) return { missing: true };
+      // Scroll it into view the way a person would, then check it is really there.
+      btn.scrollIntoView({ block: 'center' });
+      const b = btn.getBoundingClientRect();
+      const mid = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return {
+        questions: document.querySelectorAll('#ol2capIv [data-iv]').length,
+        overlayScrolls: overlay ? getComputedStyle(overlay).overflowY : '',
+        inViewport: b.top >= 0 && b.bottom <= window.innerHeight + 1,
+        topElIsButton: !!(mid && (mid === btn || btn.contains(mid)))
+      };
+    });
+    await page.close();
+    assert(!r.missing, 'the Confirm button is not in the DOM at all');
+    assert(r.questions > 0, 'the interview asked nothing about a bare one-line capture');
+    assert(/auto|scroll/.test(r.overlayScrolls),
+      `the capture overlay does not scroll (overflow-y:${r.overlayScrolls}) — a tall interview strands the actions`);
+    assert(r.inViewport, 'Confirm cannot be brought on screen even by scrolling');
+    assert(r.topElIsButton, 'something covers Confirm — it is visible but not clickable');
+  });
+
 check('MB1', 'members',
   'A name on a card is resolved against the real roster — and someone with no account is NOT silently treated as a member',
   async ({ page }) => {
