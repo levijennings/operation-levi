@@ -418,6 +418,20 @@
   @media (max-width:900px){:root{--gut:18px}.deck>.slide.glance{padding:18px 18px 90px}}
   @media print{.deck>.slide,.deck>.slide.glance{padding-left:0;padding-right:0}}
 
+  /* v18: cover wordmark centering
+     - .brand was capped at 520px, so the nowrap "EXPEDITION" line (~690px)
+       overflowed and Chrome pinned it to the box's left edge instead of centering it.
+     - .deck>.slide>* (v17) out-specified .covwrap and killed its width cap + auto margins.
+     - letter-spacing adds a trailing space after the last glyph, so centred tracked
+       type sits left by half the tracking; text-indent of one em-tracking cancels it. */
+  .deck>.slide.cover>.covwrap{max-width:820px;margin-left:auto;margin-right:auto}
+  .cover .brand{max-width:none}
+  .cover .brand .arc{text-indent:.16em}
+  .cover .brand .est,.cover .brand .tag{text-indent:.24em}
+  .cover .years{text-indent:.2em}
+  .cover .cdc small{text-indent:.22em}
+  @media (max-width:900px){.cover .brand .arc{text-indent:.1em}}
+
   /* v17: prep-day totals rows */
   .prepday h4{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .prepday h4 .count{font-family:var(--body);font-size:12px;letter-spacing:.06em;color:var(--mute)}
